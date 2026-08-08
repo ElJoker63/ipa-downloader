@@ -575,38 +575,39 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	}
 
 
-	// Fetch Storage Info (Hardware Level for Marketing Accuracy)
-	// 1. Try Factory Domain for the "Marketing" size (64, 128, 256 GB)
-	if factory, err := dev.GetValue("com.apple.disk_usage.factory", ""); err == nil && factory != nil {
-		if m, ok := factory.(map[string]interface{}); ok {
-			info.StorageTotal = getInt64FromVal(m["DiskCapacity"])
-		}
+	// Fetch Storage Info (Strict Technical Discovery)
+	// Objective: Retrieve actual raw bytes from the hardware
+
+	// 1. Total Disk Capacity (The full chip size)
+	if val, err := dev.GetValue("", "TotalDiskCapacity"); err == nil {
+		info.StorageTotal = getInt64FromVal(val)
 	}
 
-	// 2. Try Disk Usage Domain for Partition details
+	// 2. Free Space Discovery (Try technical keys first)
 	if diskUsage, err := dev.GetValue("com.apple.disk_usage", ""); err == nil && diskUsage != nil {
 		if m, ok := diskUsage.(map[string]interface{}); ok {
+			// If we didn't get marketed capacity, use technical total data partition
 			if info.StorageTotal == 0 {
-				// Use TotalDiskCapacity as fallback for Total
 				info.StorageTotal = getInt64FromVal(m["TotalDiskCapacity"])
 			}
 
-			// Available space (Settings uses AmountRestoreAvailable which includes purgeable)
-			if free := getInt64FromVal(m["AmountRestoreAvailable"]); free > 0 {
+			// TotalDataAvailable is the raw physical free blocks on the disk
+			// AmountRestoreAvailable is what iOS thinks it can free up
+			// We try TotalDataAvailable first for "Real" info.
+			if free := getInt64FromVal(m["TotalDataAvailable"]); free > 0 {
+				info.StorageFree = free
+			} else if free := getInt64FromVal(m["AmountRestoreAvailable"]); free > 0 {
 				info.StorageFree = free
 			} else if free := getInt64FromVal(m["AmountDataAvailable"]); free > 0 {
 				info.StorageFree = free
-			} else if free := getInt64FromVal(m["TotalDataAvailable"]); free > 0 {
-				info.StorageFree = free
 			}
-
 		}
 	}
 
-	// 3. Fallback for older devices/OS versions
-	if info.StorageTotal == 0 {
-		if val, err := dev.GetValue("", "TotalDiskCapacity"); err == nil {
-			info.StorageTotal = getInt64FromVal(val)
+	// Fallback to global keys if com.apple.disk_usage is inaccessible
+	if info.StorageFree == 0 {
+		if val, err := dev.GetValue("", "TotalDataAvailable"); err == nil {
+			info.StorageFree = getInt64FromVal(val)
 		}
 	}
 
@@ -614,6 +615,7 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	if info.StorageUsed < 0 {
 		info.StorageUsed = 0
 	}
+
 
 
 

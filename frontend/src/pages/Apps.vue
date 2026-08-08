@@ -600,9 +600,9 @@ function truncateUDID(udid: string) {
 
 function formatAppSize(bytes: number) {
   if (bytes === undefined || bytes === null || bytes < 0) return '--'
-  if (bytes === 0) return 'Unknown'
+  if (bytes === 0) return '0 MB'
 
-  // Apple uses decimal units (1000) for storage in Settings since iOS 10
+  // Use Decimal (1000) for storage - Industry standard for disk sizes and Apple UI
   const unit = 1000
   if (bytes < unit) return `${bytes} B`
 
@@ -613,17 +613,10 @@ function formatAppSize(bytes: number) {
   if (mb < unit) return `${mb.toFixed(1)} MB`
 
   const gb = mb / unit
-
-  // Professional Marketing Rounding: Match standard box capacities (64, 128, etc)
-  const standardCapacities = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
-  for (const cap of standardCapacities) {
-    if (Math.abs(gb - cap) < (cap * 0.1)) { // 10% tolerance to catch formatted partition loss
-      return `${cap}.00 GB`
-    }
-  }
-
+  // No hardcoded rounding to "standard" sizes. Show exactly what the device reports.
   return `${gb.toFixed(2)} GB`
 }
+
 
 
 

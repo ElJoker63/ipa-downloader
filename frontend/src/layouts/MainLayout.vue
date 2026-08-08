@@ -161,8 +161,12 @@
       <!-- Bottom User Profile, Language Switcher & Branding Strip -->
       <div class="pt-3 border-t border-white/[0.08] space-y-2.5">
         <!-- Account Mini Card with Dynamic Initials Avatar -->
-        <div v-if="authStore.isLoggedIn" class="p-2.5 rounded-[14px] bg-white/[0.06] border border-white/[0.12] flex items-center space-x-2.5 backdrop-blur-md">
-          <div class="w-8 h-8 rounded-[10px] bg-gradient-to-tr from-[#0071E3] via-[#0A84FF] to-[#64D2FF] flex items-center justify-center text-xs font-bold text-white shadow-sm border border-white/20 shrink-0 select-none">
+        <div
+          v-if="authStore.isLoggedIn"
+          @click="router.push('/profile')"
+          class="p-2.5 rounded-[14px] bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.1] hover:border-white/[0.2] cursor-pointer transition-all flex items-center space-x-2.5 backdrop-blur-md group"
+        >
+          <div class="w-8 h-8 rounded-[10px] bg-gradient-to-tr from-[#0071E3] via-[#0A84FF] to-[#64D2FF] flex items-center justify-center text-xs font-bold text-white shadow-sm border border-white/20 shrink-0 select-none group-hover:scale-105 transition-transform">
             {{ userInitials }}
           </div>
           <div class="min-w-0 flex-1">
@@ -172,7 +176,21 @@
               <span>{{ t.common.connected }}</span>
             </div>
           </div>
+          <svg class="w-3 h-3 text-[#7D8592] group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
         </div>
+
+        <!-- Sign In Button (When not logged in) -->
+        <router-link
+          v-else
+          to="/login"
+          class="p-3 rounded-[14px] bg-[#0A84FF]/10 border border-[#0A84FF]/20 hover:bg-[#0A84FF]/20 hover:border-[#0A84FF]/30 transition-all flex items-center space-x-3 text-[#0A84FF]"
+        >
+          <div class="w-8 h-8 rounded-[10px] bg-[#0A84FF] flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#0A84FF]/20">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+          </div>
+          <span class="text-xs font-bold">{{ t.home.signInButton }}</span>
+        </router-link>
+
 
         <!-- Language & Theme Switcher Bar -->
         <div class="flex items-center justify-between px-1 gap-1">
@@ -233,7 +251,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import TwoFactorModal from '../components/TwoFactorModal.vue'
 import AppDetailsModal from '../components/AppDetailsModal.vue'
 import ToastContainer from '../components/ToastContainer.vue'
@@ -248,6 +266,8 @@ import { useI18n } from '../i18n'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
 
 const route = useRoute()
+const router = useRouter()
+
 const authStore = useAuthStore()
 const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
