@@ -217,11 +217,15 @@ func (t *appstore) downloadFile(src, dst string, progress *progressbar.ProgressB
 	}
 	defer res.Body.Close()
 
-	totalSize := res.ContentLength + stat.Size()
+	var currentSize int64
+	if stat != nil {
+		currentSize = stat.Size()
+	}
+	totalSize := res.ContentLength + currentSize
 
 	if progress != nil {
 		progress.ChangeMax64(totalSize)
-		err = progress.Set64(stat.Size())
+		err = progress.Set64(currentSize)
 
 		if err != nil {
 			return fmt.Errorf("can not set bar progress: %w", err)
