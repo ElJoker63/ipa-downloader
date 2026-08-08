@@ -297,8 +297,9 @@
 
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useDownloadsStore } from '../stores/downloads'
+
 import { useSettingsStore } from '../stores/settings'
 import { useHistoryStore } from '../stores/history'
 import { useDeviceStore } from '../stores/device'

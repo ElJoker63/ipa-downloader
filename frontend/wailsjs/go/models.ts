@@ -190,6 +190,72 @@ export namespace models {
 	        this.searchLimit = source["searchLimit"];
 	    }
 	}
+	export class Firmware {
+	    version: string;
+	    buildid: string;
+	    sha1sum: string;
+	    md5sum: string;
+	    size: number;
+	    releasedate: string;
+	    uploaddate: string;
+	    url: string;
+	    signed: boolean;
+	    filename: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Firmware(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.version = source["version"];
+	        this.buildid = source["buildid"];
+	        this.sha1sum = source["sha1sum"];
+	        this.md5sum = source["md5sum"];
+	        this.size = source["size"];
+	        this.releasedate = source["releasedate"];
+	        this.uploaddate = source["uploaddate"];
+	        this.url = source["url"];
+	        this.signed = source["signed"];
+	        this.filename = source["filename"];
+	    }
+	}
+	export class AppleHardware {
+	    identifier: string;
+	    name: string;
+	    platform: string;
+	    firmwares?: Firmware[];
+	
+	    static createFrom(source: any = {}) {
+	        return new AppleHardware(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.identifier = source["identifier"];
+	        this.name = source["name"];
+	        this.platform = source["platform"];
+	        this.firmwares = this.convertValues(source["firmwares"], Firmware);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class DeviceInfo {
 	    udid: string;
 	    name: string;
@@ -376,6 +442,7 @@ export namespace models {
 		    return a;
 		}
 	}
+	
 	export class IPAInfo {
 	    bundleId: string;
 	    bundleName: string;

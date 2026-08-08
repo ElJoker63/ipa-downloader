@@ -25,6 +25,8 @@ export function ClearSearchHistory():Promise<void>;
 
 export function DeleteHistoryItem(arg1:string):Promise<void>;
 
+export function DownloadFirmware(arg1:string,arg2:models.Firmware):Promise<models.DownloadTask>;
+
 export function ExportLogs(arg1:string):Promise<string>;
 
 export function GetAccount():Promise<models.AccountProfile>;
@@ -35,11 +37,15 @@ export function GetAllDownloads():Promise<Array<models.DownloadTask>>;
 
 export function GetAppDetails(arg1:number,arg2:string,arg3:string):Promise<models.AppDetailsOutput>;
 
+export function GetAppleDevices():Promise<Array<models.AppleHardware>>;
+
 export function GetAuthStatus():Promise<string>;
 
 export function GetCacheSize():Promise<string>;
 
 export function GetConnectedDevices():Promise<Array<models.DeviceInfo>>;
+
+export function GetDeviceFirmwares(arg1:string):Promise<models.AppleHardware>;
 
 export function GetDownloadHistory():Promise<Array<models.DownloadTask>>;
 

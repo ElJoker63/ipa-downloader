@@ -164,8 +164,9 @@
 
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useHistoryStore } from '../stores/history'
+
 import { useDeviceStore } from '../stores/device'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'

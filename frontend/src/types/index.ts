@@ -45,9 +45,10 @@ export type DownloadStatus = 'queued' | 'downloading' | 'paused' | 'completed' |
 
 export interface DownloadTask {
   id: string
-  type: 'app' | 'firmware'
+  type: string
   url?: string
   appId: number
+
   bundleId: string
 
   appName: string

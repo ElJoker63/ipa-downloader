@@ -46,6 +46,10 @@ export function DeleteHistoryItem(arg1) {
   return window['go']['services']['AppService']['DeleteHistoryItem'](arg1);
 }
 
+export function DownloadFirmware(arg1, arg2) {
+  return window['go']['services']['AppService']['DownloadFirmware'](arg1, arg2);
+}
+
 export function ExportLogs(arg1) {
   return window['go']['services']['AppService']['ExportLogs'](arg1);
 }
@@ -66,6 +70,10 @@ export function GetAppDetails(arg1, arg2, arg3) {
   return window['go']['services']['AppService']['GetAppDetails'](arg1, arg2, arg3);
 }
 
+export function GetAppleDevices() {
+  return window['go']['services']['AppService']['GetAppleDevices']();
+}
+
 export function GetAuthStatus() {
   return window['go']['services']['AppService']['GetAuthStatus']();
 }
@@ -76,6 +84,10 @@ export function GetCacheSize() {
 
 export function GetConnectedDevices() {
   return window['go']['services']['AppService']['GetConnectedDevices']();
+}
+
+export function GetDeviceFirmwares(arg1) {
+  return window['go']['services']['AppService']['GetDeviceFirmwares'](arg1);
 }
 
 export function GetDownloadHistory() {
