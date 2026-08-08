@@ -54,6 +54,10 @@ export function DownloadFirmware(arg1, arg2) {
   return window['go']['services']['AppService']['DownloadFirmware'](arg1, arg2);
 }
 
+export function DummyProgress() {
+  return window['go']['services']['AppService']['DummyProgress']();
+}
+
 export function ExportLogs(arg1) {
   return window['go']['services']['AppService']['ExportLogs'](arg1);
 }

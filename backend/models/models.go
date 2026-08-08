@@ -223,10 +223,14 @@ type IPAInfo struct {
 
 // DeviceInstallProgress tracks IPA installation phases.
 type DeviceInstallProgress struct {
+	ID      string `json:"id"`
+	IPAName string `json:"ipaName"`
+	UDID    string `json:"udid"`
 	Phase   string `json:"phase"`   // "Preparing", "Copying", "Installing", "Verifying", "Complete", "Failed"
 	Percent int    `json:"percent"` // 0-100
 	Message string `json:"message"`
 }
+
 
 // UpdateInfo holds information about an available application update.
 type UpdateInfo struct {

@@ -8,10 +8,11 @@ export const useDeviceStore = defineStore('device', () => {
   const selectedUdid = ref<string>('')
   const installedApps = ref<InstalledApp[]>([])
   const isLoadingApps = ref(false)
-  const installProgress = ref<DeviceInstallProgress | null>(null)
+  const installTasks = ref<DeviceInstallProgress[]>([])
   const activeTab = ref<'user' | 'system'>('user')
   const isInstalling = ref(false)
   const installError = ref<string | null>(null)
+
 
   const selectedDevice = computed(() => {
     return devices.value.find((d) => d.udid === selectedUdid.value) || null
@@ -80,14 +81,11 @@ export const useDeviceStore = defineStore('device', () => {
 
     isInstalling.value = true
     installError.value = null
-    installProgress.value = { phase: 'Preparing', percent: 5, message: 'Initializing installation...' }
 
     try {
       await WailsService.installIPA(targetUdid, filePath)
-      // fetchApps() is now triggered by event device:install_complete
     } catch (err: any) {
       installError.value = err?.message || String(err)
-      installProgress.value = { phase: 'Failed', percent: 0, message: installError.value || 'Installation failed' }
       isInstalling.value = false
       throw err
     }
@@ -111,9 +109,9 @@ export const useDeviceStore = defineStore('device', () => {
 
   function closeInstallModal() {
     isInstalling.value = false
-    installProgress.value = null
     installError.value = null
   }
+
 
   async function uninstallApp(bundleId: string, udid?: string) {
     const targetUdid = udid || selectedUdid.value
@@ -154,9 +152,11 @@ export const useDeviceStore = defineStore('device', () => {
     })
 
     WailsService.onEvent('device:install_progress', (prog: DeviceInstallProgress) => {
-      installProgress.value = prog
-      if (prog.phase === 'Failed') {
-        installError.value = prog.message
+      const idx = installTasks.value.findIndex(t => t.id === prog.id)
+      if (idx !== -1) {
+        installTasks.value[idx] = prog
+      } else {
+        installTasks.value.unshift(prog)
       }
     })
 
@@ -164,15 +164,31 @@ export const useDeviceStore = defineStore('device', () => {
       if (data.udid === selectedUdid.value) {
         fetchApps()
       }
-      // If queue is empty, isInstalling is handled via logic or just hide after timeout
-      if (installProgress.value?.phase === 'Complete') {
-         setTimeout(() => {
-           if (installProgress.value?.phase === 'Complete') {
-             closeInstallModal()
-           }
-         }, 2000)
+
+      const idx = installTasks.value.findIndex(t => t.id === data.id)
+      if (idx !== -1) {
+        installTasks.value[idx].phase = 'Complete'
+        installTasks.value[idx].percent = 100
+        installTasks.value[idx].message = 'Installed successfully'
+
+        // Auto-remove completed tasks after 5 seconds
+        setTimeout(() => {
+          removeInstallTask(data.id)
+        }, 5000)
       }
     })
+
+    WailsService.onEvent('device:install_failed', (data: any) => {
+      const idx = installTasks.value.findIndex(t => t.id === data.id)
+      if (idx !== -1) {
+        installTasks.value[idx].phase = 'Failed'
+        installTasks.value[idx].message = data.error
+      }
+    })
+  }
+
+  function removeInstallTask(id: string) {
+    installTasks.value = installTasks.value.filter(t => t.id !== id)
   }
 
   return {
@@ -181,7 +197,7 @@ export const useDeviceStore = defineStore('device', () => {
     selectedDevice,
     installedApps,
     isLoadingApps,
-    installProgress,
+    installTasks,
     activeTab,
     isInstalling,
     installError,
@@ -194,6 +210,7 @@ export const useDeviceStore = defineStore('device', () => {
     installIPA,
     installMultipleIPAs,
     uninstallApp,
+    removeInstallTask,
     closeInstallModal,
     initListeners,
   }

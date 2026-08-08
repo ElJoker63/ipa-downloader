@@ -29,6 +29,8 @@ export function DeleteHistoryItem(arg1:string):Promise<void>;
 
 export function DownloadFirmware(arg1:string,arg2:models.Firmware):Promise<models.DownloadTask>;
 
+export function DummyProgress():Promise<models.DeviceInstallProgress>;
+
 export function ExportLogs(arg1:string):Promise<string>;
 
 export function GetAccount():Promise<models.AccountProfile>;

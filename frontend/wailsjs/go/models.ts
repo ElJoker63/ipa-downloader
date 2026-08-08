@@ -320,6 +320,28 @@ export namespace models {
 	        this.isConnected = source["isConnected"];
 	    }
 	}
+	export class DeviceInstallProgress {
+	    id: string;
+	    ipaName: string;
+	    udid: string;
+	    phase: string;
+	    percent: number;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DeviceInstallProgress(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.ipaName = source["ipaName"];
+	        this.udid = source["udid"];
+	        this.phase = source["phase"];
+	        this.percent = source["percent"];
+	        this.message = source["message"];
+	    }
+	}
 	export class DownloadTask {
 	    id: string;
 	    type: string;

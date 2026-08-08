@@ -37,9 +37,11 @@ type DeviceService interface {
 }
 
 type installTask struct {
+	id      string
 	udid    string
 	ipaPath string
 }
+
 
 type deviceService struct {
 	emitter events.Emitter
@@ -179,56 +181,59 @@ func (s *deviceService) processInstallQueue() {
 
 		if !exists {
 			s.emitter.EmitLog("ERROR", fmt.Sprintf("Queue: Device %s no longer connected", task.udid), "DeviceService")
+			s.emitInstallProgress(task.id, filepath.Base(task.ipaPath), task.udid, "Failed", 0, "Device disconnected")
 			continue
 		}
 
-		s.runActualInstall(dev, info, task.ipaPath)
+		s.runActualInstall(task.id, dev, info, task.ipaPath)
 	}
 }
 
-func (s *deviceService) runActualInstall(dev giDevice.Device, info *models.DeviceInfo, ipaPath string) {
-	s.emitter.EmitLog("INFO", fmt.Sprintf("Starting queued installation on %s: %s", info.Name, filepath.Base(ipaPath)), "DeviceService")
+func (s *deviceService) runActualInstall(id string, dev giDevice.Device, info *models.DeviceInfo, ipaPath string) {
+	ipaName := filepath.Base(ipaPath)
+	s.emitter.EmitLog("INFO", fmt.Sprintf("Starting queued installation on %s: %s", info.Name, ipaName), "DeviceService")
 
-	s.emitInstallProgress("Preparing", 10, fmt.Sprintf("[%s] Validating IPA and checking safety...", info.Name))
+	s.emitInstallProgress(id, ipaName, info.UDID, "Preparing", 10, fmt.Sprintf("[%s] Validating IPA and checking safety...", info.Name))
 	ipaInfo, err := s.ValidateIPA(ipaPath)
 	if err != nil {
-		s.emitInstallProgress("Failed", 0, err.Error())
+		s.emitInstallProgress(id, ipaName, info.UDID, "Failed", 0, err.Error())
 		return
 	}
 
 	// Technical Safety Checks
 	if info.BatteryLevel < 5 && !info.BatteryCharging {
 		errStr := "Battery too low (< 5%) for safe installation"
-		s.emitInstallProgress("Failed", 0, errStr)
+		s.emitInstallProgress(id, ipaName, info.UDID, "Failed", 0, errStr)
 		s.emitter.EmitLog("ERROR", fmt.Sprintf("[%s] %s", info.Name, errStr), "DeviceService")
-		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": errStr, "ipa": ipaPath, "udid": info.UDID})
+		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"id": id, "error": errStr, "ipa": ipaPath, "udid": info.UDID})
 		return
 	}
 
 	if info.StorageFree > 0 && info.StorageFree < ipaInfo.FileSizeBytes+ (100 * 1024 * 1024) { // Buffer of 100MB
 		errStr := fmt.Sprintf("Insufficient space. Required: %s, Available: %s", formatBytes(ipaInfo.FileSizeBytes), formatBytes(info.StorageFree))
-		s.emitInstallProgress("Failed", 0, errStr)
+		s.emitInstallProgress(id, ipaName, info.UDID, "Failed", 0, errStr)
 		s.emitter.EmitLog("ERROR", fmt.Sprintf("[%s] %s", info.Name, errStr), "DeviceService")
-		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": errStr, "ipa": ipaPath, "udid": info.UDID})
+		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"id": id, "error": errStr, "ipa": ipaPath, "udid": info.UDID})
 		return
 	}
 
 
-	s.emitInstallProgress("Copying", 30, fmt.Sprintf("[%s] Transferring %s...", info.Name, ipaInfo.BundleName))
+	s.emitInstallProgress(id, ipaName, info.UDID, "Copying", 30, fmt.Sprintf("[%s] Transferring %s...", info.Name, ipaInfo.BundleName))
 
 
 	err = dev.AppInstall(ipaPath)
 	if err != nil {
-		s.emitInstallProgress("Failed", 0, err.Error())
-		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": err.Error(), "ipa": ipaPath, "udid": info.UDID})
+		s.emitInstallProgress(id, ipaName, info.UDID, "Failed", 0, err.Error())
+		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"id": id, "error": err.Error(), "ipa": ipaPath, "udid": info.UDID})
 		s.emitter.EmitLog("ERROR", fmt.Sprintf("Failed to install %s on %s: %v", ipaInfo.BundleName, info.Name, err), "DeviceService")
 		return
 	}
 
-	s.emitInstallProgress("Complete", 100, fmt.Sprintf("[%s] Successfully installed %s", info.Name, ipaInfo.BundleName))
+	s.emitInstallProgress(id, ipaName, info.UDID, "Complete", 100, fmt.Sprintf("[%s] Successfully installed %s", info.Name, ipaInfo.BundleName))
 	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("App %s installed on %s", ipaInfo.BundleName, info.Name), "DeviceService")
-	s.emitter.Emit(events.EventDeviceInstallComplete, map[string]interface{}{"info": ipaInfo, "udid": info.UDID})
+	s.emitter.Emit(events.EventDeviceInstallComplete, map[string]interface{}{"id": id, "info": ipaInfo, "udid": info.UDID})
 }
+
 
 func (s *deviceService) GetConnectedDevices() ([]models.DeviceInfo, error) {
 	s.mu.RLock()
@@ -347,10 +352,16 @@ func (s *deviceService) QueueInstall(udid string, ipaPath string) error {
 		return fmt.Errorf("device %s not connected", udid)
 	}
 
-	s.installQueue <- installTask{udid: udid, ipaPath: ipaPath}
+	taskID := fmt.Sprintf("ins-%d", time.Now().UnixNano())
+	s.installQueue <- installTask{id: taskID, udid: udid, ipaPath: ipaPath}
+
+	// Emit initial queued status
+	s.emitInstallProgress(taskID, filepath.Base(ipaPath), udid, "Queued", 0, "Waiting in queue...")
+
 	s.emitter.EmitLog("INFO", fmt.Sprintf("Added to installation queue: %s", filepath.Base(ipaPath)), "DeviceService")
 	return nil
 }
+
 
 func (s *deviceService) UninstallApp(udid string, bundleID string) error {
 	s.mu.RLock()
@@ -724,14 +735,18 @@ func formatProductType(productType string) string {
 	return productType
 }
 
-func (s *deviceService) emitInstallProgress(phase string, percent int, message string) {
+func (s *deviceService) emitInstallProgress(id, ipaName, udid, phase string, percent int, message string) {
 	prog := models.DeviceInstallProgress{
+		ID:      id,
+		IPAName: ipaName,
+		UDID:    udid,
 		Phase:   phase,
 		Percent: percent,
 		Message: message,
 	}
 	s.emitter.Emit(events.EventDeviceInstallProgress, prog)
 }
+
 
 // Utility helper functions
 func getStringVal(m map[string]interface{}, key string) string {

@@ -197,10 +197,14 @@ export interface IPAInfo {
 }
 
 export interface DeviceInstallProgress {
+  id: string
+  ipaName: string
+  udid: string
   phase: 'Preparing' | 'Copying' | 'Installing' | 'Verifying' | 'Complete' | 'Failed' | string
   percent: number
   message: string
 }
+
 
 export interface Firmware {
   version: string

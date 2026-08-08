@@ -372,3 +372,8 @@ func (s *AppService) DownloadFirmware(deviceName string, fw models.Firmware) (*m
 	return s.downloadManager.QueueFirmwareDownload(deviceName, fw)
 }
 
+func (s *AppService) DummyProgress() models.DeviceInstallProgress {
+	return models.DeviceInstallProgress{}
+}
+
+

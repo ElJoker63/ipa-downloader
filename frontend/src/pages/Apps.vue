@@ -170,7 +170,68 @@
     </div>
 
 
+    <!-- Active Installations Queue Section (Professional List) -->
+    <div v-if="deviceStore.installTasks.length > 0" class="space-y-3">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">Deployment Queue</h2>
+        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">
+          {{ deviceStore.installTasks.length }} Task(s)
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        <div
+          v-for="task in deviceStore.installTasks"
+          :key="task.id"
+          class="glass-card p-4 rounded-2xl border border-white/[0.05] hover:border-white/10 transition-all flex flex-col space-y-3"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-[#0A84FF]">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-white truncate max-w-[280px]">{{ task.ipaName }}</div>
+                <div class="flex items-center space-x-2 text-[10px] text-[#8E8E93]">
+                  <span class="font-mono">{{ truncateUDID(task.udid) }}</span>
+                  <span>•</span>
+                  <span :class="phaseClass(task.phase)">{{ task.phase }}</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              @click="deviceStore.removeInstallTask(task.id)"
+              v-if="task.phase === 'Complete' || task.phase === 'Failed'"
+              class="p-2 rounded-xl hover:bg-white/10 text-[#7D8592] transition"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="space-y-1.5">
+            <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-500"
+                :class="task.phase === 'Failed' ? 'bg-red-500' : task.phase === 'Complete' ? 'bg-[#30D158]' : 'bg-[#0A84FF]'"
+                :style="{ width: `${task.percent}%` }"
+              ></div>
+            </div>
+            <div class="text-[10px] text-[#8E8E93] flex justify-between">
+              <span>{{ task.message }}</span>
+              <span class="font-mono font-bold text-white">{{ task.percent }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- Installed Apps Section (When Connected) -->
+
     <div v-if="deviceStore.isConnected" class="space-y-4">
       <!-- Search & Tab Filter Bar -->
       <div class="flex items-center justify-between gap-4">
@@ -257,82 +318,10 @@
       </div>
     </div>
 
-    <!-- Installation Progress Modal Overlay -->
-    <div
-      v-if="deviceStore.isInstalling || deviceStore.installProgress"
-      class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
-    >
-      <div class="w-full max-w-md p-6 rounded-2xl bg-[#171A21] border border-white/10 shadow-2xl space-y-4 relative">
-        <!-- Header -->
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-semibold text-white flex items-center space-x-2">
-            <svg
-              class="w-5 h-5"
-              :class="deviceStore.installError ? 'text-red-400' : deviceStore.installProgress?.phase === 'Complete' ? 'text-[#30D158]' : 'text-[#0A84FF]'"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path v-if="deviceStore.installError" stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              <path v-else-if="deviceStore.installProgress?.phase === 'Complete'" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              <path v-else stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            <span>
-              {{ deviceStore.installError ? 'Installation Failed' : deviceStore.installProgress?.phase === 'Complete' ? 'Installation Complete' : 'Processing Queue' }}
-            </span>
-          </h3>
+    <!-- Deployment Queue (REPLACED Modal with List above) -->
+  </div>
+</template>
 
-          <div class="flex items-center space-x-2">
-            <span class="text-xs font-mono font-bold" :class="deviceStore.installError ? 'text-red-400' : 'text-[#0A84FF]'">
-              {{ deviceStore.installProgress?.percent || 0 }}%
-            </span>
-
-            <!-- Close 'X' Button -->
-            <button
-              @click="deviceStore.closeInstallModal()"
-              class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#8E8E93] hover:text-white transition"
-              title="Close modal"
-            >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-          <div
-            class="h-full rounded-full transition-all duration-300"
-            :class="deviceStore.installError ? 'bg-red-500' : deviceStore.installProgress?.phase === 'Complete' ? 'bg-[#30D158]' : 'bg-[#0A84FF]'"
-            :style="{ width: `${deviceStore.installProgress?.percent || 0}%` }"
-          ></div>
-        </div>
-
-        <!-- Phase & Message -->
-        <div class="text-xs text-[#8E8E93] flex justify-between items-center">
-          <span class="font-medium text-white">{{ deviceStore.installProgress?.phase }}</span>
-          <span class="truncate ml-2 max-w-[240px]">{{ deviceStore.installProgress?.message }}</span>
-        </div>
-
-        <!-- Error Alert if Failed -->
-        <div v-if="deviceStore.installError" class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-300 space-y-1">
-          <div class="font-semibold text-red-400">Error details:</div>
-          <div>{{ deviceStore.installError }}</div>
-        </div>
-
-        <!-- Bottom Actions (Dismiss / Confirm Button) -->
-        <div v-if="deviceStore.installError || deviceStore.installProgress?.phase === 'Complete' || !deviceStore.isInstalling" class="pt-2 flex justify-end">
-          <button
-            @click="deviceStore.closeInstallModal()"
-            class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- Device Details Modal -->
     <div
@@ -505,7 +494,8 @@ import { useDeviceStore } from '../stores/device'
 import { useModalStore } from '../stores/modal'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
-import type { InstalledApp } from '../types'
+import type { InstalledApp, DeviceInstallProgress } from '../types'
+
 
 const deviceStore = useDeviceStore()
 const modalStore = useModalStore()
@@ -598,7 +588,19 @@ function truncateUDID(udid: string) {
   return `${udid.slice(0, 6)}...${udid.slice(-6)}`
 }
 
+function phaseClass(phase: string) {
+  switch (phase) {
+    case 'Complete': return 'text-[#30D158]'
+    case 'Failed': return 'text-red-500'
+    case 'Preparing':
+    case 'Installing':
+    case 'Copying': return 'text-[#0A84FF] animate-pulse'
+    default: return 'text-[#8E8E93]'
+  }
+}
+
 function formatAppSize(bytes: number) {
+
   if (bytes === undefined || bytes === null || bytes < 0) return '--'
   if (bytes === 0) return '0 MB'
 
