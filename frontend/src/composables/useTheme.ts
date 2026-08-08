@@ -11,13 +11,25 @@ export function useTheme() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
 
+  function applyTheme() {
+    if (isDark.value) {
+      document.documentElement.classList.add('dark')
+      document.documentElement.classList.remove('light')
+    } else {
+      document.documentElement.classList.add('light')
+      document.documentElement.classList.remove('dark')
+    }
+  }
+
   function toggleTheme() {
     const next = isDark.value ? 'light' : 'dark'
     settingsStore.updateSettings({ theme: next })
+    applyTheme()
   }
 
   function setTheme(theme: 'dark' | 'light' | 'system') {
     settingsStore.updateSettings({ theme })
+    applyTheme()
   }
 
   return {
@@ -25,5 +37,7 @@ export function useTheme() {
     isDark,
     toggleTheme,
     setTheme,
+    applyTheme,
   }
 }
+

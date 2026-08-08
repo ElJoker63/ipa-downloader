@@ -10,6 +10,7 @@ import { useFavoritesStore } from './stores/favorites'
 import { useLogsStore } from './stores/logs'
 import { useSettingsStore } from './stores/settings'
 import { useNotifications } from './composables/useNotifications'
+import { useTheme } from './composables/useTheme'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -26,6 +27,7 @@ const favoritesStore = useFavoritesStore()
 const logsStore = useLogsStore()
 const settingsStore = useSettingsStore()
 const { initListeners: initNotificationListeners } = useNotifications()
+const { applyTheme } = useTheme()
 
 authStore.initListeners()
 downloadsStore.initListeners()
@@ -34,5 +36,8 @@ logsStore.initListeners()
 initNotificationListeners()
 
 // Load initial settings and theme
-settingsStore.fetchSettings()
+settingsStore.fetchSettings().then(() => {
+  applyTheme()
+})
 authStore.checkAccount()
+
