@@ -27,24 +27,7 @@
   --status-info: #64D2FF;
 }
 
-/* Light Theme Overrides */
-html.light {
-  --bg-primary: #F5F5F7;
-  --bg-secondary: #FFFFFF;
-  --bg-surface: #E8E8ED;
-  --bg-card: rgba(255, 255, 255, 0.8);
-  --glass-bg: rgba(0, 0, 0, 0.04);
-  --glass-hover: rgba(0, 0, 0, 0.08);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-separator: rgba(0, 0, 0, 0.06);
 
-  --text-primary: #1D1D1F;
-  --text-secondary: #424245;
-  --text-muted: #86868B;
-
-  --brand-primary: #0071E3;
-  --brand-hover: #0077ED;
-}
 
 body {
   background-color: var(--bg-primary);

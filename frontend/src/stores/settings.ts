@@ -56,25 +56,10 @@ export const useSettingsStore = defineStore('settings', () => {
     return WailsService.exportLogs(path)
   }
 
-  function applyTheme(theme: string) {
+  function applyTheme(theme: string = 'dark') {
     const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-      root.classList.remove('light')
-    } else if (theme === 'light') {
-      root.classList.add('light')
-      root.classList.remove('dark')
-    } else {
-      // System
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      if (prefersDark) {
-        root.classList.add('dark')
-        root.classList.remove('light')
-      } else {
-        root.classList.add('light')
-        root.classList.remove('dark')
-      }
-    }
+    root.classList.add('dark')
+    root.classList.remove('light')
   }
 
   return {

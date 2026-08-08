@@ -152,14 +152,14 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
       </svg>
       <div class="text-sm font-medium text-white">{{ t.apps.dragDropText }}</div>
-      <div class="text-xs text-[#8E8E93]">{{ t.apps.orClickToSelect }}</div>
+      <div class="text-xs text-[#7D8592]">{{ t.apps.orClickToSelect }}</div>
     </div>
 
     <!-- Active Installations Queue Section -->
     <div v-if="deviceStore.installTasks.length > 0" class="space-y-3">
       <div class="flex items-center justify-between px-1">
         <h2 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">Deployment Queue</h2>
-        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">
+        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">>
           {{ deviceStore.installTasks.length }} Task(s)
         </span>
       </div>

@@ -4,31 +4,20 @@ import { useSettingsStore } from '../stores/settings'
 export function useTheme() {
   const settingsStore = useSettingsStore()
 
-  const currentTheme = computed(() => settingsStore.settings.theme)
-  const isDark = computed(() => {
-    if (settingsStore.settings.theme === 'dark') return true
-    if (settingsStore.settings.theme === 'light') return false
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  })
+  const currentTheme = computed(() => 'dark')
+  const isDark = computed(() => true)
 
   function applyTheme() {
-    if (isDark.value) {
-      document.documentElement.classList.add('dark')
-      document.documentElement.classList.remove('light')
-    } else {
-      document.documentElement.classList.add('light')
-      document.documentElement.classList.remove('dark')
-    }
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
   }
 
   function toggleTheme() {
-    const next = isDark.value ? 'light' : 'dark'
-    settingsStore.updateSettings({ theme: next })
-    applyTheme()
+    // Theme toggling is disabled, keeping dark mode only
   }
 
-  function setTheme(theme: 'dark' | 'light' | 'system') {
-    settingsStore.updateSettings({ theme })
+  function setTheme(theme: 'dark') {
+    settingsStore.updateSettings({ theme: 'dark' })
     applyTheme()
   }
 
@@ -40,4 +29,3 @@ export function useTheme() {
     applyTheme,
   }
 }
-

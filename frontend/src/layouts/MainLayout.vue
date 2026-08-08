@@ -29,7 +29,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <span class="flex-1">{{ t.nav.home }}</span>
-          <span v-if="authStore.isLoggedIn" class="w-1.5 h-1.5 rounded-full bg-[#30D158] shadow-[0_0_6px_rgba(48,209,88,0.8)]"></span>
+          <span v-if="authStore.isLoggedIn" class="w-1.5 h-1.5 rounded-full bg-[#30D158] shadow-[0_0_6px_rgba(48,209,88,0.4)]"></span>
         </router-link>
 
         <!-- Search -->
@@ -192,13 +192,13 @@
         </router-link>
 
 
-        <!-- Language & Theme Switcher Bar -->
-        <div class="flex items-center justify-between px-1 gap-1">
+        <!-- Language Switcher Bar -->
+        <div class="flex items-center justify-center px-1">
           <!-- Language Selector -->
-          <div class="flex items-center rounded-lg bg-white/[0.06] border border-white/[0.08] p-0.5">
+          <div class="flex items-center rounded-lg bg-white/[0.06] border border-white/[0.08] p-0.5 w-full">
             <button
               type="button"
-              class="px-2 py-0.5 text-[10px] font-semibold rounded transition"
+              class="flex-1 py-1 text-[10px] font-semibold rounded transition text-center"
               :class="currentLanguage === 'es' ? 'bg-[#0A84FF] text-white shadow-xs' : 'text-[#B8C0CC] hover:text-white'"
               @click="setLanguage('es')"
             >
@@ -206,28 +206,13 @@
             </button>
             <button
               type="button"
-              class="px-2 py-0.5 text-[10px] font-semibold rounded transition"
+              class="flex-1 py-1 text-[10px] font-semibold rounded transition text-center"
               :class="currentLanguage === 'en' ? 'bg-[#0A84FF] text-white shadow-xs' : 'text-[#B8C0CC] hover:text-white'"
               @click="setLanguage('en')"
             >
               EN
             </button>
           </div>
-
-          <!-- Theme Toggle Button with Clean SVG Icons -->
-          <button
-            type="button"
-            class="text-xs font-medium text-[#B8C0CC] hover:text-white flex items-center space-x-1.5 py-1 px-2.5 rounded-lg hover:bg-white/[0.06] transition"
-            @click="toggleTheme"
-          >
-            <svg v-if="isDark" class="w-3.5 h-3.5 text-[#FFD60A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-            <svg v-else class="w-3.5 h-3.5 text-[#FFD60A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <span class="text-[10px] font-semibold">{{ isDark ? t.common.dark : t.common.light }}</span>
-          </button>
         </div>
       </div>
     </aside>
