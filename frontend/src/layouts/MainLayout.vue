@@ -227,6 +227,7 @@
     <TwoFactorModal />
     <AppDetailsModal />
     <ToastContainer />
+    <GlobalModal />
   </div>
 </template>
 
@@ -236,6 +237,8 @@ import { useRoute } from 'vue-router'
 import TwoFactorModal from '../components/TwoFactorModal.vue'
 import AppDetailsModal from '../components/AppDetailsModal.vue'
 import ToastContainer from '../components/ToastContainer.vue'
+import GlobalModal from '../components/GlobalModal.vue'
+
 import { useAuthStore } from '../stores/auth'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'

@@ -182,17 +182,19 @@
 import { ref, onMounted } from 'vue'
 import { useHistoryStore } from '../stores/history'
 import { WailsService } from '../services/wails'
+import { useModalStore } from '../stores/modal'
 import { useDeviceStore } from '../stores/device'
-
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 import { useRouter } from 'vue-router'
 
 const historyStore = useHistoryStore()
 const deviceStore = useDeviceStore()
+const modalStore = useModalStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 const router = useRouter()
+
 
 const ipaToInstall = ref<string | null>(null)
 
@@ -227,15 +229,21 @@ function revealInExplorer(path: string) {
 }
 
 async function handleDeleteFile(path: string) {
-  if (confirm(t.value.common.confirm + ': ' + t.value.history.deleteFile + '?')) {
-    try {
-      await WailsService.deleteFile(path)
-      showToast('File Deleted', path, 'success')
-    } catch (err: any) {
-      showToast('Deletion Failed', err.message || err, 'error')
-    }
-  }
+  modalStore.confirm(
+    t.value.common.confirm,
+    t.value.history.deleteFile + '?',
+    async () => {
+      try {
+        await WailsService.deleteFile(path)
+        showToast('File Deleted', path, 'success')
+      } catch (err: any) {
+        showToast('Deletion Failed', err.message || err, 'error')
+      }
+    },
+    t.value.common.delete
+  )
 }
+
 
 
 async function copyPath(path: string) {
@@ -253,9 +261,17 @@ async function deleteItem(id: string) {
 }
 
 async function clearHistory() {
-  await historyStore.clearHistory()
-  showToast(t.value.history.clearedTitle, t.value.history.clearedDesc, 'info')
+  modalStore.confirm(
+    t.value.common.confirm,
+    t.value.history.clearHistory + '?',
+    async () => {
+      await historyStore.clearHistory()
+      showToast(t.value.history.clearedTitle, t.value.history.clearedDesc, 'info')
+    },
+    t.value.common.clear
+  )
 }
+
 
 function statusBadgeClass(status: string) {
   switch (status) {

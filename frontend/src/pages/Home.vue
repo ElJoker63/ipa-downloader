@@ -250,13 +250,16 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'
+import { useModalStore } from '../stores/modal'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const authStore = useAuthStore()
 const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
+const modalStore = useModalStore()
 const { t } = useI18n()
+
 const { showToast } = useNotifications()
 
 const email = ref('')
@@ -299,7 +302,15 @@ async function handleLogin() {
 }
 
 async function logout() {
-  await authStore.logout()
-  showToast('Signed Out', 'Your Apple Storefront session has been revoked', 'info')
+  modalStore.confirm(
+    t.value.common.confirm,
+    t.value.home.signOut + '?',
+    async () => {
+      await authStore.logout()
+      showToast('Signed Out', 'Your Apple Storefront session has been revoked', 'info')
+    },
+    t.value.home.signOut
+  )
 }
+
 </script>

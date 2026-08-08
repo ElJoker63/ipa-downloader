@@ -316,7 +316,7 @@ import { ref, onMounted } from 'vue'
 import { useDownloadsStore } from '../stores/downloads'
 import { WailsService } from '../services/wails'
 import { useSettingsStore } from '../stores/settings'
-
+import { useModalStore } from '../stores/modal'
 import { useHistoryStore } from '../stores/history'
 import { useDeviceStore } from '../stores/device'
 import { useI18n } from '../i18n'
@@ -327,9 +327,11 @@ const downloadsStore = useDownloadsStore()
 const settingsStore = useSettingsStore()
 const historyStore = useHistoryStore()
 const deviceStore = useDeviceStore()
+const modalStore = useModalStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 const router = useRouter()
+
 
 const ipaToInstall = ref<string | null>(null)
 
@@ -370,15 +372,21 @@ function revealInExplorer(path: string) {
 }
 
 async function handleDeleteFile(path: string) {
-  if (confirm(t.value.common.confirm + ': ' + t.value.downloads.deleteFile + '?')) {
-    try {
-      await WailsService.deleteFile(path)
-      showToast('File Deleted', path, 'success')
-    } catch (err: any) {
-      showToast('Deletion Failed', err.message || err, 'error')
-    }
-  }
+  modalStore.confirm(
+    t.value.common.confirm,
+    t.value.downloads.deleteFile + '?',
+    async () => {
+      try {
+        await WailsService.deleteFile(path)
+        showToast('File Deleted', path, 'success')
+      } catch (err: any) {
+        showToast('Deletion Failed', err.message || err, 'error')
+      }
+    },
+    t.value.common.delete
+  )
 }
+
 
 
 async function copyErrorText(errText: string) {
