@@ -1,183 +1,147 @@
-# IPATool Desktop & CLI
+# IPA Downloader
 
-[![Release](https://img.shields.io/github/release/majd/ipatool.svg?label=Release)](https://GitHub.com/majd/ipatool/releases/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/majd/ipatool/blob/main/LICENSE)
+IPA Downloader is a cross-platform desktop application and command-line suite designed to search, inspect, and download signed `.ipa` packages directly from Apple's App Store with FairPlay SINF DRM signature replication.
 
-`ipatool` is a modern cross-platform desktop application and command line suite that allows you to search for iOS and tvOS apps on the [App Store](https://apps.apple.com) and download encrypted copies of the app package (`.ipa` files) with FairPlay signature replication.
+## Overview
+
+The project provides both a modern desktop graphical user interface and a full-featured CLI tool sharing a unified backend engine written in Go.
+
+### Core Capabilities
+
+- **Direct App Store Integration**: Authenticate with Apple ID (including 2FA verification) to acquire free licenses and download original encrypted `.ipa` binaries.
+- **FairPlay DRM SINF Replication**: Automatically replicates and injects FairPlay DRM signatures into downloaded packages for sideloading and analysis.
+- **Search and Version Inspection**: Real-time App Store search across iOS, iPadOS, and tvOS with high-resolution artwork, screenshot lightboxes, and historical build listings.
+- **Concurrent Transfer Queue**: Chunked streaming downloads with live speed tracking, ETA calculations, pause/resume controls, and retry handling.
+- **Multi-Language Support**: Complete interface localization in English and Spanish (Español).
+- **Offline Persistence**: Embedded pure-Go SQLite storage for favorites, transfer queues, search history, and settings without external database dependencies.
+- **Diagnostic Logging**: Live streaming logs with severity filtering (INFO, SUCCESS, WARN, ERROR) and one-click file export.
+- **CLI Compatibility**: Full command-line interface preserving backward compatibility with scripts and automated workflows.
 
 ---
 
-## Features
+## Tech Stack
 
-- 🖥️ **Modern Desktop GUI**: Built with Wails v2, Vue 3, TypeScript, TailwindCSS, and Pinia.
-- 🎨 **Dark & Light Themes**: Sleek glassmorphism interface with automatic system preference detection.
-- 🔐 **Direct Apple ID Authentication**: Native 2FA modal verification with encrypted local keychain storage.
-- 🔍 **Live Search & Metadata**: Search iOS, iPadOS, and tvOS apps with high-res artwork, screenshots gallery, and version history.
-- ⬇️ **Concurrent Download Manager**: Chunked streaming, live speed & ETA calculations, pause/resume, and auto-license acquisition.
-- ⭐ **Local Favorites & History**: Instant local bookmarks, search history, and download history powered by pure-Go SQLite.
-- 📄 **Real-Time Logs**: Streaming diagnostic log viewer with color-coded severity levels and file export.
-- 💻 **Backward-Compatible CLI**: Full command line tool preserved sharing the exact same backend services.
+### Backend (Go)
+- **Framework**: Wails v2 for native desktop window management and Go-to-TypeScript runtime bindings.
+- **App Store Engine**: Custom iTunes Storefront and GrandSlam protocol implementations.
+- **Storage**: Zero-CGO SQLite driver (`modernc.org/sqlite`) for local persistence.
+- **Security**: OS Keychain integration via `github.com/byteness/keyring` with persistent cookie jar.
 
-## Installation
+### Frontend (TypeScript / Vue 3)
+- **Framework**: Vue 3 (Composition API / `<script setup>`).
+- **State Management**: Pinia stores for authentication, downloads queue, favorites, history, settings, and logs.
+- **Styling**: TailwindCSS with Apple / visionOS glassmorphism design tokens and San Francisco (SF Pro) typography.
+- **Routing**: Vue Router 4.
 
-### Manual
+---
 
-You can grab the latest version of `ipatool` from [GitHub releases](https://github.com/majd/ipatool/releases).
+## Building from Source
 
-### Package Manager (macOS)
+### Prerequisites
 
-You can install `ipatool` using [Homebrew](https://brew.sh).
+- **Go**: Version 1.21 or higher
+- **Node.js**: Version 18 or higher (with npm)
+- **Wails CLI** (optional for live development):
+  ```shell
+  go install github.com/wailsapp/wails/v2/cmd/wails@latest
+  ```
 
-```shell
-$ brew install ipatool
-```
+### Build Desktop Application
 
-## Usage
-
-To authenticate with the App Store, use the `auth` command.
-
-```
-Authenticate with the App Store
-
-Usage:
-  ipatool auth [command]
-
-Available Commands:
-  info        Show current account info
-  login       Login to the App Store
-  revoke      Revoke your App Store credentials
-
-Flags:
-  -h, --help   help for auth
-
-Global Flags:
-      --format format     sets output format for command; can be 'text', 'json' (default text)
-      --non-interactive   run in non-interactive session
-      --verbose           enables verbose logs
-
-Use "ipatool auth [command] --help" for more information about a command.
-```
-
-To search for apps on the App Store, use the `search` command.
-
-```
-Search for iOS and tvOS apps available on the App Store
-
-Usage:
-  ipatool search <term> [flags]
-
-Flags:
-  -h, --help              help for search
-  -l, --limit int         maximum amount of search results to retrieve (default 5)
-      --platform string   Platform to search: iphone, ipad, or appletv
-
-Global Flags:
-      --format format     sets output format for command; can be 'text', 'json' (default text)
-      --non-interactive   run in non-interactive session
-      --verbose           enables verbose logs
-```
-
-To obtain a license for an app, use the `purchase` command.
-
-```
-Obtain a license for the app from the App Store
-
-Usage:
-  ipatool purchase [flags]
-
-Flags:
-  -b, --bundle-identifier string   Bundle identifier of the target iOS app (required)
-  -h, --help                       help for purchase
-
-Global Flags:
-      --format format     sets output format for command; can be 'text', 'json' (default text)
-      --non-interactive   run in non-interactive session
-      --verbose           enables verbose logs
-```
-
-To obtain a list of availble app versions to download, use the `list-versions` command.
-
-```
-List the available versions of an iOS app
-
-Usage:
-  ipatool list-versions [flags]
-
-Flags:
-  -i, --app-id int                 ID of the target iOS app (required)
-  -b, --bundle-identifier string   The bundle identifier of the target iOS app (overrides the app ID)
-  -h, --help                       help for list-versions
-
-Global Flags:
-      --format format                sets output format for command; can be 'text', 'json' (default text)
-      --keychain-passphrase string   passphrase for unlocking keychain
-      --non-interactive              run in non-interactive session
-      --verbose                      enables verbose logs
-```
-
-To download a copy of the ipa file, use the `download` command.
-
-```
-Download (encrypted) iOS and tvOS app packages from the App Store
-
-Usage:
-  ipatool download [flags]
-
-Flags:
-  -i, --app-id int                   ID of the target iOS app (required)
-  -b, --bundle-identifier string     The bundle identifier of the target iOS app (overrides the app ID)
-      --external-version-id string   External version identifier of the target iOS app (defaults to latest version when not specified)
-  -h, --help                         help for download
-  -o, --output string                The destination path of the downloaded app package
-      --platform string              Platform to download for: iphone, ipad, or appletv
-      --purchase                     Obtain a license for the app if needed
-
-Global Flags:
-      --format format                sets output format for command; can be 'text', 'json' (default text)
-      --keychain-passphrase string   passphrase for unlocking keychain
-      --non-interactive              run in non-interactive session
-      --verbose                      enables verbose logs
-```
-
-To resolve an external version identifier, returned by the `list-versions` command, use the `get-version-metadata` command.
-
-```
-Retrieves the metadata for a specific version of an app
-
-Usage:
-  ipatool get-version-metadata [flags]
-
-Flags:
-  -i, --app-id int                   ID of the target iOS app (required)
-  -b, --bundle-identifier string     The bundle identifier of the target iOS app (overrides the app ID)
-      --external-version-id string   External version identifier of the target iOS app (required)
-  -h, --help                         help for get-version-metadata
-
-Global Flags:
-      --format format                sets output format for command; can be 'text', 'json' (default text)
-      --keychain-passphrase string   passphrase for unlocking keychain
-      --non-interactive              run in non-interactive session
-      --verbose                      enables verbose logs
-```
-
-**Note:** the tool runs in interactive mode by default. Use the `--non-interactive` flag
-if running in an automated environment.
-
-## Compiling
-
-The tool can be compiled using the Go toolchain.
+To compile the native desktop executable:
 
 ```shell
-$ go build -o ipatool
+# Build frontend assets
+cd frontend
+npm install
+npm run build
+cd ..
+
+# Compile desktop binary
+go build -o ipatool-desktop.exe .
 ```
 
-Unit tests can be executed with the following commands.
+### Build CLI Tool
+
+To compile the command-line binary:
 
 ```shell
-$ go generate github.com/majd/ipatool/...
-$ go test -v github.com/majd/ipatool/...
+go build -o ipatool.exe main.go
 ```
+
+### Development Mode
+
+Run live development with hot reload:
+
+```shell
+wails dev
+```
+
+---
+
+## CLI Reference
+
+### Authentication
+
+```shell
+# Authenticate with Apple ID
+ipatool auth login --email "name@icloud.com" --password "secret"
+
+# Check current authentication status
+ipatool auth info
+
+# Revoke credentials
+ipatool auth revoke
+```
+
+### Search
+
+```shell
+# Search for apps by name or bundle ID
+ipatool search "Telegram" --limit 10 --platform iphone
+```
+
+### License Purchase
+
+```shell
+# Acquire a license for a free application
+ipatool purchase --bundle-identifier "ph.telegra.Telegraph"
+```
+
+### Version Listing
+
+```shell
+# List all historical version build identifiers available from Apple
+ipatool list-versions --bundle-identifier "ph.telegra.Telegraph"
+```
+
+### Download
+
+```shell
+# Download latest version
+ipatool download --bundle-identifier "ph.telegra.Telegraph" --output "./Telegram.ipa"
+
+# Download a specific historical build
+ipatool download --bundle-identifier "ph.telegra.Telegraph" --external-version-id "854000123" --output "./Telegram_v10.ipa"
+```
+
+---
+
+## Testing
+
+Run unit tests and verification across packages:
+
+```shell
+# Run Go unit tests
+go test ./...
+
+# Verify frontend types and production bundle
+cd frontend
+npm run build
+```
+
+---
 
 ## License
 
-IPATool is released under the [MIT license](https://github.com/majd/ipatool/blob/main/LICENSE).
+This project is released under the [MIT License](LICENSE).
