@@ -170,6 +170,16 @@
                 </span>
               </div>
               <p class="text-xs text-slate-400 truncate font-mono">{{ task.destinationPath }}</p>
+              <div v-if="task.error" class="mt-1 p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 text-xs text-rose-300 font-mono break-all flex items-start justify-between gap-2">
+                <span>⚠️ {{ task.error }}</span>
+                <button
+                  type="button"
+                  class="text-[10px] uppercase font-bold text-rose-400 hover:text-white underline shrink-0"
+                  @click="copyErrorText(task.error)"
+                >
+                  Copy Error
+                </button>
+              </div>
             </div>
           </div>
 
@@ -177,7 +187,7 @@
             <button
               v-if="task.status === 'failed'"
               type="button"
-              class="btn-secondary text-xs px-3 py-1.5 text-blue-400"
+              class="btn-primary text-xs px-3 py-1.5"
               @click="downloadsStore.retryDownload(task.id)"
             >
               Retry
@@ -220,6 +230,15 @@ async function browseFolder() {
 
 function revealInExplorer(path: string) {
   historyStore.revealInExplorer(path)
+}
+
+async function copyErrorText(errText: string) {
+  try {
+    await navigator.clipboard.writeText(errText)
+    showToast('Error Copied', 'Error details copied to clipboard', 'info')
+  } catch {
+    showToast('Copy Failed', errText, 'error')
+  }
 }
 
 function formatBytes(bytes: number): string {

@@ -2,10 +2,12 @@ package events
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/majd/ipatool/v2/backend/models"
+	"github.com/majd/ipatool/v2/backend/storage"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -26,9 +28,10 @@ const (
 	EventFavoritesUpdated  EventType = "favorites:updated"
 )
 
-// Emitter defines the interface for publishing events to the frontend.
+// Emitter defines the interface for publishing events to the frontend and persisting logs.
 type Emitter interface {
 	SetContext(ctx context.Context)
+	SetStorage(store storage.Storage)
 	Emit(eventType EventType, data ...interface{})
 	EmitLog(level, message, context string)
 	EmitDownloadProgress(progress models.DownloadTask)
@@ -36,8 +39,9 @@ type Emitter interface {
 }
 
 type eventEmitter struct {
-	ctx context.Context
-	mu  sync.RWMutex
+	ctx     context.Context
+	storage storage.Storage
+	mu      sync.RWMutex
 }
 
 // NewEmitter creates a new event dispatcher.
@@ -51,6 +55,12 @@ func (e *eventEmitter) SetContext(ctx context.Context) {
 	e.ctx = ctx
 }
 
+func (e *eventEmitter) SetStorage(store storage.Storage) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.storage = store
+}
+
 func (e *eventEmitter) Emit(eventType EventType, data ...interface{}) {
 	e.mu.RLock()
 	ctx := e.ctx
@@ -61,14 +71,34 @@ func (e *eventEmitter) Emit(eventType EventType, data ...interface{}) {
 	}
 }
 
-func (e *eventEmitter) EmitLog(level, message, context string) {
+func (e *eventEmitter) EmitLog(level, message, contextStr string) {
+	e.mu.RLock()
+	ctx := e.ctx
+	store := e.storage
+	e.mu.RUnlock()
+
+	now := time.Now()
 	entry := models.LogEntry{
-		Timestamp: time.Now(),
+		Timestamp: now,
 		Level:     level,
 		Message:   message,
-		Context:   context,
+		Context:   contextStr,
 	}
-	e.Emit(EventLogEntry, entry)
+
+	// 1. Save to SQLite database so history is preserved
+	if store != nil {
+		if saved, err := store.AddLog(level, message, contextStr); err == nil && saved != nil {
+			entry.ID = saved.ID
+		}
+	}
+
+	// 2. Console debug output
+	fmt.Printf("[%s] [%s] [%s] %s\n", now.Format("15:04:05.000"), level, contextStr, message)
+
+	// 3. Emit real-time event to Wails frontend
+	if ctx != nil {
+		runtime.EventsEmit(ctx, string(EventLogEntry), entry)
+	}
 }
 
 func (e *eventEmitter) EmitDownloadProgress(task models.DownloadTask) {

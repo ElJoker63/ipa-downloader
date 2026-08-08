@@ -35,6 +35,7 @@ func NewAppService(dataDir string) (*AppService, error) {
 	if err != nil {
 		return nil, err
 	}
+	emitter.SetStorage(store)
 
 	settings, _ := store.GetSettings()
 	passphrase := ""
