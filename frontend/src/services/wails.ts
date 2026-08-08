@@ -60,15 +60,23 @@ export const WailsService = {
   },
 
   // Search
-  async searchApps(term: string, platform: string = 'ios', limit: number = 15): Promise<AppMetadata[]> {
+  async searchApps(
+    term: string,
+    platform: string = 'ios',
+    country: string = 'US',
+    category: string = '0',
+    sortBy: string = 'relevance',
+    limit: number = 15
+  ): Promise<AppMetadata[]> {
     try {
-      const results = await AppService.SearchApps(term, platform, limit)
+      const results = await AppService.SearchApps(term, platform, country, category, sortBy, limit)
       return results || []
     } catch (err) {
       console.error('searchApps error:', err)
       return []
     }
   },
+
 
   async lookupApp(bundleId: string, platform: string = 'ios'): Promise<AppMetadata> {
     return await AppService.LookupApp(bundleId, platform)

@@ -2,8 +2,10 @@ package appstore
 
 import (
 	"archive/zip"
+	"context"
 	"errors"
 	"fmt"
+
 	"io"
 	"os"
 	"strconv"
@@ -21,8 +23,10 @@ var (
 type ProgressCallback func(downloadedBytes int64, totalBytes int64)
 
 type DownloadInput struct {
+	Context           context.Context
 	Account           Account
 	App               App
+
 	OutputPath        string
 	Progress          *progressbar.ProgressBar
 	ProgressCallback  ProgressCallback
@@ -97,10 +101,11 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 
 	tmpPath := fmt.Sprintf("%s.tmp", destination)
 
-	err = t.downloadFile(item.URL, tmpPath, input.Progress, input.ProgressCallback)
+	err = t.downloadFile(input.Context, item.URL, tmpPath, input.Progress, input.ProgressCallback)
 	if err != nil {
 		return DownloadOutput{}, fmt.Errorf("failed to download file: %w", err)
 	}
+
 
 	err = t.applyPatches(item, input.Account, tmpPath, destination)
 	if err != nil {
@@ -189,13 +194,18 @@ type downloadResult struct {
 	Items           []downloadItemResult `plist:"songList,omitempty"`
 }
 
-func (t *appstore) downloadFile(src, dst string, progress *progressbar.ProgressBar, callback ProgressCallback) error {
+func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *progressbar.ProgressBar, callback ProgressCallback) error {
 	req, err := t.httpClient.NewRequest("GET", src, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
 	file, err := t.os.OpenFile(dst, os.O_CREATE|os.O_RDWR, 0644)
+
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
@@ -248,7 +258,16 @@ func (t *appstore) downloadFile(src, dst string, progress *progressbar.ProgressB
 
 		buf := make([]byte, 64*1024)
 		for {
+			if ctx != nil {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+				}
+			}
+
 			n, rErr := res.Body.Read(buf)
+
 			if n > 0 {
 				_, wErr := file.Write(buf[:n])
 				if wErr != nil {

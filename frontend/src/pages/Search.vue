@@ -66,7 +66,66 @@
         </div>
       </div>
 
+      <!-- Professional Filter Bar -->
+      <div class="flex flex-wrap items-center gap-3 py-1">
+        <!-- Region Selector -->
+        <GlassDropdown
+          v-model="searchStore.country"
+          :options="countries"
+          @change="searchStore.search(searchTerm)"
+          class="min-w-[160px]"
+        >
+          <template #icon="{ selected }">
+            <span v-if="selected" class="text-sm leading-none">{{ selected.flag }}</span>
+          </template>
+        </GlassDropdown>
+
+        <!-- Category Dropdown -->
+        <GlassDropdown
+          v-model="searchStore.category"
+          :options="categories"
+          @change="searchStore.search(searchTerm)"
+          class="min-w-[150px]"
+        >
+          <template #icon>
+            <svg class="w-3.5 h-3.5 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+          </template>
+        </GlassDropdown>
+
+        <!-- Sort Dropdown -->
+        <GlassDropdown
+          v-model="searchStore.sortBy"
+          :options="sortOptions"
+          @change="searchStore.search(searchTerm)"
+          class="min-w-[130px]"
+        >
+          <template #icon>
+            <svg class="w-3.5 h-3.5 text-[#5E5CE6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+            </svg>
+          </template>
+        </GlassDropdown>
+
+        <div class="h-4 w-px bg-white/10 mx-1"></div>
+
+        <!-- Result Limit -->
+        <div class="flex items-center space-x-2 text-[10px] font-bold text-[#7D8592] uppercase tracking-wider">
+          <span>Show:</span>
+          <GlassDropdown
+            v-model="searchStore.limit"
+            :options="limitOptions"
+            @change="searchStore.search(searchTerm)"
+            class="min-w-[110px]"
+          />
+        </div>
+      </div>
+
+
+
       <!-- Recent Searches Chips -->
+
       <div v-if="searchStore.searchHistory.length > 0 && searchStore.results.length === 0 && !searchStore.isLoading" class="flex flex-wrap items-center gap-2 pt-1">
         <span class="text-xs text-[#7D8592] font-medium">{{ t.search.recentSearches }}</span>
         <button
@@ -167,13 +226,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useSearchStore } from '../stores/search'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
+import GlassDropdown from '../components/GlassDropdown.vue'
 import type { AppMetadata } from '../types'
+
 
 const searchStore = useSearchStore()
 const downloadsStore = useDownloadsStore()
@@ -183,13 +244,64 @@ const { showToast } = useNotifications()
 
 const searchTerm = ref('')
 
+const countries = [
+  { id: 'US', name: 'United States', flag: '🇺🇸' },
+  { id: 'ES', name: 'Spain', flag: '🇪🇸' },
+  { id: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+  { id: 'MX', name: 'Mexico', flag: '🇲🇽' },
+  { id: 'AR', name: 'Argentina', flag: '🇦🇷' },
+  { id: 'CO', name: 'Colombia', flag: '🇨🇴' },
+  { id: 'CL', name: 'Chile', flag: '🇨🇱' },
+  { id: 'BR', name: 'Brazil', flag: '🇧🇷' },
+  { id: 'JP', name: 'Japan', flag: '🇯🇵' },
+  { id: 'CN', name: 'China', flag: '🇨🇳' },
+]
+
+const categories = [
+  { id: '0', name: 'All Categories' },
+  { id: '6014', name: 'Games' },
+  { id: '6002', name: 'Utilities' },
+  { id: '6007', name: 'Productivity' },
+  { id: '6017', name: 'Education' },
+  { id: '6016', name: 'Entertainment' },
+  { id: '6005', name: 'Social' },
+  { id: '6015', name: 'Finance' },
+  { id: '6013', name: 'Health' },
+  { id: '6012', name: 'Lifestyle' },
+  { id: '6011', name: 'Music' },
+  { id: '6008', name: 'Photo & Video' },
+  { id: '6000', name: 'Business' },
+]
+
+const sortOptions = [
+  { id: 'relevance', name: 'Relevance' },
+  { id: 'popular', name: 'Popularity' },
+  { id: 'rating', name: 'User Rating' },
+  { id: 'recent', name: 'Release Date' },
+]
+
+const limitOptions = [
+  { id: 15, name: '15 results' },
+  { id: 30, name: '30 results' },
+  { id: 50, name: '50 results' },
+]
+
+
+
+const searchTerm = ref('')
+let searchTimeout: any = null
+
 onMounted(async () => {
   await searchStore.fetchHistory()
 })
 
 function onSearchInput() {
-  searchStore.search(searchTerm.value)
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    searchStore.search(searchTerm.value)
+  }, 400)
 }
+
 
 function selectRecent(term: string) {
   searchTerm.value = term

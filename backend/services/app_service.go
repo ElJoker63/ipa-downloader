@@ -197,9 +197,10 @@ func (s *AppService) GetAuthStatus() string {
 
 // ----------------- Search & Details Bindings -----------------
 
-func (s *AppService) SearchApps(term string, platform string, limit int) ([]models.AppMetadata, error) {
-	return s.searchService.Search(term, platform, limit)
+func (s *AppService) SearchApps(term string, platform string, country string, category string, sortBy string, limit int) ([]models.AppMetadata, error) {
+	return s.searchService.Search(term, platform, country, category, sortBy, limit)
 }
+
 
 func (s *AppService) LookupApp(bundleID string, platform string) (*models.AppMetadata, error) {
 	return s.searchService.Lookup(bundleID, platform)

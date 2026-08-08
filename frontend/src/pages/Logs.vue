@@ -13,19 +13,14 @@
 
       <div class="flex flex-wrap items-center gap-2">
         <!-- Severity Filter -->
-        <select
+        <GlassDropdown
           v-model="logsStore.filterLevel"
-          class="glass-input px-3 py-1.5 rounded-[12px] text-xs font-semibold outline-none cursor-pointer"
-        >
-          <option value="ALL">{{ t.logs.allLevels }}</option>
-          <option value="INFO">INFO</option>
-          <option value="SUCCESS">SUCCESS</option>
-          <option value="WARN">WARN</option>
-          <option value="ERROR">ERROR</option>
-          <option value="DEBUG">DEBUG</option>
-        </select>
+          :options="logLevels"
+          class="min-w-[120px]"
+        />
 
         <!-- Auto-scroll Toggle -->
+
         <button
           type="button"
           class="btn-secondary text-xs px-3 py-1.5 flex items-center space-x-1.5"
@@ -90,15 +85,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { useLogsStore } from '../stores/logs'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
+import GlassDropdown from '../components/GlassDropdown.vue'
 
 const logsStore = useLogsStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 const logContainerRef = ref<HTMLElement | null>(null)
+
+const logLevels = computed(() => [
+  { id: 'ALL', name: t.value.logs.allLevels },
+  { id: 'INFO', name: 'INFO' },
+  { id: 'SUCCESS', name: 'SUCCESS' },
+  { id: 'WARN', name: 'WARN' },
+  { id: 'ERROR', name: 'ERROR' },
+  { id: 'DEBUG', name: 'DEBUG' },
+])
+
 
 onMounted(() => {
   logsStore.fetchLogs()

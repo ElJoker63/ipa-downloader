@@ -6,6 +6,10 @@ import { WailsService } from '../services/wails'
 export const useSearchStore = defineStore('search', () => {
   const query = ref('')
   const platform = ref<Platform>('ios')
+  const country = ref('US')
+  const category = ref('0')
+  const sortBy = ref('relevance')
+
   const results = ref<AppMetadata[]>([])
   const isLoading = ref(false)
   const errorMessage = ref<string | null>(null)
@@ -17,7 +21,13 @@ export const useSearchStore = defineStore('search', () => {
   const searchHistory = ref<SearchHistoryItem[]>([])
   const limit = ref(15)
 
-  async function search(searchQuery: string = query.value, targetPlatform: Platform = platform.value) {
+  async function search(
+    searchQuery: string = query.value,
+    targetPlatform: Platform = platform.value,
+    targetCountry: string = country.value,
+    targetCategory: string = category.value,
+    targetSort: string = sortBy.value
+  ) {
     if (!searchQuery.trim()) {
       results.value = []
       return
@@ -25,11 +35,22 @@ export const useSearchStore = defineStore('search', () => {
 
     query.value = searchQuery
     platform.value = targetPlatform
+    country.value = targetCountry
+    category.value = targetCategory
+    sortBy.value = targetSort
+
     isLoading.value = true
     errorMessage.value = null
 
     try {
-      const data = await WailsService.searchApps(searchQuery.trim(), targetPlatform, limit.value)
+      const data = await WailsService.searchApps(
+        searchQuery.trim(),
+        targetPlatform,
+        targetCountry,
+        targetCategory,
+        targetSort,
+        limit.value
+      )
       results.value = data || []
       fetchHistory()
     } catch (err: any) {
@@ -81,6 +102,9 @@ export const useSearchStore = defineStore('search', () => {
   return {
     query,
     platform,
+    country,
+    category,
+    sortBy,
     results,
     isLoading,
     errorMessage,

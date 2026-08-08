@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 	"sync"
 	"time"
+
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/apple"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/events"
@@ -17,12 +19,13 @@ import (
 
 // SearchService handles searching for apps, retrieving rich metadata, and managing search history.
 type SearchService interface {
-	Search(term string, platform string, limit int) ([]models.AppMetadata, error)
+	Search(term string, platform string, country string, category string, sortBy string, limit int) ([]models.AppMetadata, error)
 	Lookup(bundleID string, platform string) (*models.AppMetadata, error)
 	GetAppDetails(appID int64, bundleID string, platform string) (*models.AppDetailsOutput, error)
 	GetSearchHistory(limit int) ([]models.SearchHistoryItem, error)
 	ClearSearchHistory() error
 }
+
 
 type searchService struct {
 	appleClient apple.Client
@@ -42,44 +45,51 @@ func NewSearchService(client apple.Client, store storage.Storage, emitter events
 	}
 }
 
-func (s *searchService) Search(term string, platform string, limit int) ([]models.AppMetadata, error) {
+func (s *searchService) Search(term string, platform string, country string, category string, sortBy string, limit int) ([]models.AppMetadata, error) {
 	if term == "" {
 		return []models.AppMetadata{}, nil
 	}
 
-	s.emitter.EmitLog("INFO", fmt.Sprintf("Searching for '%s' on %s...", term, platform), "SearchService")
+	s.emitter.EmitLog("INFO", fmt.Sprintf("Searching for '%s' in %s (Platform: %s, Category: %s)...", term, country, platform, category), "SearchService")
 
 	if limit <= 0 {
 		limit = 15
 	}
 
-	// 1. Search via client with fallback to direct iTunes Search API
-	results, err := s.appleClient.Search(term, models.Platform(platform), int64(limit))
-	if err != nil || len(results) == 0 {
-		s.emitter.EmitLog("INFO", fmt.Sprintf("Querying direct iTunes Search API for '%s'...", term), "SearchService")
-		directResults, directErr := s.directITunesSearch(term, platform, limit)
-		if directErr == nil && len(directResults) > 0 {
-			results = directResults
-		} else if err != nil {
-			s.emitter.EmitLog("ERROR", fmt.Sprintf("Search failed: %v", err), "SearchService")
-			return nil, err
-		}
+	if country == "" {
+		country = "US"
 	}
 
-	// 2. Enhance results with high-resolution artwork and developer info
+	// 1. Search via direct iTunes Search API (it's more flexible for filters)
+	results, err := s.directITunesSearch(term, platform, country, category, limit)
+	if err != nil {
+		s.emitter.EmitLog("ERROR", fmt.Sprintf("Search failed: %v", err), "SearchService")
+		return nil, err
+	}
+
+	// 2. Enhance results and handle sorting
 	enhancedResults := make([]models.AppMetadata, 0, len(results))
 	for _, app := range results {
-		// Fetch rich metadata if available
-		richMeta := s.enrichMetadata(app, platform)
-
 		// Check if it is a favorite
-		isFav, _ := s.storage.IsFavorite(richMeta.ID)
-		richMeta.IsFavorite = isFav
+		isFav, _ := s.storage.IsFavorite(app.ID)
+		app.IsFavorite = isFav
 
-		enhancedResults = append(enhancedResults, richMeta)
+		enhancedResults = append(enhancedResults, app)
 
 		// Cache app metadata for instant detail lookup
-		_ = s.storage.CacheAppMetadata(richMeta)
+		_ = s.storage.CacheAppMetadata(app)
+	}
+
+	// Apply custom sorting if requested
+	switch sortBy {
+	case "rating":
+		sort.Slice(enhancedResults, func(i, j int) bool {
+			return enhancedResults[i].AverageUserRating > enhancedResults[j].AverageUserRating
+		})
+	case "recent":
+		sort.Slice(enhancedResults, func(i, j int) bool {
+			return enhancedResults[i].ReleaseDate > enhancedResults[j].ReleaseDate
+		})
 	}
 
 	// 3. Record search history in background
@@ -89,7 +99,7 @@ func (s *searchService) Search(term string, platform string, limit int) ([]model
 	return enhancedResults, nil
 }
 
-func (s *searchService) directITunesSearch(term string, platform string, limit int) ([]models.AppMetadata, error) {
+func (s *searchService) directITunesSearch(term string, platform string, country string, category string, limit int) ([]models.AppMetadata, error) {
 	entity := "software"
 	switch platform {
 	case "ipados":
@@ -98,7 +108,12 @@ func (s *searchService) directITunesSearch(term string, platform string, limit i
 		entity = "tvSoftware"
 	}
 
-	searchURL := fmt.Sprintf("https://itunes.apple.com/search?media=software&entity=%s&term=%s&country=US&limit=%d", entity, url.QueryEscape(term), limit)
+	searchURL := fmt.Sprintf("https://itunes.apple.com/search?media=software&entity=%s&term=%s&country=%s&limit=%d", entity, url.QueryEscape(term), country, limit)
+
+	if category != "" && category != "0" {
+		searchURL += fmt.Sprintf("&genreId=%s", category)
+	}
+
 	resp, err := s.httpClient.Get(searchURL)
 	if err != nil {
 		return nil, err
@@ -173,6 +188,7 @@ func (s *searchService) directITunesSearch(term string, platform string, limit i
 
 	return results, nil
 }
+
 
 func (s *searchService) Lookup(bundleID string, platform string) (*models.AppMetadata, error) {
 	s.emitter.EmitLog("INFO", fmt.Sprintf("Looking up bundle ID '%s'...", bundleID), "SearchService")

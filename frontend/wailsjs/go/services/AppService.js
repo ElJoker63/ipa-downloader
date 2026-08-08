@@ -182,8 +182,8 @@ export function SaveSettings(arg1) {
   return window['go']['services']['AppService']['SaveSettings'](arg1);
 }
 
-export function SearchApps(arg1, arg2, arg3) {
-  return window['go']['services']['AppService']['SearchApps'](arg1, arg2, arg3);
+export function SearchApps(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['services']['AppService']['SearchApps'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 export function SearchFavorites(arg1) {

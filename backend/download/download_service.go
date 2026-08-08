@@ -223,11 +223,12 @@ func (m *downloadManager) PauseDownload(id string) error {
 
 	_ = m.storage.UpdateDownloadProgress(id, models.DownloadStatusPaused, task.DownloadedBytes, task.TotalBytes, task.Progress, 0, 0, "")
 	m.emitter.EmitLog("INFO", fmt.Sprintf("Paused download: %s", task.AppName), "DownloadManager")
-	m.emitter.Emit(events.EventDownloadPaused, task)
+	m.emitter.Emit(events.EventDownloadStatus, task) // Trigger status update for UI
 	m.emitter.EmitDownloadProgress(*task)
 
 	return nil
 }
+
 
 func (m *downloadManager) ResumeDownload(id string) error {
 	task, err := m.storage.GetDownload(id)
@@ -688,6 +689,7 @@ func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.
 	}
 
 	return store.Download(appstore.DownloadInput{
+		Context:           ctx,
 		Account:           acc,
 		App:               app,
 		OutputPath:        task.DestinationPath,
@@ -695,6 +697,7 @@ func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.
 		Platform:          platform,
 		ProgressCallback:  progressCallback,
 	})
+
 }
 
 func sanitizeFilename(name string) string {
