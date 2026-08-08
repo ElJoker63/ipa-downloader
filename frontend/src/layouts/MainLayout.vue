@@ -130,9 +130,11 @@
 
       <!-- Bottom User Profile, Language Switcher & Branding Strip -->
       <div class="pt-3 border-t border-white/[0.08] space-y-2.5">
-        <!-- Account Mini Card (Clean with Only User Name) -->
+        <!-- Account Mini Card with Dynamic Initials Avatar -->
         <div v-if="authStore.isLoggedIn" class="p-2.5 rounded-[14px] bg-white/[0.06] border border-white/[0.12] flex items-center space-x-2.5 backdrop-blur-md">
-          <img src="/logo.png" alt="User" class="w-7 h-7 rounded-lg object-contain shrink-0" />
+          <div class="w-8 h-8 rounded-[10px] bg-gradient-to-tr from-[#0071E3] via-[#0A84FF] to-[#64D2FF] flex items-center justify-center text-xs font-bold text-white shadow-sm border border-white/20 shrink-0 select-none">
+            {{ userInitials }}
+          </div>
           <div class="min-w-0 flex-1">
             <div class="text-xs font-semibold truncate text-[#FFFFFF]">{{ authStore.account.name || 'Apple User' }}</div>
             <div class="text-[10px] text-[#30D158] font-medium flex items-center space-x-1">
@@ -235,14 +237,14 @@ const statusBadgeClass = computed(() => {
   return 'bg-white/[0.08] border-white/[0.18] text-[#B8C0CC]'
 })
 
-const statusDotClass = computed(() => {
-  if (authStore.isLoggedIn) {
-    return 'bg-[#30D158] shadow-[0_0_8px_rgba(48,209,88,0.8)] animate-pulse-subtle'
+const userInitials = computed(() => {
+  const name = authStore.account?.name || authStore.account?.email || ''
+  if (!name.trim()) return ''
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) {
+    return parts[0].substring(0, 2).toUpperCase()
   }
-  if (authStore.isLoading) {
-    return 'bg-[#FFD60A] animate-ping'
-  }
-  return 'bg-[#7D8592]'
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 })
 </script>
 

@@ -75,10 +75,12 @@
     <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
       <!-- Left Column: Authenticated Account or Sign-in Form -->
       <div class="md:col-span-7 space-y-6">
-        <!-- Logged In Card -->
+        <!-- Logged In Card with Dynamic Initials Avatar -->
         <div v-if="authStore.isLoggedIn" class="glass-card p-6 rounded-[18px] space-y-6">
           <div class="flex items-center space-x-4">
-            <img src="/logo.png" alt="IPA Downloader" class="w-16 h-16 rounded-[16px] object-contain bg-[#1E222B]/90 border border-white/[0.18] shadow-lg shrink-0 p-1.5" />
+            <div class="w-16 h-16 rounded-[18px] bg-gradient-to-tr from-[#0071E3] via-[#0A84FF] to-[#64D2FF] flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-[#0A84FF]/25 border border-white/20 shrink-0 select-none">
+              {{ userInitials }}
+            </div>
             <div class="min-w-0 flex-1">
               <h2 class="text-xl font-bold text-[#FFFFFF] truncate">{{ authStore.account.name || 'Apple ID User' }}</h2>
               <div class="flex items-center gap-2 mt-1">
@@ -271,6 +273,16 @@ const statusDotClass = computed(() => {
   if (authStore.isLoggedIn) return 'bg-[#30D158] shadow-[0_0_8px_rgba(48,209,88,0.8)] animate-pulse-subtle'
   if (authStore.isLoading) return 'bg-[#FFD60A] animate-ping'
   return 'bg-[#7D8592]'
+})
+
+const userInitials = computed(() => {
+  const name = authStore.account?.name || authStore.account?.email || ''
+  if (!name.trim()) return ''
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) {
+    return parts[0].substring(0, 2).toUpperCase()
+  }
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 })
 
 async function handleLogin() {
