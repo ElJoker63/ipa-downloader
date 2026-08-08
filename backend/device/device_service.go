@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strconv"
 	"strings"
+
 	"sync"
 	"time"
 
@@ -203,13 +205,14 @@ func (s *deviceService) runActualInstall(dev giDevice.Device, info *models.Devic
 		return
 	}
 
-	if info.StorageFree < ipaInfo.FileSizeBytes+ (100 * 1024 * 1024) { // Buffer of 100MB
+	if info.StorageFree > 0 && info.StorageFree < ipaInfo.FileSizeBytes+ (100 * 1024 * 1024) { // Buffer of 100MB
 		errStr := fmt.Sprintf("Insufficient space. Required: %s, Available: %s", formatBytes(ipaInfo.FileSizeBytes), formatBytes(info.StorageFree))
 		s.emitInstallProgress("Failed", 0, errStr)
 		s.emitter.EmitLog("ERROR", fmt.Sprintf("[%s] %s", info.Name, errStr), "DeviceService")
 		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": errStr, "ipa": ipaPath, "udid": info.UDID})
 		return
 	}
+
 
 	s.emitInstallProgress("Copying", 30, fmt.Sprintf("[%s] Transferring %s...", info.Name, ipaInfo.BundleName))
 
@@ -572,41 +575,50 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	}
 
 
-	// Fetch Storage Info (Multi-domain fallback for professional accuracy)
-	// 1. Try global domain
-	if val, err := dev.GetValue("", "TotalDiskCapacity"); err == nil {
-		info.StorageTotal = getInt64FromVal(val)
-	}
-	if val, err := dev.GetValue("", "TotalDataAvailable"); err == nil {
-		info.StorageFree = getInt64FromVal(val)
+	// Fetch Storage Info (Hardware Level for Marketing Accuracy)
+	// 1. Try Factory Domain for the "Marketing" size (64, 128, 256 GB)
+	if factory, err := dev.GetValue("com.apple.disk_usage.factory", ""); err == nil && factory != nil {
+		if m, ok := factory.(map[string]interface{}); ok {
+			info.StorageTotal = getInt64FromVal(m["DiskCapacity"])
+		}
 	}
 
-	// 2. Try specialized disk_usage domain (often more accurate and required for some iOS versions)
+	// 2. Try Disk Usage Domain for Partition details
 	if diskUsage, err := dev.GetValue("com.apple.disk_usage", ""); err == nil && diskUsage != nil {
 		if m, ok := diskUsage.(map[string]interface{}); ok {
 			if info.StorageTotal == 0 {
-				if total := getInt64FromVal(m["TotalDiskCapacity"]); total > 0 {
-					info.StorageTotal = total
-				} else if total := getInt64FromVal(m["TotalSystemCapacity"]); total > 0 {
-					info.StorageTotal = total
-				}
+				// Use TotalDiskCapacity as fallback for Total
+				info.StorageTotal = getInt64FromVal(m["TotalDiskCapacity"])
 			}
 
-			// Check multiple potential keys for free space in order of reliability
-			if free := getInt64FromVal(m["DataAvailable"]); free > 0 {
+			// Available space (Settings uses AmountRestoreAvailable which includes purgeable)
+			if free := getInt64FromVal(m["AmountRestoreAvailable"]); free > 0 {
 				info.StorageFree = free
 			} else if free := getInt64FromVal(m["AmountDataAvailable"]); free > 0 {
-				info.StorageFree = free
-			} else if free := getInt64FromVal(m["MobileDataFree"]); free > 0 {
 				info.StorageFree = free
 			} else if free := getInt64FromVal(m["TotalDataAvailable"]); free > 0 {
 				info.StorageFree = free
 			}
+
 		}
 	}
 
+	// 3. Fallback for older devices/OS versions
+	if info.StorageTotal == 0 {
+		if val, err := dev.GetValue("", "TotalDiskCapacity"); err == nil {
+			info.StorageTotal = getInt64FromVal(val)
+		}
+	}
 
 	info.StorageUsed = info.StorageTotal - info.StorageFree
+	if info.StorageUsed < 0 {
+		info.StorageUsed = 0
+	}
+
+
+
+
+
 
 
 	// Fetch Battery Info (Requires trusted connection/session)
@@ -756,9 +768,17 @@ func getInt64FromVal(val interface{}) int64 {
 		return int64(v)
 	case float64:
 		return int64(v)
+	case string:
+		// Robust parsing for strings (handles potential scientific notation or large ints)
+		f, err := strconv.ParseFloat(v, 64)
+		if err == nil {
+			return int64(f)
+		}
 	}
 	return 0
 }
+
+
 
 func formatBytes(bytes int64) string {
 	const unit = 1024

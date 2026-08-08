@@ -600,12 +600,32 @@ function truncateUDID(udid: string) {
 
 function formatAppSize(bytes: number) {
   if (bytes === undefined || bytes === null || bytes < 0) return '--'
-  if (bytes === 0) return '0 MB'
-  const mb = bytes / (1024 * 1024)
-  if (mb >= 1024) {
-    return `${(mb / 1024).toFixed(2)} GB`
+  if (bytes === 0) return 'Unknown'
+
+  // Apple uses decimal units (1000) for storage in Settings since iOS 10
+  const unit = 1000
+  if (bytes < unit) return `${bytes} B`
+
+  const kb = bytes / unit
+  if (kb < unit) return `${kb.toFixed(1)} KB`
+
+  const mb = kb / unit
+  if (mb < unit) return `${mb.toFixed(1)} MB`
+
+  const gb = mb / unit
+
+  // Professional Marketing Rounding: Match standard box capacities (64, 128, etc)
+  const standardCapacities = [8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+  for (const cap of standardCapacities) {
+    if (Math.abs(gb - cap) < (cap * 0.1)) { // 10% tolerance to catch formatted partition loss
+      return `${cap}.00 GB`
+    }
   }
-  return `${mb.toFixed(1)} MB`
+
+  return `${gb.toFixed(2)} GB`
 }
+
+
+
 
 </script>

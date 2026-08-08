@@ -716,9 +716,10 @@ func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.
 
 			speedBps := int64(smoothedSpeed)
 			var etaSec int64 = 0
-			if speedBps > 0 && total > downloadedBytes {
-				etaSec = (total - downloadedBytes) / speedBps
+			if speedBps > 0 && totalBytes > downloadedBytes {
+				etaSec = (totalBytes - downloadedBytes) / speedBps
 			}
+
 
 			task.DownloadedBytes = downloadedBytes
 			task.TotalBytes = totalBytes
