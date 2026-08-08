@@ -18,11 +18,14 @@ var (
 	ErrLicenseRequired = errors.New("license is required")
 )
 
+type ProgressCallback func(downloadedBytes int64, totalBytes int64)
+
 type DownloadInput struct {
 	Account           Account
 	App               App
 	OutputPath        string
 	Progress          *progressbar.ProgressBar
+	ProgressCallback  ProgressCallback
 	ExternalVersionID string
 	Platform          Platform
 }
@@ -94,7 +97,7 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 
 	tmpPath := fmt.Sprintf("%s.tmp", destination)
 
-	err = t.downloadFile(item.URL, tmpPath, input.Progress)
+	err = t.downloadFile(item.URL, tmpPath, input.Progress, input.ProgressCallback)
 	if err != nil {
 		return DownloadOutput{}, fmt.Errorf("failed to download file: %w", err)
 	}
@@ -186,7 +189,7 @@ type downloadResult struct {
 	Items           []downloadItemResult `plist:"songList,omitempty"`
 }
 
-func (t *appstore) downloadFile(src, dst string, progress *progressbar.ProgressBar) error {
+func (t *appstore) downloadFile(src, dst string, progress *progressbar.ProgressBar, callback ProgressCallback) error {
 	req, err := t.httpClient.NewRequest("GET", src, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -214,8 +217,10 @@ func (t *appstore) downloadFile(src, dst string, progress *progressbar.ProgressB
 	}
 	defer res.Body.Close()
 
+	totalSize := res.ContentLength + stat.Size()
+
 	if progress != nil {
-		progress.ChangeMax64(res.ContentLength + stat.Size())
+		progress.ChangeMax64(totalSize)
 		err = progress.Set64(stat.Size())
 
 		if err != nil {
@@ -228,6 +233,33 @@ func (t *appstore) downloadFile(src, dst string, progress *progressbar.ProgressB
 		}
 
 		_, err = io.Copy(io.MultiWriter(file, progress), res.Body)
+	} else if callback != nil {
+		_, err = file.Seek(0, io.SeekEnd)
+		if err != nil {
+			return fmt.Errorf("can not seek file: %w", err)
+		}
+
+		current := stat.Size()
+		callback(current, totalSize)
+
+		buf := make([]byte, 64*1024)
+		for {
+			n, rErr := res.Body.Read(buf)
+			if n > 0 {
+				_, wErr := file.Write(buf[:n])
+				if wErr != nil {
+					return fmt.Errorf("failed to write chunk: %w", wErr)
+				}
+				current += int64(n)
+				callback(current, totalSize)
+			}
+			if rErr != nil {
+				if rErr == io.EOF {
+					break
+				}
+				return fmt.Errorf("failed to read stream: %w", rErr)
+			}
+		}
 	} else {
 		_, err = io.Copy(file, res.Body)
 	}

@@ -386,6 +386,74 @@ func (m *downloadManager) executeDownload(ctx context.Context, task *models.Down
 }
 
 func (m *downloadManager) streamDownload(ctx context.Context, store appstore.AppStore, acc appstore.Account, app appstore.App, task *models.DownloadTask, tmpPath string, platform appstore.Platform) (appstore.DownloadOutput, error) {
+	startTime := time.Now()
+	lastUpdateTime := time.Now()
+	var lastBytes int64 = 0
+	var smoothedSpeed float64 = 0
+	var lastLoggedPercent int = 0
+
+	progressCallback := func(downloadedBytes int64, totalBytes int64) {
+		now := time.Now()
+		elapsed := now.Sub(lastUpdateTime).Seconds()
+
+		var percent float64 = 0
+		if totalBytes > 0 {
+			percent = (float64(downloadedBytes) / float64(totalBytes)) * 100.0
+			if percent > 100.0 {
+				percent = 100.0
+			}
+		}
+
+		// Calculate speed with exponential moving average
+		if elapsed >= 0.15 || downloadedBytes == totalBytes {
+			deltaBytes := downloadedBytes - lastBytes
+			if elapsed > 0 {
+				instantSpeed := float64(deltaBytes) / elapsed
+				if smoothedSpeed == 0 {
+					smoothedSpeed = instantSpeed
+				} else {
+					smoothedSpeed = 0.3*instantSpeed + 0.7*smoothedSpeed
+				}
+			}
+
+			speedBps := int64(smoothedSpeed)
+			var etaSec int64 = 0
+			if speedBps > 0 && totalBytes > downloadedBytes {
+				etaSec = (totalBytes - downloadedBytes) / speedBps
+			}
+
+			task.DownloadedBytes = downloadedBytes
+			task.TotalBytes = totalBytes
+			task.Progress = percent
+			task.SpeedBytesPerSec = speedBps
+			task.FormattedSpeed = formatSpeed(speedBps)
+			task.ETASeconds = etaSec
+			task.FormattedETA = formatETA(etaSec)
+
+			// Update in SQLite
+			_ = m.storage.UpdateDownloadProgress(task.ID, models.DownloadStatusDownloading, downloadedBytes, totalBytes, percent, speedBps, etaSec, "")
+
+			// Emit live progress to Wails UI
+			m.emitter.EmitDownloadProgress(*task)
+
+			lastUpdateTime = now
+			lastBytes = downloadedBytes
+
+			// Emit milestone logs (25%, 50%, 75%)
+			intPercent := int(percent)
+			if intPercent >= 25 && lastLoggedPercent < 25 {
+				lastLoggedPercent = 25
+				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] 25%% downloaded (%s)", task.AppName, formatSpeed(speedBps)), "DownloadManager")
+			} else if intPercent >= 50 && lastLoggedPercent < 50 {
+				lastLoggedPercent = 50
+				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] 50%% downloaded (%s)", task.AppName, formatSpeed(speedBps)), "DownloadManager")
+			} else if intPercent >= 75 && lastLoggedPercent < 75 {
+				lastLoggedPercent = 75
+				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] 75%% downloaded (%s)", task.AppName, formatSpeed(speedBps)), "DownloadManager")
+			}
+		}
+	}
+
 	out, err := store.Download(appstore.DownloadInput{
 		Account:           acc,
 		App:               app,
@@ -393,9 +461,16 @@ func (m *downloadManager) streamDownload(ctx context.Context, store appstore.App
 		ExternalVersionID: task.ExternalVersionID,
 		Platform:          platform,
 		Progress:          nil,
+		ProgressCallback:  progressCallback,
 	})
 	if err != nil {
 		return out, err
+	}
+
+	duration := time.Since(startTime).Seconds()
+	if duration > 0 && task.TotalBytes > 0 {
+		avgSpeed := int64(float64(task.TotalBytes) / duration)
+		m.emitter.EmitLog("INFO", fmt.Sprintf("Download finished for %s (Average speed: %s)", task.AppName, formatSpeed(avgSpeed)), "DownloadManager")
 	}
 
 	return out, nil
