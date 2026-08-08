@@ -200,11 +200,19 @@ export namespace models {
 	    buildVersion: string;
 	    serialNumber: string;
 	    wifiAddress?: string;
+	    imei?: string;
+	    imei2?: string;
+	    modelNumber?: string;
+	    regionInfo?: string;
+	    activationState?: string;
+	    isJailbroken: boolean;
+	    batteryLevel: number;
+	    batteryHealth?: number;
+	    chargeCycles?: number;
+	    batteryCharging: boolean;
 	    storageTotal: number;
 	    storageUsed: number;
 	    storageFree: number;
-	    batteryLevel: number;
-	    batteryCharging: boolean;
 	    isPaired: boolean;
 	    isConnected: boolean;
 	
@@ -223,11 +231,19 @@ export namespace models {
 	        this.buildVersion = source["buildVersion"];
 	        this.serialNumber = source["serialNumber"];
 	        this.wifiAddress = source["wifiAddress"];
+	        this.imei = source["imei"];
+	        this.imei2 = source["imei2"];
+	        this.modelNumber = source["modelNumber"];
+	        this.regionInfo = source["regionInfo"];
+	        this.activationState = source["activationState"];
+	        this.isJailbroken = source["isJailbroken"];
+	        this.batteryLevel = source["batteryLevel"];
+	        this.batteryHealth = source["batteryHealth"];
+	        this.chargeCycles = source["chargeCycles"];
+	        this.batteryCharging = source["batteryCharging"];
 	        this.storageTotal = source["storageTotal"];
 	        this.storageUsed = source["storageUsed"];
 	        this.storageFree = source["storageFree"];
-	        this.batteryLevel = source["batteryLevel"];
-	        this.batteryCharging = source["batteryCharging"];
 	        this.isPaired = source["isPaired"];
 	        this.isConnected = source["isConnected"];
 	    }

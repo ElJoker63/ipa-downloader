@@ -100,6 +100,13 @@ func (s *deviceService) pollLoop() {
 }
 
 func (s *deviceService) checkDeviceConnection() {
+	defer func() {
+		if r := recover(); r != nil {
+			s.emitter.EmitLog("ERROR", fmt.Sprintf("Panic recovered in device service: %v", r), "DeviceService")
+			s.handleDisconnect()
+		}
+	}()
+
 	usbmux, err := giDevice.NewUsbmux()
 	if err != nil {
 		s.handleDisconnect()
@@ -155,7 +162,7 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 
 	info := &models.DeviceInfo{
 		UDID:         props.SerialNumber,
-		SerialNumber: props.SerialNumber,
+		SerialNumber: props.SerialNumber, // Default to props if specific key fails
 		IsConnected:  true,
 		IsPaired:     true,
 	}
@@ -193,7 +200,46 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 		}
 	}
 
-	// Fetch Storage Info
+	// Fetch more detailed IDs
+	if val, err := dev.GetValue("", "SerialNumber"); err == nil {
+		if str, ok := val.(string); ok {
+			info.SerialNumber = str
+		}
+	}
+	if val, err := dev.GetValue("", "InternationalMobileEquipmentIdentity"); err == nil {
+		if str, ok := val.(string); ok {
+			info.IMEI = str
+		}
+	}
+	if val, err := dev.GetValue("", "InternationalMobileEquipmentIdentity2"); err == nil {
+		if str, ok := val.(string); ok {
+			info.IMEI2 = str
+		}
+	}
+	if val, err := dev.GetValue("", "ModelNumber"); err == nil {
+		if str, ok := val.(string); ok {
+			info.ModelNumber = str
+		}
+	}
+	if val, err := dev.GetValue("", "RegionInfo"); err == nil {
+		if str, ok := val.(string); ok {
+			info.RegionInfo = str
+		}
+	}
+	if val, err := dev.GetValue("", "ActivationState"); err == nil {
+		if str, ok := val.(string); ok {
+			info.ActivationState = str
+		}
+	}
+	// Jailbreak detection - primitive check
+	if val, err := dev.GetValue("", "BrickState"); err == nil {
+		if i, ok := val.(uint64); ok && i > 0 {
+			info.IsJailbroken = true
+		}
+	}
+
+
+	// Fetch Storage Info (Global domain)
 	if val, err := dev.GetValue("", "TotalDiskCapacity"); err == nil {
 		info.StorageTotal = getInt64FromVal(val)
 	}
@@ -202,19 +248,24 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	}
 	info.StorageUsed = info.StorageTotal - info.StorageFree
 
-	// Fetch Battery Info
-	if val, err := dev.GetValue("com.apple.mobile.battery", "BatteryCurrentCapacity"); err == nil {
-		if i, ok := val.(uint64); ok {
-			info.BatteryLevel = int(i)
-		} else if i, ok := val.(int64); ok {
-			info.BatteryLevel = int(i)
-		} else if i, ok := val.(int); ok {
-			info.BatteryLevel = i
-		}
-	}
-	if val, err := dev.GetValue("com.apple.mobile.battery", "IsCharging"); err == nil {
-		if b, ok := val.(bool); ok {
-			info.BatteryCharging = b
+	// Fetch Battery Info (Requires trusted connection/session)
+	if info.IsPaired {
+		batteryInfo, err := dev.GetValue("com.apple.mobile.battery", "")
+		if err == nil && batteryInfo != nil {
+			if m, ok := batteryInfo.(map[string]interface{}); ok {
+				info.BatteryLevel = int(getInt64FromVal(m["BatteryCurrentCapacity"]))
+				if b, ok := m["IsCharging"].(bool); ok {
+					info.BatteryCharging = b
+				}
+
+				// Health calculation: (FullChargeCapacity / DesignCapacity) * 100
+				fullCap := getInt64FromVal(m["FullChargeCapacity"])
+				designCap := getInt64FromVal(m["DesignCapacity"])
+				if designCap > 0 {
+					info.BatteryHealth = int((float64(fullCap) / float64(designCap)) * 100)
+				}
+				info.ChargeCycles = int(getInt64FromVal(m["CycleCount"]))
+			}
 		}
 	}
 
@@ -227,6 +278,7 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 
 	return info, nil
 }
+
 
 func formatProductType(productType string) string {
 	modelsMap := map[string]string{

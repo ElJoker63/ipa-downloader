@@ -132,6 +132,14 @@ export interface DeviceInfo {
   buildVersion: string
   serialNumber: string
   wifiAddress?: string
+  imei?: string
+  imei2?: string
+  modelNumber?: string
+  regionInfo?: string
+  activationState?: string
+  isJailbroken: boolean
+  batteryHealth?: number
+  chargeCycles?: number
   storageTotal: number
   storageUsed: number
   storageFree: number

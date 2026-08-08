@@ -166,11 +166,19 @@ type DeviceInfo struct {
 	BuildVersion    string `json:"buildVersion"`
 	SerialNumber    string `json:"serialNumber"`
 	WiFiAddress     string `json:"wifiAddress,omitempty"`
+	IMEI            string `json:"imei,omitempty"`
+	IMEI2           string `json:"imei2,omitempty"`
+	ModelNumber     string `json:"modelNumber,omitempty"` // e.g., MT5W2 LL/A
+	RegionInfo      string `json:"regionInfo,omitempty"`
+	ActivationState string `json:"activationState,omitempty"`
+	IsJailbroken    bool   `json:"isJailbroken"`
+	BatteryLevel    int    `json:"batteryLevel"`
+	BatteryHealth   int    `json:"batteryHealth,omitempty"`
+	ChargeCycles    int    `json:"chargeCycles,omitempty"`
+	BatteryCharging bool   `json:"batteryCharging"`
 	StorageTotal    int64  `json:"storageTotal"`
 	StorageUsed     int64  `json:"storageUsed"`
 	StorageFree     int64  `json:"storageFree"`
-	BatteryLevel    int    `json:"batteryLevel"`
-	BatteryCharging bool   `json:"batteryCharging"`
 	IsPaired        bool   `json:"isPaired"`
 	IsConnected     bool   `json:"isConnected"`
 }

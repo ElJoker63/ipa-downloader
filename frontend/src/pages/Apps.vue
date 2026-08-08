@@ -340,20 +340,30 @@
           <!-- Main Specs Grid -->
           <div class="grid grid-cols-2 gap-4">
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">iOS Version</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.device.iosVersion }} ({{ deviceStore.device.buildVersion }})</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
               <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Serial Number</div>
               <div class="text-sm text-white font-mono">{{ deviceStore.device.serialNumber }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">UDID</div>
-              <div class="text-sm text-white font-mono break-all">{{ deviceStore.device.udid }}</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">IMEI</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.device.imei || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Product Type</div>
-              <div class="text-sm text-white">{{ deviceStore.device.productType }}</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Model Name</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.device.modelNumber || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Build Version</div>
-              <div class="text-sm text-white">{{ deviceStore.device.buildVersion }}</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Sales Region</div>
+              <div class="text-sm text-white">{{ deviceStore.device.regionInfo || 'N/A' }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Activation</div>
+              <div class="text-sm" :class="deviceStore.device.activationState === 'Activated' ? 'text-[#30D158]' : 'text-white'">
+                {{ deviceStore.device.activationState || 'N/A' }}
+              </div>
             </div>
           </div>
 
@@ -363,12 +373,12 @@
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-semibold text-white">Storage Capacity</h4>
-                <span class="text-xs text-[#8E8E93]">{{ formatAppSize(deviceStore.device.storageFree) }} available of {{ formatAppSize(deviceStore.device.storageTotal) }}</span>
+                <span class="text-xs text-[#8E8E93]">{{ formatAppSize(deviceStore.device.storageFree) }} free of {{ formatAppSize(deviceStore.device.storageTotal) }}</span>
               </div>
               <div class="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <div
                   class="h-full bg-[#0A84FF] rounded-full"
-                  :style="{ width: `${((deviceStore.device.storageTotal - deviceStore.device.storageFree) / deviceStore.device.storageTotal) * 100}%` }"
+                  :style="{ width: `${deviceStore.device.storageTotal > 0 ? ((deviceStore.device.storageTotal - deviceStore.device.storageFree) / deviceStore.device.storageTotal) * 100 : 0}%` }"
                 ></div>
               </div>
               <div class="flex justify-between text-[10px] text-[#8E8E93] font-medium px-1">
@@ -398,34 +408,36 @@
                   :class="deviceStore.device.batteryLevel > 20 ? 'bg-[#30D158]' : 'bg-[#FF453A]'"
                   :style="{ width: `${deviceStore.device.batteryLevel}%` }"
                 ></div>
-                <div v-if="deviceStore.device.batteryCharging" class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
               </div>
-              <div class="flex items-center space-x-2 text-[10px] text-[#8E8E93]">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Health: Normal</span>
+              <div class="flex justify-between text-[10px] text-[#8E8E93] font-medium px-1 pt-1">
+                <span>Health: <span class="text-white font-bold">{{ deviceStore.device.batteryHealth || '--' }}%</span></span>
+                <span>Cycles: <span class="text-white font-bold">{{ deviceStore.device.chargeCycles || '--' }}</span></span>
               </div>
             </div>
           </div>
 
           <!-- Connection Details -->
           <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-4">
-            <h4 class="text-sm font-semibold text-white">Connectivity</h4>
+            <h4 class="text-sm font-semibold text-white">Connectivity & Security</h4>
             <div class="grid grid-cols-2 gap-y-4">
               <div class="space-y-1">
                 <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Wi-Fi Address</div>
                 <div class="text-xs text-white font-mono">{{ deviceStore.device.wifiAddress || 'N/A' }}</div>
               </div>
               <div class="space-y-1 text-right">
-                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Pairing Status</div>
-                <div class="text-xs font-bold" :class="deviceStore.device.isPaired ? 'text-[#30D158]' : 'text-[#FF9F0A]'">
-                  {{ deviceStore.device.isPaired ? 'Trusted' : 'Untrusted' }}
+                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Jailbreak</div>
+                <div class="text-xs font-bold" :class="deviceStore.device.isJailbroken ? 'text-[#FF453A]' : 'text-[#30D158]'">
+                  {{ deviceStore.device.isJailbroken ? 'Yes' : 'No' }}
                 </div>
+              </div>
+              <div class="space-y-1">
+                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">UDID</div>
+                <div class="text-[10px] text-white font-mono break-all">{{ deviceStore.device.udid }}</div>
               </div>
             </div>
           </div>
         </div>
+
 
         <!-- Modal Footer -->
         <div class="p-4 border-t border-white/10 bg-white/[0.01] flex justify-end">
