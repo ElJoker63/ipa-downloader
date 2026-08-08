@@ -74,8 +74,8 @@ export function GetCacheSize() {
   return window['go']['services']['AppService']['GetCacheSize']();
 }
 
-export function GetConnectedDevice() {
-  return window['go']['services']['AppService']['GetConnectedDevice']();
+export function GetConnectedDevices() {
+  return window['go']['services']['AppService']['GetConnectedDevices']();
 }
 
 export function GetDownloadHistory() {
@@ -98,16 +98,20 @@ export function GetSettings() {
   return window['go']['services']['AppService']['GetSettings']();
 }
 
-export function InstallIPA(arg1) {
-  return window['go']['services']['AppService']['InstallIPA'](arg1);
+export function InstallIPA(arg1, arg2) {
+  return window['go']['services']['AppService']['InstallIPA'](arg1, arg2);
 }
 
-export function IsDeviceConnected() {
-  return window['go']['services']['AppService']['IsDeviceConnected']();
+export function InstallMultipleIPAs(arg1, arg2) {
+  return window['go']['services']['AppService']['InstallMultipleIPAs'](arg1, arg2);
 }
 
-export function ListInstalledApps(arg1) {
-  return window['go']['services']['AppService']['ListInstalledApps'](arg1);
+export function IsDeviceConnected(arg1) {
+  return window['go']['services']['AppService']['IsDeviceConnected'](arg1);
+}
+
+export function ListInstalledApps(arg1, arg2) {
+  return window['go']['services']['AppService']['ListInstalledApps'](arg1, arg2);
 }
 
 export function Login(arg1, arg2, arg3, arg4) {
@@ -130,8 +134,8 @@ export function OpenFolder(arg1) {
   return window['go']['services']['AppService']['OpenFolder'](arg1);
 }
 
-export function PairDevice() {
-  return window['go']['services']['AppService']['PairDevice']();
+export function PairDevice(arg1) {
+  return window['go']['services']['AppService']['PairDevice'](arg1);
 }
 
 export function PauseDownload(arg1) {
@@ -178,6 +182,10 @@ export function SelectIPAFile() {
   return window['go']['services']['AppService']['SelectIPAFile']();
 }
 
+export function SelectMultipleIPAs() {
+  return window['go']['services']['AppService']['SelectMultipleIPAs']();
+}
+
 export function SetContext(arg1) {
   return window['go']['services']['AppService']['SetContext'](arg1);
 }
@@ -190,8 +198,8 @@ export function ToggleFavorite(arg1) {
   return window['go']['services']['AppService']['ToggleFavorite'](arg1);
 }
 
-export function UninstallApp(arg1) {
-  return window['go']['services']['AppService']['UninstallApp'](arg1);
+export function UninstallApp(arg1, arg2) {
+  return window['go']['services']['AppService']['UninstallApp'](arg1, arg2);
 }
 
 export function ValidateIPA(arg1) {

@@ -254,42 +254,47 @@ export const WailsService = {
   },
 
   // Device Management
-  async getConnectedDevice(): Promise<DeviceInfo | null> {
+  async listConnectedDevices(): Promise<DeviceInfo[]> {
     try {
-      return (await AppService.GetConnectedDevice()) as DeviceInfo
+      return (await AppService.GetConnectedDevices()) as DeviceInfo[]
     } catch {
-      return null
+      return []
     }
   },
 
-  async isDeviceConnected(): Promise<boolean> {
+  async isDeviceConnected(udid: string): Promise<boolean> {
     try {
-      return await AppService.IsDeviceConnected()
+      return await AppService.IsDeviceConnected(udid)
     } catch {
       return false
     }
   },
 
-  async pairDevice(): Promise<void> {
-    return await AppService.PairDevice()
+  async pairDevice(udid: string): Promise<void> {
+    return await AppService.PairDevice(udid)
   },
 
-  async listInstalledApps(appType: string = 'user'): Promise<InstalledApp[]> {
+  async listInstalledApps(udid: string, appType: string = 'user'): Promise<InstalledApp[]> {
     try {
-      const apps = await AppService.ListInstalledApps(appType)
+      const apps = await AppService.ListInstalledApps(udid, appType)
       return (apps || []) as InstalledApp[]
     } catch {
       return []
     }
   },
 
-  async installIPA(ipaPath: string): Promise<void> {
-    return await AppService.InstallIPA(ipaPath)
+  async installIPA(udid: string, ipaPath: string): Promise<void> {
+    return await AppService.InstallIPA(udid, ipaPath)
   },
 
-  async uninstallApp(bundleId: string): Promise<void> {
-    return await AppService.UninstallApp(bundleId)
+  async installMultipleIPAs(udid: string, ipaPaths: string[]): Promise<void> {
+    return await AppService.InstallMultipleIPAs(udid, ipaPaths)
   },
+
+  async uninstallApp(udid: string, bundleId: string): Promise<void> {
+    return await AppService.UninstallApp(udid, bundleId)
+  },
+
 
   async validateIPA(ipaPath: string): Promise<IPAInfo> {
     return (await AppService.ValidateIPA(ipaPath)) as IPAInfo

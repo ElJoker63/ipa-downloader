@@ -6,19 +6,20 @@
         <h1 class="text-2xl font-bold tracking-tight text-white flex items-center space-x-3">
           <span>{{ t.apps?.title || 'Device Apps' }}</span>
           <span
-            v-if="deviceStore.isConnected"
+            v-if="deviceStore.devices.length > 0"
             class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 flex items-center space-x-1.5"
           >
             <span class="w-2 h-2 rounded-full bg-[#30D158] animate-pulse"></span>
-            <span>Connected</span>
+            <span>{{ deviceStore.devices.length }} Devices Connected</span>
           </span>
           <span
             v-else
             class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-white/10 text-[#8E8E93] border border-white/10 flex items-center space-x-1.5"
           >
             <span class="w-2 h-2 rounded-full bg-[#8E8E93]"></span>
-            <span>Disconnected</span>
+            <span>No Device</span>
           </span>
+
         </h1>
         <p class="text-sm text-[#8E8E93] mt-1">
           {{ t.apps?.subtitle || 'Manage iOS applications and install IPAs on USB connected devices' }}
@@ -51,56 +52,78 @@
       </div>
     </div>
 
-    <!-- Device Info Card (When Connected) -->
-    <div
-      v-if="deviceStore.device && deviceStore.device.isConnected"
-      @click="showDeviceDetails = true"
-      class="p-5 rounded-2xl bg-[#171A21]/90 border border-white/[0.08] hover:border-white/[0.15] cursor-pointer group transition-all duration-300 backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4"
-    >
-      <div class="flex items-center space-x-4">
-        <!-- Device Icon -->
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0A84FF]/20 to-[#5E5CE6]/20 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-          <svg class="w-7 h-7 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        </div>
-
-        <!-- Device Specs -->
-        <div>
-          <h2 class="text-base font-semibold text-white flex items-center space-x-2">
-            <span>{{ deviceStore.device.name }}</span>
-            <span class="text-xs px-2 py-0.5 rounded-md bg-white/10 text-[#8E8E93] font-mono">{{ deviceStore.device.model }}</span>
-          </h2>
-          <div class="text-xs text-[#8E8E93] mt-1 space-x-3 flex items-center">
-            <span>iOS {{ deviceStore.device.iosVersion }}</span>
-            <span>•</span>
-            <div class="flex items-center space-x-1">
-              <svg class="w-3.5 h-3.5" :class="deviceStore.device.batteryCharging ? 'text-[#30D158]' : 'text-[#8E8E93]'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10.5h-1.5V9a1.5 1.5 0 00-1.5-1.5H5A1.5 1.5 0 003.5 9v6a1.5 1.5 0 001.5 1.5h13a1.5 1.5 0 001.5-1.5v-1.5H21v-3z" />
-              </svg>
-              <span>{{ deviceStore.device.batteryLevel }}%</span>
-            </div>
-            <span>•</span>
-            <span>{{ formatAppSize(deviceStore.device.storageFree) }} Free</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Badges & Pair Button -->
-      <div class="flex items-center space-x-3 shrink-0">
-        <div class="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-[#8E8E93]">
-          <span class="text-white font-medium">{{ deviceStore.userApps.length }}</span> User Apps
-        </div>
-
+    <!-- Device Selection & Info -->
+    <div v-if="deviceStore.devices.length > 0" class="space-y-4">
+      <!-- Device Selector (Tabs style) -->
+      <div v-if="deviceStore.devices.length > 1" class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
         <button
-          v-if="!deviceStore.device.isPaired"
-          @click.stop="handlePair"
-          class="px-3 py-1.5 rounded-xl bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/30 text-xs font-medium hover:bg-[#FF9F0A]/30 transition"
+          v-for="dev in deviceStore.devices"
+          :key="dev.udid"
+          @click="deviceStore.selectedUdid = dev.udid; deviceStore.fetchApps()"
+          class="px-4 py-2 rounded-2xl border transition-all shrink-0 flex items-center space-x-2"
+          :class="deviceStore.selectedUdid === dev.udid
+            ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
+            : 'bg-white/[0.04] border-white/10 text-[#8E8E93] hover:bg-white/[0.08]'"
         >
-          Trust & Pair Device
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          <span class="text-xs font-semibold">{{ dev.name }}</span>
         </button>
       </div>
+
+      <!-- Active Device Info Card -->
+      <div
+        v-if="deviceStore.selectedDevice"
+        @click="showDeviceDetails = true"
+        class="p-5 rounded-2xl bg-[#171A21]/90 border border-white/[0.08] hover:border-white/[0.15] cursor-pointer group transition-all duration-300 backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
+        <div class="flex items-center space-x-4">
+          <!-- Device Icon -->
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0A84FF]/20 to-[#5E5CE6]/20 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <svg class="w-7 h-7 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+
+          <!-- Device Specs -->
+          <div>
+            <h2 class="text-base font-semibold text-white flex items-center space-x-2">
+              <span>{{ deviceStore.selectedDevice.name }}</span>
+              <span class="text-xs px-2 py-0.5 rounded-md bg-white/10 text-[#8E8E93] font-mono">{{ deviceStore.selectedDevice.model }}</span>
+            </h2>
+            <div class="text-xs text-[#8E8E93] mt-1 space-x-3 flex items-center">
+              <span>iOS {{ deviceStore.selectedDevice.iosVersion }}</span>
+              <span>•</span>
+              <div class="flex items-center space-x-1">
+                <svg class="w-3.5 h-3.5" :class="deviceStore.selectedDevice.batteryCharging ? 'text-[#30D158]' : 'text-[#8E8E93]'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10.5h-1.5V9a1.5 1.5 0 00-1.5-1.5H5A1.5 1.5 0 003.5 9v6a1.5 1.5 0 001.5 1.5h13a1.5 1.5 0 001.5-1.5v-1.5H21v-3z" />
+                </svg>
+                <span>{{ deviceStore.selectedDevice.batteryLevel }}%</span>
+              </div>
+              <span>•</span>
+              <span>{{ formatAppSize(deviceStore.selectedDevice.storageFree) }} Free</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Badges & Pair Button -->
+        <div class="flex items-center space-x-3 shrink-0">
+          <div class="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-[#8E8E93]">
+            <span class="text-white font-medium">{{ deviceStore.userApps.length }}</span> User Apps
+          </div>
+
+          <button
+            v-if="!deviceStore.selectedDevice.isPaired"
+            @click.stop="handlePair(deviceStore.selectedDevice.udid)"
+            class="px-3 py-1.5 rounded-xl bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/30 text-xs font-medium hover:bg-[#FF9F0A]/30 transition"
+          >
+            Trust & Pair Device
+          </button>
+        </div>
+      </div>
     </div>
+
 
     <!-- No Device Connected Banner -->
     <div v-else class="p-8 rounded-2xl bg-[#171A21]/60 border border-white/[0.08] backdrop-blur-xl text-center flex flex-col items-center justify-center space-y-4">
@@ -253,7 +276,7 @@
               <path v-else stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             <span>
-              {{ deviceStore.installError ? 'Installation Failed' : deviceStore.installProgress?.phase === 'Complete' ? 'Installation Complete' : 'Installing Application' }}
+              {{ deviceStore.installError ? 'Installation Failed' : deviceStore.installProgress?.phase === 'Complete' ? 'Installation Complete' : 'Processing Queue' }}
             </span>
           </h3>
 
@@ -310,7 +333,7 @@
 
     <!-- Device Details Modal -->
     <div
-      v-if="showDeviceDetails && deviceStore.device"
+      v-if="showDeviceDetails && deviceStore.selectedDevice"
       class="fixed inset-0 bg-black/80 backdrop-blur-xl z-[60] flex items-center justify-center p-6"
       @click.self="showDeviceDetails = false"
     >
@@ -324,8 +347,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-xl font-bold text-white">{{ deviceStore.device.name }}</h3>
-              <p class="text-xs text-[#8E8E93] font-mono mt-0.5">{{ deviceStore.device.model }} • iOS {{ deviceStore.device.iosVersion }}</p>
+              <h3 class="text-xl font-bold text-white">{{ deviceStore.selectedDevice.name }}</h3>
+              <p class="text-xs text-[#8E8E93] font-mono mt-0.5">{{ deviceStore.selectedDevice.model }} • iOS {{ deviceStore.selectedDevice.iosVersion }}</p>
             </div>
           </div>
           <button @click="showDeviceDetails = false" class="p-2 rounded-full hover:bg-white/10 text-[#8E8E93] transition">
@@ -341,28 +364,28 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
               <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">iOS Version</div>
-              <div class="text-sm text-white font-mono">{{ deviceStore.device.iosVersion }} ({{ deviceStore.device.buildVersion }})</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.iosVersion }} ({{ deviceStore.selectedDevice.buildVersion }})</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
               <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Serial Number</div>
-              <div class="text-sm text-white font-mono">{{ deviceStore.device.serialNumber }}</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.serialNumber }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
               <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">IMEI</div>
-              <div class="text-sm text-white font-mono">{{ deviceStore.device.imei || 'N/A' }}</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.imei || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
               <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Model Name</div>
-              <div class="text-sm text-white font-mono">{{ deviceStore.device.modelNumber || 'N/A' }}</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.modelNumber || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
               <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Sales Region</div>
-              <div class="text-sm text-white">{{ deviceStore.device.regionInfo || 'N/A' }}</div>
+              <div class="text-sm text-white">{{ deviceStore.selectedDevice.regionInfo || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
               <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Activation</div>
-              <div class="text-sm" :class="deviceStore.device.activationState === 'Activated' ? 'text-[#30D158]' : 'text-white'">
-                {{ deviceStore.device.activationState || 'N/A' }}
+              <div class="text-sm" :class="deviceStore.selectedDevice.activationState === 'Activated' ? 'text-[#30D158]' : 'text-white'">
+                {{ deviceStore.selectedDevice.activationState || 'N/A' }}
               </div>
             </div>
           </div>
@@ -373,22 +396,22 @@
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-semibold text-white">Storage Capacity</h4>
-                <span class="text-xs text-[#8E8E93]">{{ formatAppSize(deviceStore.device.storageFree) }} free of {{ formatAppSize(deviceStore.device.storageTotal) }}</span>
+                <span class="text-xs text-[#8E8E93]">{{ formatAppSize(deviceStore.selectedDevice.storageFree) }} free of {{ formatAppSize(deviceStore.selectedDevice.storageTotal) }}</span>
               </div>
               <div class="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <div
                   class="h-full bg-[#0A84FF] rounded-full"
-                  :style="{ width: `${deviceStore.device.storageTotal > 0 ? ((deviceStore.device.storageTotal - deviceStore.device.storageFree) / deviceStore.device.storageTotal) * 100 : 0}%` }"
+                  :style="{ width: `${deviceStore.selectedDevice.storageTotal > 0 ? ((deviceStore.selectedDevice.storageTotal - deviceStore.selectedDevice.storageFree) / deviceStore.selectedDevice.storageTotal) * 100 : 0}%` }"
                 ></div>
               </div>
               <div class="flex justify-between text-[10px] text-[#8E8E93] font-medium px-1">
                 <div class="flex items-center space-x-1.5">
                   <span class="w-2 h-2 rounded-full bg-[#0A84FF]"></span>
-                  <span>Used: {{ formatAppSize(deviceStore.device.storageUsed) }}</span>
+                  <span>Used: {{ formatAppSize(deviceStore.selectedDevice.storageUsed) }}</span>
                 </div>
                 <div class="flex items-center space-x-1.5">
                   <span class="w-2 h-2 rounded-full bg-white/10"></span>
-                  <span>Free: {{ formatAppSize(deviceStore.device.storageFree) }}</span>
+                  <span>Free: {{ formatAppSize(deviceStore.selectedDevice.storageFree) }}</span>
                 </div>
               </div>
             </div>
@@ -398,20 +421,20 @@
               <div class="flex items-center justify-between">
                 <h4 class="text-sm font-semibold text-white">Battery Status</h4>
                 <div class="flex items-center space-x-2">
-                  <span v-if="deviceStore.device.batteryCharging" class="text-[10px] font-bold text-[#30D158] uppercase">Charging</span>
-                  <span class="text-sm font-bold text-white">{{ deviceStore.device.batteryLevel }}%</span>
+                  <span v-if="deviceStore.selectedDevice.batteryCharging" class="text-[10px] font-bold text-[#30D158] uppercase">Charging</span>
+                  <span class="text-sm font-bold text-white">{{ deviceStore.selectedDevice.batteryLevel }}%</span>
                 </div>
               </div>
               <div class="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 relative">
                 <div
                   class="h-full rounded-full transition-all duration-500"
-                  :class="deviceStore.device.batteryLevel > 20 ? 'bg-[#30D158]' : 'bg-[#FF453A]'"
-                  :style="{ width: `${deviceStore.device.batteryLevel}%` }"
+                  :class="deviceStore.selectedDevice.batteryLevel > 20 ? 'bg-[#30D158]' : 'bg-[#FF453A]'"
+                  :style="{ width: `${deviceStore.selectedDevice.batteryLevel}%` }"
                 ></div>
               </div>
               <div class="flex justify-between text-[10px] text-[#8E8E93] font-medium px-1 pt-1">
-                <span>Health: <span class="text-white font-bold">{{ deviceStore.device.batteryHealth || '--' }}%</span></span>
-                <span>Cycles: <span class="text-white font-bold">{{ deviceStore.device.chargeCycles || '--' }}</span></span>
+                <span>Health: <span class="text-white font-bold">{{ deviceStore.selectedDevice.batteryHealth || '--' }}%</span></span>
+                <span>Cycles: <span class="text-white font-bold">{{ deviceStore.selectedDevice.chargeCycles || '--' }}</span></span>
               </div>
             </div>
           </div>
@@ -422,21 +445,22 @@
             <div class="grid grid-cols-2 gap-y-4">
               <div class="space-y-1">
                 <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Wi-Fi Address</div>
-                <div class="text-xs text-white font-mono">{{ deviceStore.device.wifiAddress || 'N/A' }}</div>
+                <div class="text-xs text-white font-mono">{{ deviceStore.selectedDevice.wifiAddress || 'N/A' }}</div>
               </div>
               <div class="space-y-1 text-right">
                 <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Jailbreak</div>
-                <div class="text-xs font-bold" :class="deviceStore.device.isJailbroken ? 'text-[#FF453A]' : 'text-[#30D158]'">
-                  {{ deviceStore.device.isJailbroken ? 'Yes' : 'No' }}
+                <div class="text-xs font-bold" :class="deviceStore.selectedDevice.isJailbroken ? 'text-[#FF453A]' : 'text-[#30D158]'">
+                  {{ deviceStore.selectedDevice.isJailbroken ? 'Yes' : 'No' }}
                 </div>
               </div>
               <div class="space-y-1">
                 <div class="text-[10px] font-bold text-[#8E8E93] uppercase">UDID</div>
-                <div class="text-[10px] text-white font-mono break-all">{{ deviceStore.device.udid }}</div>
+                <div class="text-[10px] text-white font-mono break-all">{{ deviceStore.selectedDevice.udid }}</div>
               </div>
             </div>
           </div>
         </div>
+
 
 
         <!-- Modal Footer -->
@@ -516,22 +540,23 @@ const filteredApps = computed(() => {
 
 onMounted(() => {
   deviceStore.initListeners()
-  deviceStore.checkDevice()
+  deviceStore.checkDevices()
 })
 
 function handleRefresh() {
-  deviceStore.checkDevice()
+  deviceStore.checkDevices()
 }
 
-function handlePair() {
-  deviceStore.pairDevice().catch((err) => {
+function handlePair(udid: string) {
+  deviceStore.pairDevice(udid).catch((err) => {
     showToast('Pairing Failed', err.message || 'Please unlock your device and trust this computer', 'error')
   })
 }
 
+
 function triggerIPAInstall() {
   deviceStore.installIPA().catch((err) => {
-    // Error handled in store state
+    showToast('Installation Error', err.message || String(err), 'error')
   })
 }
 
@@ -558,16 +583,24 @@ const confirmUninstallApp = ref<InstalledApp | null>(null)
 function handleFileDrop(e: DragEvent) {
   const files = e.dataTransfer?.files
   if (files && files.length > 0) {
-    const file = files[0]
-    if (file.name.endsWith('.ipa')) {
-      // In Wails, file.path contains the absolute local OS path
-      const path = (file as any).path
-      if (path) {
-        deviceStore.installIPA(path)
+    const ipaPaths: string[] = []
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].name.endsWith('.ipa')) {
+        const path = (files[i] as any).path
+        if (path) ipaPaths.push(path)
+      }
+    }
+
+    if (ipaPaths.length > 0) {
+      if (ipaPaths.length === 1) {
+        deviceStore.installIPA(ipaPaths[0])
+      } else {
+        deviceStore.installMultipleIPAs(ipaPaths)
       }
     }
   }
 }
+
 
 function switchTab(tab: 'user' | 'system') {
   deviceStore.activeTab = tab

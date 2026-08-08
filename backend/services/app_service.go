@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/apple"
@@ -94,20 +95,20 @@ func (s *AppService) Shutdown() {
 
 // ----------------- Device Management Bindings -----------------
 
-func (s *AppService) GetConnectedDevice() (*models.DeviceInfo, error) {
-	return s.deviceService.GetConnectedDevice()
+func (s *AppService) GetConnectedDevices() ([]models.DeviceInfo, error) {
+	return s.deviceService.GetConnectedDevices()
 }
 
-func (s *AppService) IsDeviceConnected() bool {
-	return s.deviceService.IsDeviceConnected()
+func (s *AppService) IsDeviceConnected(udid string) bool {
+	return s.deviceService.IsDeviceConnected(udid)
 }
 
-func (s *AppService) PairDevice() error {
-	return s.deviceService.PairDevice()
+func (s *AppService) PairDevice(udid string) error {
+	return s.deviceService.PairDevice(udid)
 }
 
-func (s *AppService) ListInstalledApps(appType string) ([]models.InstalledApp, error) {
-	apps, err := s.deviceService.ListInstalledApps(appType)
+func (s *AppService) ListInstalledApps(udid string, appType string) ([]models.InstalledApp, error) {
+	apps, err := s.deviceService.ListInstalledApps(udid, appType)
 	if err != nil {
 		return nil, err
 	}
@@ -117,9 +118,7 @@ func (s *AppService) ListInstalledApps(appType string) ([]models.InstalledApp, e
 	enrichedApps := make([]models.InstalledApp, len(apps))
 	copy(enrichedApps, apps)
 
-	// Limit concurrency to avoid hitting iTunes API rate limits too hard
 	sem := make(chan struct{}, 5)
-
 	for i := range enrichedApps {
 		wg.Add(1)
 		go func(idx int) {
@@ -128,8 +127,6 @@ func (s *AppService) ListInstalledApps(appType string) ([]models.InstalledApp, e
 			defer func() { <-sem }()
 
 			bundleID := enrichedApps[idx].BundleID
-			// Skip system apps or apps that don't look like standard bundles if needed
-			// But usually, we want artwork for all user apps at least.
 			meta, err := s.searchService.Lookup(bundleID, "ios")
 			if err == nil && meta != nil && meta.ArtworkURL != "" {
 				enrichedApps[idx].ArtworkURL = meta.ArtworkURL
@@ -141,14 +138,23 @@ func (s *AppService) ListInstalledApps(appType string) ([]models.InstalledApp, e
 	return enrichedApps, nil
 }
 
-func (s *AppService) InstallIPA(ipaPath string) error {
-	s.AddLog("INFO", fmt.Sprintf("User requested IPA installation: %s", ipaPath), "AppService")
-	return s.deviceService.InstallIPA(ipaPath)
+func (s *AppService) InstallIPA(udid, ipaPath string) error {
+	s.AddLog("INFO", fmt.Sprintf("User queued IPA installation on %s: %s", udid, ipaPath), "AppService")
+	return s.deviceService.QueueInstall(udid, ipaPath)
 }
 
-func (s *AppService) UninstallApp(bundleID string) error {
-	s.AddLog("INFO", fmt.Sprintf("User requested uninstallation: %s", bundleID), "AppService")
-	return s.deviceService.UninstallApp(bundleID)
+func (s *AppService) InstallMultipleIPAs(udid string, ipaPaths []string) error {
+	for _, path := range ipaPaths {
+		if err := s.deviceService.QueueInstall(udid, path); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *AppService) UninstallApp(udid, bundleID string) error {
+	s.AddLog("INFO", fmt.Sprintf("User requested uninstallation from %s: %s", udid, bundleID), "AppService")
+	return s.deviceService.UninstallApp(udid, bundleID)
 }
 
 func (s *AppService) ValidateIPA(ipaPath string) (*models.IPAInfo, error) {
@@ -158,6 +164,11 @@ func (s *AppService) ValidateIPA(ipaPath string) (*models.IPAInfo, error) {
 func (s *AppService) SelectIPAFile() (string, error) {
 	return s.deviceService.SelectIPAFile()
 }
+
+func (s *AppService) SelectMultipleIPAs() ([]string, error) {
+	return s.deviceService.SelectMultipleIPAFiles()
+}
+
 
 // ----------------- Auth Bindings -----------------
 

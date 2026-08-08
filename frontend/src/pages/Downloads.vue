@@ -217,10 +217,10 @@
 
           <div class="flex items-center space-x-2 shrink-0">
             <button
-              v-if="deviceStore.isConnected && task.status === 'completed'"
+              v-if="deviceStore.devices.length > 0 && task.status === 'completed'"
               type="button"
               class="btn-primary text-xs px-3.5 py-1.5 flex items-center space-x-1.5"
-              @click="installToDevice(task.destinationPath)"
+              @click="handleInstallClick(task.destinationPath)"
             >
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -229,6 +229,7 @@
             </button>
             <button
               v-if="task.status === 'failed'"
+
               type="button"
               class="btn-primary text-xs px-3.5 py-1.5"
               @click="downloadsStore.retryDownload(task.id)"
@@ -246,8 +247,54 @@
         </div>
       </div>
     </div>
+
+    <!-- Device Picker Modal -->
+    <div
+      v-if="ipaToInstall && deviceStore.devices.length > 1"
+      class="fixed inset-0 bg-black/60 backdrop-blur-md z-[80] flex items-center justify-center p-6"
+      @click.self="ipaToInstall = null"
+    >
+      <div class="w-full max-w-sm bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
+        <div class="text-center space-y-2">
+          <h3 class="text-lg font-bold text-white">Select Target Device</h3>
+          <p class="text-xs text-[#8E8E93]">Multiple devices detected. Please choose where to install.</p>
+        </div>
+
+        <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+          <button
+            v-for="dev in deviceStore.devices"
+            :key="dev.udid"
+            @click="installToDevice(ipaToInstall!, dev.udid)"
+            class="w-full p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition text-left flex items-center justify-between group"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF]">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-white group-hover:text-[#0A84FF] transition-colors">{{ dev.name }}</div>
+                <div class="text-[10px] text-[#8E8E93]">{{ dev.model }} • iOS {{ dev.iosVersion }}</div>
+              </div>
+            </div>
+            <svg class="w-4 h-4 text-[#8E8E93] group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <button
+          @click="ipaToInstall = null"
+          class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
@@ -267,21 +314,34 @@ const { t } = useI18n()
 const { showToast } = useNotifications()
 const router = useRouter()
 
+const ipaToInstall = ref<string | null>(null)
+
 onMounted(() => {
   downloadsStore.fetchDownloads()
   settingsStore.fetchSettings()
 })
 
-async function installToDevice(path: string) {
+function handleInstallClick(path: string) {
+  if (deviceStore.devices.length === 1) {
+    installToDevice(path, deviceStore.devices[0].udid)
+  } else {
+    ipaToInstall.value = path
+  }
+}
+
+async function installToDevice(path: string, udid: string) {
+  ipaToInstall.value = null
   try {
+    deviceStore.selectedUdid = udid
     router.push('/apps')
     setTimeout(() => {
-      deviceStore.installIPA(path)
+      deviceStore.installIPA(path, udid)
     }, 300)
   } catch (err: any) {
     showToast('Installation Failed', err.message || err, 'error')
   }
 }
+
 
 async function browseFolder() {
   await settingsStore.browseFolder()

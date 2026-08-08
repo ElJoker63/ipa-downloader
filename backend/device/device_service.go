@@ -23,14 +23,20 @@ type DeviceService interface {
 	SetContext(ctx context.Context)
 	StartWatcher()
 	StopWatcher()
-	GetConnectedDevice() (*models.DeviceInfo, error)
-	IsDeviceConnected() bool
-	PairDevice() error
-	ListInstalledApps(appType string) ([]models.InstalledApp, error)
-	InstallIPA(ipaPath string) error
-	UninstallApp(bundleID string) error
+	GetConnectedDevices() ([]models.DeviceInfo, error)
+	IsDeviceConnected(udid string) bool
+	PairDevice(udid string) error
+	ListInstalledApps(udid string, appType string) ([]models.InstalledApp, error)
+	QueueInstall(udid string, ipaPath string) error
+	UninstallApp(udid string, bundleID string) error
 	ValidateIPA(ipaPath string) (*models.IPAInfo, error)
 	SelectIPAFile() (string, error)
+	SelectMultipleIPAFiles() ([]string, error)
+}
+
+type installTask struct {
+	udid    string
+	ipaPath string
 }
 
 type deviceService struct {
@@ -39,18 +45,25 @@ type deviceService struct {
 	mu      sync.RWMutex
 
 	usbmux         giDevice.Usbmux
-	cachedDevice   giDevice.Device
-	cachedInfo     *models.DeviceInfo
+	devices        map[string]giDevice.Device
+	deviceInfos    map[string]*models.DeviceInfo
 	watcherRunning bool
 	stopChan       chan struct{}
+
+	installQueue chan installTask
 }
 
 // NewDeviceService creates a new instance of DeviceService.
 func NewDeviceService(emitter events.Emitter) DeviceService {
-	return &deviceService{
-		emitter:  emitter,
-		stopChan: make(chan struct{}),
+	s := &deviceService{
+		emitter:      emitter,
+		stopChan:     make(chan struct{}),
+		devices:      make(map[string]giDevice.Device),
+		deviceInfos:  make(map[string]*models.DeviceInfo),
+		installQueue: make(chan installTask, 100),
 	}
+	go s.processInstallQueue()
+	return s
 }
 
 func (s *deviceService) SetContext(ctx context.Context) {
@@ -103,58 +116,339 @@ func (s *deviceService) checkDeviceConnection() {
 	defer func() {
 		if r := recover(); r != nil {
 			s.emitter.EmitLog("ERROR", fmt.Sprintf("Panic recovered in device service: %v", r), "DeviceService")
-			s.handleDisconnect()
 		}
 	}()
 
 	usbmux, err := giDevice.NewUsbmux()
 	if err != nil {
-		s.handleDisconnect()
 		return
 	}
 
-	devices, err := usbmux.Devices()
-	if err != nil || len(devices) == 0 {
-		s.handleDisconnect()
-		return
-	}
-
-	// Pick the first connected USB device
-	dev := devices[0]
-
-	s.mu.Lock()
-	wasConnected := s.cachedDevice != nil
-	s.cachedDevice = dev
-	s.usbmux = usbmux
-	s.mu.Unlock()
-
-	info, err := s.fetchDeviceInfo(dev)
+	rawDevices, err := usbmux.Devices()
 	if err != nil {
-		s.handleDisconnect()
 		return
 	}
 
 	s.mu.Lock()
-	s.cachedInfo = info
-	s.mu.Unlock()
+	s.usbmux = usbmux
+	currentUdids := make(map[string]bool)
 
-	if !wasConnected {
-		s.emitter.EmitLog("INFO", fmt.Sprintf("iOS Device connected: %s (%s)", info.Name, info.Model), "DeviceService")
-		s.emitter.Emit(events.EventDeviceConnected, info)
+	for _, dev := range rawDevices {
+		udid := dev.Properties().SerialNumber
+		currentUdids[udid] = true
+
+		if _, exists := s.devices[udid]; !exists {
+			// New device connected
+			s.devices[udid] = dev
+			info, err := s.fetchDeviceInfo(dev)
+			if err == nil {
+				s.deviceInfos[udid] = info
+				s.emitter.EmitLog("INFO", fmt.Sprintf("iOS Device connected: %s (%s)", info.Name, info.Model), "DeviceService")
+				s.emitter.Emit("device:connected", info)
+			}
+		} else {
+			// Update existing device info (battery/storage might change)
+			info, err := s.fetchDeviceInfo(dev)
+			if err == nil {
+				s.deviceInfos[udid] = info
+				s.emitter.Emit("device:updated", info)
+			}
+		}
+	}
+
+	// Detect disconnections
+	for udid := range s.devices {
+		if !currentUdids[udid] {
+			s.emitter.EmitLog("INFO", fmt.Sprintf("iOS Device disconnected: %s", udid), "DeviceService")
+			delete(s.devices, udid)
+			delete(s.deviceInfos, udid)
+			s.emitter.Emit("device:disconnected", udid)
+		}
+	}
+	s.mu.Unlock()
+}
+
+func (s *deviceService) processInstallQueue() {
+	for task := range s.installQueue {
+		s.mu.RLock()
+		dev, exists := s.devices[task.udid]
+		info := s.deviceInfos[task.udid]
+		s.mu.RUnlock()
+
+		if !exists {
+			s.emitter.EmitLog("ERROR", fmt.Sprintf("Queue: Device %s no longer connected", task.udid), "DeviceService")
+			continue
+		}
+
+		s.runActualInstall(dev, info, task.ipaPath)
 	}
 }
 
-func (s *deviceService) handleDisconnect() {
-	s.mu.Lock()
-	wasConnected := s.cachedDevice != nil
-	s.cachedDevice = nil
-	s.cachedInfo = nil
-	s.mu.Unlock()
+func (s *deviceService) runActualInstall(dev giDevice.Device, info *models.DeviceInfo, ipaPath string) {
+	s.emitter.EmitLog("INFO", fmt.Sprintf("Starting queued installation on %s: %s", info.Name, filepath.Base(ipaPath)), "DeviceService")
 
-	if wasConnected {
-		s.emitter.EmitLog("INFO", "iOS Device disconnected", "DeviceService")
-		s.emitter.Emit(events.EventDeviceDisconnected, nil)
+	s.emitInstallProgress("Preparing", 10, fmt.Sprintf("[%s] Validating IPA...", info.Name))
+	ipaInfo, err := s.ValidateIPA(ipaPath)
+	if err != nil {
+		s.emitInstallProgress("Failed", 0, err.Error())
+		return
 	}
+
+	s.emitInstallProgress("Copying", 30, fmt.Sprintf("[%s] Transferring %s...", info.Name, ipaInfo.BundleName))
+
+	err = dev.AppInstall(ipaPath)
+	if err != nil {
+		s.emitInstallProgress("Failed", 0, err.Error())
+		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": err.Error(), "ipa": ipaPath, "udid": info.UDID})
+		s.emitter.EmitLog("ERROR", fmt.Sprintf("Failed to install %s on %s: %v", ipaInfo.BundleName, info.Name, err), "DeviceService")
+		return
+	}
+
+	s.emitInstallProgress("Complete", 100, fmt.Sprintf("[%s] Successfully installed %s", info.Name, ipaInfo.BundleName))
+	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("App %s installed on %s", ipaInfo.BundleName, info.Name), "DeviceService")
+	s.emitter.Emit(events.EventDeviceInstallComplete, map[string]interface{}{"info": ipaInfo, "udid": info.UDID})
+}
+
+func (s *deviceService) GetConnectedDevices() ([]models.DeviceInfo, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var list []models.DeviceInfo
+	for _, info := range s.deviceInfos {
+		list = append(list, *info)
+	}
+	return list, nil
+}
+
+func (s *deviceService) IsDeviceConnected(udid string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	_, exists := s.devices[udid]
+	return exists
+}
+
+func (s *deviceService) PairDevice(udid string) error {
+	s.mu.RLock()
+	dev, exists := s.devices[udid]
+	s.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("device %s not connected", udid)
+	}
+
+	_, err := dev.Pair()
+	if err != nil {
+		return fmt.Errorf("device pairing failed: %w", err)
+	}
+
+	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("Device %s paired", udid), "DeviceService")
+	s.checkDeviceConnection() // Refresh info
+	return nil
+}
+
+func (s *deviceService) ListInstalledApps(udid string, appType string) ([]models.InstalledApp, error) {
+	s.mu.RLock()
+	dev, exists := s.devices[udid]
+	s.mu.RUnlock()
+
+	if !exists {
+		return nil, fmt.Errorf("device %s not connected", udid)
+	}
+
+	var targetType giDevice.ApplicationType
+	switch strings.ToLower(appType) {
+	case "system":
+		targetType = giDevice.ApplicationTypeSystem
+	case "user":
+		targetType = giDevice.ApplicationTypeUser
+	default:
+		targetType = giDevice.ApplicationTypeAny
+	}
+
+	result, err := dev.InstallationProxyBrowse(
+		giDevice.WithApplicationType(targetType),
+		giDevice.WithReturnAttributes(
+			"CFBundleIdentifier",
+			"CFBundleDisplayName",
+			"CFBundleName",
+			"CFBundleShortVersionString",
+			"CFBundleVersion",
+			"ApplicationType",
+			"MinimumOSVersion",
+			"SignerIdentity",
+			"StaticDiskUsage",
+			"DynamicDiskUsage",
+		),
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to browse apps: %w", err)
+	}
+
+	var installedApps []models.InstalledApp
+	for _, item := range result {
+		if m, ok := item.(map[string]interface{}); ok {
+			app := models.InstalledApp{
+				BundleID:       getStringVal(m, "CFBundleIdentifier"),
+				Version:        getStringVal(m, "CFBundleVersion"),
+				ShortVersion:   getStringVal(m, "CFBundleShortVersionString"),
+				AppType:        getStringVal(m, "ApplicationType"),
+				MinimumOS:      getStringVal(m, "MinimumOSVersion"),
+				SignerIdentity: getStringVal(m, "SignerIdentity"),
+				Size:           getInt64Val(m, "StaticDiskUsage"),
+				DynamicSize:    getInt64Val(m, "DynamicDiskUsage"),
+			}
+
+			appName := getStringVal(m, "CFBundleDisplayName")
+			if appName == "" {
+				appName = getStringVal(m, "CFBundleName")
+			}
+			if appName == "" {
+				appName = app.BundleID
+			}
+			app.Name = appName
+
+			if app.BundleID != "" {
+				installedApps = append(installedApps, app)
+			}
+		}
+	}
+
+	return installedApps, nil
+}
+
+func (s *deviceService) QueueInstall(udid string, ipaPath string) error {
+	s.mu.RLock()
+	_, exists := s.devices[udid]
+	s.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("device %s not connected", udid)
+	}
+
+	s.installQueue <- installTask{udid: udid, ipaPath: ipaPath}
+	s.emitter.EmitLog("INFO", fmt.Sprintf("Added to installation queue: %s", filepath.Base(ipaPath)), "DeviceService")
+	return nil
+}
+
+func (s *deviceService) UninstallApp(udid string, bundleID string) error {
+	s.mu.RLock()
+	dev, exists := s.devices[udid]
+	s.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("device %s not connected", udid)
+	}
+
+	s.emitter.EmitLog("INFO", fmt.Sprintf("Uninstalling %s from %s", bundleID, udid), "DeviceService")
+
+	err := dev.AppUninstall(bundleID)
+	if err != nil {
+		return fmt.Errorf("failed to uninstall: %w", err)
+	}
+
+	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("Uninstalled %s", bundleID), "DeviceService")
+	return nil
+}
+
+func (s *deviceService) ValidateIPA(ipaPath string) (*models.IPAInfo, error) {
+	r, err := zip.OpenReader(ipaPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open IPA file (invalid archive): %w", err)
+	}
+	defer r.Close()
+
+	var infoPlistFile *zip.File
+	var size int64
+
+	for _, f := range r.File {
+		size += f.FileInfo().Size()
+		// Look for Payload/*.app/Info.plist
+		parts := strings.Split(filepath.ToSlash(f.Name), "/")
+		if len(parts) == 3 && parts[0] == "Payload" && strings.HasSuffix(parts[1], ".app") && parts[2] == "Info.plist" {
+			infoPlistFile = f
+			break
+		}
+	}
+
+	if infoPlistFile == nil {
+		return nil, fmt.Errorf("invalid IPA: missing Info.plist in Payload directory")
+	}
+
+	rc, err := infoPlistFile.Open()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Info.plist from IPA: %w", err)
+	}
+	defer rc.Close()
+
+	buf, err := io.ReadAll(rc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract Info.plist: %w", err)
+	}
+
+	var plistData map[string]interface{}
+	decoder := plist.NewDecoder(bytes.NewReader(buf))
+	if err := decoder.Decode(&plistData); err != nil {
+		return nil, fmt.Errorf("failed to parse Info.plist: %w", err)
+	}
+
+	info := &models.IPAInfo{
+		BundleID:      getStringVal(plistData, "CFBundleIdentifier"),
+		BundleName:    getStringVal(plistData, "CFBundleDisplayName"),
+		Version:       getStringVal(plistData, "CFBundleVersion"),
+		ShortVersion:  getStringVal(plistData, "CFBundleShortVersionString"),
+		MinimumOS:     getStringVal(plistData, "MinimumOSVersion"),
+		FileSizeBytes: size,
+		IsValid:       true,
+	}
+
+	if info.BundleName == "" {
+		info.BundleName = getStringVal(plistData, "CFBundleName")
+	}
+
+	return info, nil
+}
+
+func (s *deviceService) SelectIPAFile() (string, error) {
+	s.mu.RLock()
+	ctx := s.ctx
+	s.mu.RUnlock()
+
+	if ctx == nil {
+		return "", fmt.Errorf("context not available")
+	}
+
+	path, err := runtime.OpenFileDialog(ctx, runtime.OpenDialogOptions{
+		Title: "Select IPA File to Install",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "iOS Application Archive (*.ipa)", Pattern: "*.ipa"},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+func (s *deviceService) SelectMultipleIPAFiles() ([]string, error) {
+	s.mu.RLock()
+	ctx := s.ctx
+	s.mu.RUnlock()
+
+	if ctx == nil {
+		return nil, fmt.Errorf("context not available")
+	}
+
+	paths, err := runtime.OpenMultipleFilesDialog(ctx, runtime.OpenDialogOptions{
+		Title: "Select IPA Files to Install",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "iOS Application Archive (*.ipa)", Pattern: "*.ipa"},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return paths, nil
 }
 
 func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo, error) {
@@ -279,7 +573,6 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	return info, nil
 }
 
-
 func formatProductType(productType string) string {
 	modelsMap := map[string]string{
 		"iPhone10,3": "iPhone X",
@@ -315,274 +608,6 @@ func formatProductType(productType string) string {
 		return name
 	}
 	return productType
-}
-
-func (s *deviceService) GetConnectedDevice() (*models.DeviceInfo, error) {
-	s.mu.RLock()
-	dev := s.cachedDevice
-	info := s.cachedInfo
-	s.mu.RUnlock()
-
-	if dev == nil {
-		// Attempt instant scan
-		s.checkDeviceConnection()
-		s.mu.RLock()
-		info = s.cachedInfo
-		s.mu.RUnlock()
-	}
-
-	if info == nil {
-		return nil, fmt.Errorf("no iOS device connected via USB")
-	}
-
-	return info, nil
-}
-
-func (s *deviceService) IsDeviceConnected() bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.cachedDevice != nil
-}
-
-func (s *deviceService) PairDevice() error {
-	s.mu.RLock()
-	dev := s.cachedDevice
-	s.mu.RUnlock()
-
-	if dev == nil {
-		return fmt.Errorf("no iOS device connected to pair")
-	}
-
-	_, err := dev.Pair()
-	if err != nil {
-		return fmt.Errorf("device pairing failed (please unlock device and trust this computer): %w", err)
-	}
-
-	s.emitter.EmitLog("SUCCESS", "Device successfully paired", "DeviceService")
-	s.emitter.Emit(events.EventDevicePairStatus, true)
-	return nil
-}
-
-func (s *deviceService) ListInstalledApps(appType string) ([]models.InstalledApp, error) {
-	s.mu.RLock()
-	dev := s.cachedDevice
-	s.mu.RUnlock()
-
-	if dev == nil {
-		return nil, fmt.Errorf("no iOS device connected")
-	}
-
-	var targetType giDevice.ApplicationType
-	switch strings.ToLower(appType) {
-	case "system":
-		targetType = giDevice.ApplicationTypeSystem
-	case "user":
-		targetType = giDevice.ApplicationTypeUser
-	default:
-		targetType = giDevice.ApplicationTypeAny
-	}
-
-	result, err := dev.InstallationProxyBrowse(
-		giDevice.WithApplicationType(targetType),
-		giDevice.WithReturnAttributes(
-			"CFBundleIdentifier",
-			"CFBundleDisplayName",
-			"CFBundleName",
-			"CFBundleShortVersionString",
-			"CFBundleVersion",
-			"ApplicationType",
-			"MinimumOSVersion",
-			"SignerIdentity",
-			"StaticDiskUsage",
-			"DynamicDiskUsage",
-		),
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to browse installed applications: %w", err)
-	}
-
-	var installedApps []models.InstalledApp
-
-	for _, item := range result {
-		if m, ok := item.(map[string]interface{}); ok {
-			app := models.InstalledApp{
-				BundleID:       getStringVal(m, "CFBundleIdentifier"),
-				Version:        getStringVal(m, "CFBundleVersion"),
-				ShortVersion:   getStringVal(m, "CFBundleShortVersionString"),
-				AppType:        getStringVal(m, "ApplicationType"),
-				MinimumOS:      getStringVal(m, "MinimumOSVersion"),
-				SignerIdentity: getStringVal(m, "SignerIdentity"),
-				Size:           getInt64Val(m, "StaticDiskUsage"),
-				DynamicSize:    getInt64Val(m, "DynamicDiskUsage"),
-			}
-
-			appName := getStringVal(m, "CFBundleDisplayName")
-			if appName == "" {
-				appName = getStringVal(m, "CFBundleName")
-			}
-			if appName == "" {
-				appName = app.BundleID
-			}
-			app.Name = appName
-
-			if app.BundleID != "" {
-				installedApps = append(installedApps, app)
-			}
-		}
-	}
-
-	return installedApps, nil
-}
-
-func (s *deviceService) InstallIPA(ipaPath string) error {
-	s.mu.RLock()
-	dev := s.cachedDevice
-	s.mu.RUnlock()
-
-	if dev == nil {
-		return fmt.Errorf("no iOS device connected")
-	}
-
-	s.emitter.EmitLog("INFO", fmt.Sprintf("Starting IPA installation: %s", filepath.Base(ipaPath)), "DeviceService")
-
-	s.emitInstallProgress("Preparing", 10, "Validating IPA package...")
-	info, err := s.ValidateIPA(ipaPath)
-	if err != nil {
-		s.emitInstallProgress("Failed", 0, err.Error())
-		return fmt.Errorf("IPA validation failed: %w", err)
-	}
-
-	s.emitInstallProgress("Copying", 30, fmt.Sprintf("Transferring %s (%s)...", info.BundleName, formatBytes(info.FileSizeBytes)))
-
-	// Perform actual installation
-	s.emitInstallProgress("Installing", 60, "Deploying package to device...")
-	err = dev.AppInstall(ipaPath)
-	if err != nil {
-		s.emitInstallProgress("Failed", 0, err.Error())
-		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": err.Error(), "ipa": ipaPath})
-		return fmt.Errorf("IPA installation failed: %w", err)
-	}
-
-	s.emitInstallProgress("Complete", 100, fmt.Sprintf("Successfully installed %s (%s)", info.BundleName, info.Version))
-	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("App %s (%s) installed on device", info.BundleName, info.BundleID), "DeviceService")
-	s.emitter.Emit(events.EventDeviceInstallComplete, info)
-
-	return nil
-}
-
-func (s *deviceService) UninstallApp(bundleID string) error {
-	s.mu.RLock()
-	dev := s.cachedDevice
-	s.mu.RUnlock()
-
-	if dev == nil {
-		s.emitter.EmitLog("ERROR", "Uninstall failed: No device connected", "DeviceService")
-		return fmt.Errorf("no iOS device connected")
-	}
-
-	s.emitter.EmitLog("INFO", fmt.Sprintf("Requesting uninstallation for bundle ID: %s", bundleID), "DeviceService")
-
-	// Ensure device is still responding before trying to uninstall
-	_, err := dev.GetValue("", "DeviceName")
-	if err != nil {
-		s.emitter.EmitLog("ERROR", fmt.Sprintf("Device communication error before uninstall: %v", err), "DeviceService")
-		return fmt.Errorf("device communication error: %w", err)
-	}
-
-	err = dev.AppUninstall(bundleID)
-	if err != nil {
-		s.emitter.EmitLog("ERROR", fmt.Sprintf("Failed to uninstall %s: %v", bundleID, err), "DeviceService")
-		return fmt.Errorf("failed to uninstall app %s: %w", bundleID, err)
-	}
-
-	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("App %s uninstalled successfully", bundleID), "DeviceService")
-	// Trigger an app list refresh after uninstallation
-	go func() {
-		time.Sleep(1 * time.Second)
-		s.emitter.Emit(events.EventDeviceConnected, s.cachedInfo) // Force frontend refresh via event
-	}()
-
-	return nil
-}
-
-func (s *deviceService) ValidateIPA(ipaPath string) (*models.IPAInfo, error) {
-	r, err := zip.OpenReader(ipaPath)
-	if err != nil {
-		return nil, fmt.Errorf("cannot open IPA file (invalid archive): %w", err)
-	}
-	defer r.Close()
-
-	var infoPlistFile *zip.File
-	var size int64
-
-	for _, f := range r.File {
-		size += f.FileInfo().Size()
-		// Look for Payload/*.app/Info.plist
-		parts := strings.Split(filepath.ToSlash(f.Name), "/")
-		if len(parts) == 3 && parts[0] == "Payload" && strings.HasSuffix(parts[1], ".app") && parts[2] == "Info.plist" {
-			infoPlistFile = f
-			break
-		}
-	}
-
-	if infoPlistFile == nil {
-		return nil, fmt.Errorf("invalid IPA: missing Info.plist in Payload directory")
-	}
-
-	rc, err := infoPlistFile.Open()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read Info.plist from IPA: %w", err)
-	}
-	defer rc.Close()
-
-	buf, err := io.ReadAll(rc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract Info.plist: %w", err)
-	}
-
-	var plistData map[string]interface{}
-	decoder := plist.NewDecoder(bytes.NewReader(buf))
-	if err := decoder.Decode(&plistData); err != nil {
-		return nil, fmt.Errorf("failed to parse Info.plist: %w", err)
-	}
-
-	info := &models.IPAInfo{
-		BundleID:      getStringVal(plistData, "CFBundleIdentifier"),
-		BundleName:    getStringVal(plistData, "CFBundleDisplayName"),
-		Version:       getStringVal(plistData, "CFBundleVersion"),
-		ShortVersion:  getStringVal(plistData, "CFBundleShortVersionString"),
-		MinimumOS:     getStringVal(plistData, "MinimumOSVersion"),
-		FileSizeBytes: size,
-		IsValid:       true,
-	}
-
-	if info.BundleName == "" {
-		info.BundleName = getStringVal(plistData, "CFBundleName")
-	}
-
-	return info, nil
-}
-
-func (s *deviceService) SelectIPAFile() (string, error) {
-	s.mu.RLock()
-	ctx := s.ctx
-	s.mu.RUnlock()
-
-	if ctx == nil {
-		return "", fmt.Errorf("context not available")
-	}
-
-	path, err := runtime.OpenFileDialog(ctx, runtime.OpenDialogOptions{
-		Title: "Select IPA File to Install",
-		Filters: []runtime.FileFilter{
-			{DisplayName: "iOS Application Archive (*.ipa)", Pattern: "*.ipa"},
-		},
-	})
-	if err != nil {
-		return "", err
-	}
-	return path, nil
 }
 
 func (s *deviceService) emitInstallProgress(phase string, percent int, message string) {
