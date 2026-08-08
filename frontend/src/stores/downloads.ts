@@ -7,12 +7,14 @@ export const useDownloadsStore = defineStore('downloads', () => {
   const downloads = ref<DownloadTask[]>([])
   const isLoading = ref(false)
 
+  // Active downloads queue (Must NEVER remove tasks while downloading, queued, paused, OR signing)
   const activeDownloads = computed(() => {
     return downloads.value.filter(
-      (d) => d.status === 'downloading' || d.status === 'queued' || d.status === 'paused'
+      (d) => d.status === 'downloading' || d.status === 'queued' || d.status === 'paused' || d.status === 'signing'
     )
   })
 
+  // Completed or failed downloads
   const completedDownloads = computed(() => {
     return downloads.value.filter(
       (d) => d.status === 'completed' || d.status === 'failed' || d.status === 'cancelled'
@@ -20,7 +22,9 @@ export const useDownloadsStore = defineStore('downloads', () => {
   })
 
   const activeCount = computed(() => {
-    return downloads.value.filter((d) => d.status === 'downloading' || d.status === 'queued').length
+    return downloads.value.filter(
+      (d) => d.status === 'downloading' || d.status === 'queued' || d.status === 'signing'
+    ).length
   })
 
   const totalSpeedFormatted = computed(() => {
@@ -95,7 +99,7 @@ export const useDownloadsStore = defineStore('downloads', () => {
   async function clearCompleted() {
     await WailsService.clearCompletedDownloads()
     downloads.value = downloads.value.filter(
-      (d) => d.status === 'downloading' || d.status === 'queued' || d.status === 'paused'
+      (d) => d.status === 'downloading' || d.status === 'queued' || d.status === 'paused' || d.status === 'signing'
     )
   }
 
@@ -117,6 +121,26 @@ export const useDownloadsStore = defineStore('downloads', () => {
         downloads.value[idx] = { ...downloads.value[idx], ...updatedTask }
       } else {
         downloads.value.unshift(updatedTask)
+      }
+    })
+
+    WailsService.onEvent('download:completed', (updatedTask: DownloadTask) => {
+      if (!updatedTask?.id) return
+      const idx = downloads.value.findIndex((d) => d.id === updatedTask.id)
+      if (idx !== -1) {
+        downloads.value[idx] = { ...downloads.value[idx], ...updatedTask, status: 'completed', progress: 100 }
+      } else {
+        downloads.value.unshift({ ...updatedTask, status: 'completed', progress: 100 })
+      }
+    })
+
+    WailsService.onEvent('download:failed', (updatedTask: DownloadTask) => {
+      if (!updatedTask?.id) return
+      const idx = downloads.value.findIndex((d) => d.id === updatedTask.id)
+      if (idx !== -1) {
+        downloads.value[idx] = { ...downloads.value[idx], ...updatedTask, status: 'failed' }
+      } else {
+        downloads.value.unshift({ ...updatedTask, status: 'failed' })
       }
     })
   }

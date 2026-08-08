@@ -5,20 +5,10 @@
       <!-- Top Brand Header in Sidebar -->
       <div class="px-3 py-2 flex items-center justify-between border-b border-white/[0.08] pb-3 mb-2">
         <div class="flex items-center space-x-2.5">
-          <img src="/logo.png" alt="IPA Downloader" class="w-7 h-7 rounded-lg object-contain shadow-sm shrink-0" />
-          <div>
+          <img src="/logo.png" alt="IPA Downloader" class="w-50 h-50 rounded-lg object-contain shadow-sm shrink-0" />
+          <!--div>
             <div class="text-[13px] font-bold tracking-tight text-white leading-tight">IPA Downloader</div>
-            <div class="text-[10px] text-[#7D8592] font-mono">v2.0 Native Suite</div>
-          </div>
-        </div>
-
-        <div
-          class="flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border"
-          :class="statusBadgeClass"
-          :title="authStore.status"
-        >
-          <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass"></span>
-          <span>{{ authStore.isLoggedIn ? (t.common.connected) : (t.common.notConnected) }}</span>
+          </div-->
         </div>
       </div>
 

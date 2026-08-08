@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <!-- Active Transfers Section (Must NEVER remove signing task until completed) -->
+    <!-- Active Transfers Section (Retains task during downloading AND signing) -->
     <div class="space-y-3 shrink-0">
       <div class="flex items-center justify-between px-1">
         <div class="flex items-center space-x-2">
@@ -118,27 +118,32 @@
             </div>
           </div>
 
-          <!-- Signing Notification Banner & Progress Area -->
-          <div v-if="task.status === 'signing'" class="flex items-center space-x-2.5 p-3 rounded-[12px] bg-[#0A84FF]/15 border border-[#0A84FF]/30 text-[#64D2FF] text-xs font-medium animate-pulse">
-            <svg class="w-4 h-4 animate-spin shrink-0 text-[#0A84FF]" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-            </svg>
-            <span>{{ t.downloads.signingNotice }}</span>
+          <!-- Progress / Signing Area: Directly replaces progress bar with animated signing status when signing -->
+          <div v-if="task.status === 'signing'" class="px-4 py-3 rounded-[12px] bg-[#0A84FF]/15 border border-[#0A84FF]/35 flex items-center justify-between shadow-[0_0_16px_rgba(10,132,255,0.2)] animate-pulse">
+            <div class="flex items-center space-x-3 min-w-0">
+              <svg class="animate-spin h-4 w-4 text-[#64D2FF] shrink-0" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              <span class="text-xs font-semibold text-white truncate">{{ t.downloads.signingNotice }}</span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0A84FF]/25 text-[#64D2FF] border border-[#0A84FF]/40 shrink-0 ml-2">
+              FairPlay SINF
+            </span>
           </div>
 
-          <!-- Progress Bar (With Direct Signing Text Display in Same Area) -->
-          <div class="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/[0.08] relative">
+          <!-- Standard Progress Bar when downloading or paused -->
+          <div v-else class="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/[0.08] relative">
             <div
               class="h-full rounded-full transition-all duration-300 relative overflow-hidden"
-              :class="task.status === 'signing' ? 'bg-gradient-to-r from-[#0A84FF] via-[#64D2FF] to-[#30D158] animate-pulse' : (task.status === 'paused' ? 'bg-[#FFD60A]' : 'bg-[#0A84FF]')"
-              :style="{ width: `${task.status === 'signing' ? 100 : Math.max(task.progress, 2)}%` }"
+              :class="task.status === 'paused' ? 'bg-[#FFD60A]' : 'bg-[#0A84FF]'"
+              :style="{ width: `${Math.max(task.progress, 2)}%` }"
             >
               <div class="absolute inset-0 bg-white/20 animate-pulse-subtle"></div>
             </div>
           </div>
 
-          <!-- Progress Stats Footer (With Clear Signing Status Label) -->
+          <!-- Progress Stats Footer (Clear Real-Time Status) -->
           <div class="flex items-center justify-between text-xs text-[#B8C0CC] font-mono">
             <div class="flex items-center space-x-3">
               <span class="font-bold text-[#FFFFFF]">{{ task.status === 'signing' ? '100.0%' : `${task.progress.toFixed(1)}%` }}</span>
@@ -167,7 +172,7 @@
       </div>
     </div>
 
-    <!-- Completed & Past Downloads Section -->
+    <!-- Completed & Past Transfers Section (Automatically populated in real-time) -->
     <div v-if="downloadsStore.completedDownloads.length > 0" class="space-y-3 pt-2">
       <div class="flex items-center justify-between px-1">
         <h2 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.downloads.completedTitle }}</h2>

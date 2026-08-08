@@ -41,7 +41,7 @@ export const en: Translations = {
     suite: 'Apple App Store Suite',
   },
   home: {
-    badge: 'App Store Direct Integration',
+    badge: '',
     title: 'IPA Downloader',
     subtitle: 'Search, inspect version history, and download signed iOS, iPadOS, and tvOS packages directly from Apple.',
     session: 'Session',
