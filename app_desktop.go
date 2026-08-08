@@ -22,11 +22,11 @@ func runDesktopApp() error {
 	}
 
 	err = wails.Run(&options.App{
-		Title:             "IPATool Desktop",
-		Width:             1180,
-		Height:            780,
-		MinWidth:          960,
-		MinHeight:         640,
+		Title:             "IPA Downloader",
+		Width:             1200,
+		Height:            800,
+		MinWidth:          980,
+		MinHeight:         660,
 		Frameless:         false,
 		StartHidden:       false,
 		HideWindowOnClose: false,
