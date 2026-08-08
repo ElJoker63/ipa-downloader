@@ -66,6 +66,10 @@ export function GetCacheSize() {
   return window['go']['services']['AppService']['GetCacheSize']();
 }
 
+export function GetConnectedDevice() {
+  return window['go']['services']['AppService']['GetConnectedDevice']();
+}
+
 export function GetDownloadHistory() {
   return window['go']['services']['AppService']['GetDownloadHistory']();
 }
@@ -86,6 +90,18 @@ export function GetSettings() {
   return window['go']['services']['AppService']['GetSettings']();
 }
 
+export function InstallIPA(arg1) {
+  return window['go']['services']['AppService']['InstallIPA'](arg1);
+}
+
+export function IsDeviceConnected() {
+  return window['go']['services']['AppService']['IsDeviceConnected']();
+}
+
+export function ListInstalledApps(arg1) {
+  return window['go']['services']['AppService']['ListInstalledApps'](arg1);
+}
+
 export function Login(arg1, arg2, arg3, arg4) {
   return window['go']['services']['AppService']['Login'](arg1, arg2, arg3, arg4);
 }
@@ -104,6 +120,10 @@ export function OpenFile(arg1) {
 
 export function OpenFolder(arg1) {
   return window['go']['services']['AppService']['OpenFolder'](arg1);
+}
+
+export function PairDevice() {
+  return window['go']['services']['AppService']['PairDevice']();
 }
 
 export function PauseDownload(arg1) {
@@ -146,6 +166,10 @@ export function SelectDownloadDirectory(arg1) {
   return window['go']['services']['AppService']['SelectDownloadDirectory'](arg1);
 }
 
+export function SelectIPAFile() {
+  return window['go']['services']['AppService']['SelectIPAFile']();
+}
+
 export function SetContext(arg1) {
   return window['go']['services']['AppService']['SetContext'](arg1);
 }
@@ -156,4 +180,12 @@ export function Shutdown() {
 
 export function ToggleFavorite(arg1) {
   return window['go']['services']['AppService']['ToggleFavorite'](arg1);
+}
+
+export function UninstallApp(arg1) {
+  return window['go']['services']['AppService']['UninstallApp'](arg1);
+}
+
+export function ValidateIPA(arg1) {
+  return window['go']['services']['AppService']['ValidateIPA'](arg1);
 }

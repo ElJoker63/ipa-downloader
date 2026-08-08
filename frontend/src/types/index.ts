@@ -121,3 +121,53 @@ export interface AppDetailsOutput {
   versionHistory: VersionInfo[]
   isFavorite: boolean
 }
+
+export interface DeviceInfo {
+  udid: string
+  name: string
+  model: string
+  productType: string
+  deviceClass: string
+  iosVersion: string
+  buildVersion: string
+  serialNumber: string
+  wifiAddress?: string
+  storageTotal: number
+  storageUsed: number
+  storageFree: number
+  batteryLevel: number
+  batteryCharging: boolean
+  isPaired: boolean
+  isConnected: boolean
+}
+
+export interface InstalledApp {
+  name: string
+  bundleId: string
+  version: string
+  shortVersion: string
+  size: number
+  dynamicSize?: number
+  vendor?: string
+  appType: string
+  minimumOs?: string
+  signerIdentity?: string
+}
+
+export interface IPAInfo {
+  bundleId: string
+  bundleName: string
+  version: string
+  shortVersion: string
+  minimumOs: string
+  architectures: string[]
+  fileSizeBytes: number
+  isValid: boolean
+  error?: string
+}
+
+export interface DeviceInstallProgress {
+  phase: 'Preparing' | 'Copying' | 'Installing' | 'Verifying' | 'Complete' | 'Failed' | string
+  percent: number
+  message: string
+}

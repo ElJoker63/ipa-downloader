@@ -32,6 +32,7 @@ export interface Translations {
     home: string
     search: string
     downloads: string
+    apps: string
     favorites: string
     history: string
     settings: string
@@ -190,5 +191,18 @@ export interface Translations {
     signInForFullHistory: string
     loadingVersions: string
     latestBadge: string
+  }
+  apps: {
+    title: string
+    subtitle: string
+    connected: string
+    disconnected: string
+    userApps: string
+    systemApps: string
+    installIpa: string
+    uninstall: string
+    noDeviceTitle: string
+    noDeviceDesc: string
+    dragDropText: string
   }
 }

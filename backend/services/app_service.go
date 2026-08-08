@@ -6,6 +6,7 @@ import (
 	"github.com/majd/ipatool/v2/backend/apple"
 	"github.com/majd/ipatool/v2/backend/auth"
 	"github.com/majd/ipatool/v2/backend/config"
+	"github.com/majd/ipatool/v2/backend/device"
 	"github.com/majd/ipatool/v2/backend/download"
 	"github.com/majd/ipatool/v2/backend/events"
 	"github.com/majd/ipatool/v2/backend/library"
@@ -25,6 +26,7 @@ type AppService struct {
 	downloadManager download.DownloadManager
 	libraryService  library.LibraryService
 	configService   config.ConfigService
+	deviceService   device.DeviceService
 }
 
 // NewAppService instantiates all sub-services and builds the service layer.
@@ -53,6 +55,7 @@ func NewAppService(dataDir string) (*AppService, error) {
 	downloadManager := download.NewDownloadManager(appleClient, store, emitter)
 	libraryService := library.NewLibraryService(store, emitter)
 	configService := config.NewConfigService(store, emitter)
+	deviceService := device.NewDeviceService(emitter)
 
 	return &AppService{
 		storage:         store,
@@ -63,6 +66,7 @@ func NewAppService(dataDir string) (*AppService, error) {
 		downloadManager: downloadManager,
 		libraryService:  libraryService,
 		configService:   configService,
+		deviceService:   deviceService,
 	}, nil
 }
 
@@ -71,13 +75,50 @@ func (s *AppService) SetContext(ctx context.Context) {
 	s.ctx = ctx
 	s.emitter.SetContext(ctx)
 	s.configService.SetContext(ctx)
+	s.deviceService.SetContext(ctx)
 	s.downloadManager.Start()
+	s.deviceService.StartWatcher()
 }
 
 // Shutdown cleans up resources.
 func (s *AppService) Shutdown() {
+	s.deviceService.StopWatcher()
 	s.downloadManager.Stop()
 	_ = s.storage.Close()
+}
+
+// ----------------- Device Management Bindings -----------------
+
+func (s *AppService) GetConnectedDevice() (*models.DeviceInfo, error) {
+	return s.deviceService.GetConnectedDevice()
+}
+
+func (s *AppService) IsDeviceConnected() bool {
+	return s.deviceService.IsDeviceConnected()
+}
+
+func (s *AppService) PairDevice() error {
+	return s.deviceService.PairDevice()
+}
+
+func (s *AppService) ListInstalledApps(appType string) ([]models.InstalledApp, error) {
+	return s.deviceService.ListInstalledApps(appType)
+}
+
+func (s *AppService) InstallIPA(ipaPath string) error {
+	return s.deviceService.InstallIPA(ipaPath)
+}
+
+func (s *AppService) UninstallApp(bundleID string) error {
+	return s.deviceService.UninstallApp(bundleID)
+}
+
+func (s *AppService) ValidateIPA(ipaPath string) (*models.IPAInfo, error) {
+	return s.deviceService.ValidateIPA(ipaPath)
+}
+
+func (s *AppService) SelectIPAFile() (string, error) {
+	return s.deviceService.SelectIPAFile()
 }
 
 // ----------------- Auth Bindings -----------------

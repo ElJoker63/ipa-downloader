@@ -7,6 +7,10 @@ import type {
   SearchHistoryItem,
   AppSettings,
   LogEntry,
+  DeviceInfo,
+  InstalledApp,
+  IPAInfo,
+  DeviceInstallProgress,
 } from '../types'
 
 import * as AppService from '../../wailsjs/go/services/AppService'
@@ -233,6 +237,52 @@ export const WailsService = {
 
   async addLog(level: string, message: string, context: string = ''): Promise<LogEntry | null> {
     return (await AppService.AddLog(level, message, context)) as LogEntry
+  },
+
+  // Device Management
+  async getConnectedDevice(): Promise<DeviceInfo | null> {
+    try {
+      return (await AppService.GetConnectedDevice()) as DeviceInfo
+    } catch {
+      return null
+    }
+  },
+
+  async isDeviceConnected(): Promise<boolean> {
+    try {
+      return await AppService.IsDeviceConnected()
+    } catch {
+      return false
+    }
+  },
+
+  async pairDevice(): Promise<void> {
+    return await AppService.PairDevice()
+  },
+
+  async listInstalledApps(appType: string = 'user'): Promise<InstalledApp[]> {
+    try {
+      const apps = await AppService.ListInstalledApps(appType)
+      return (apps || []) as InstalledApp[]
+    } catch {
+      return []
+    }
+  },
+
+  async installIPA(ipaPath: string): Promise<void> {
+    return await AppService.InstallIPA(ipaPath)
+  },
+
+  async uninstallApp(bundleId: string): Promise<void> {
+    return await AppService.UninstallApp(bundleId)
+  },
+
+  async validateIPA(ipaPath: string): Promise<IPAInfo> {
+    return (await AppService.ValidateIPA(ipaPath)) as IPAInfo
+  },
+
+  async selectIPAFile(): Promise<string> {
+    return await AppService.SelectIPAFile()
   },
 
   // Window Controls

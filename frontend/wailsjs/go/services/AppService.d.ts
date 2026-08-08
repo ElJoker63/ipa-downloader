@@ -35,6 +35,8 @@ export function GetAuthStatus():Promise<string>;
 
 export function GetCacheSize():Promise<string>;
 
+export function GetConnectedDevice():Promise<models.DeviceInfo>;
+
 export function GetDownloadHistory():Promise<Array<models.DownloadTask>>;
 
 export function GetFavorites():Promise<Array<models.FavoriteApp>>;
@@ -45,6 +47,12 @@ export function GetSearchHistory(arg1:number):Promise<Array<models.SearchHistory
 
 export function GetSettings():Promise<models.AppSettings>;
 
+export function InstallIPA(arg1:string):Promise<void>;
+
+export function IsDeviceConnected():Promise<boolean>;
+
+export function ListInstalledApps(arg1:string):Promise<Array<models.InstalledApp>>;
+
 export function Login(arg1:string,arg2:string,arg3:string,arg4:boolean):Promise<models.AccountProfile>;
 
 export function Logout():Promise<void>;
@@ -54,6 +62,8 @@ export function LookupApp(arg1:string,arg2:string):Promise<models.AppMetadata>;
 export function OpenFile(arg1:string):Promise<void>;
 
 export function OpenFolder(arg1:string):Promise<void>;
+
+export function PairDevice():Promise<void>;
 
 export function PauseDownload(arg1:string):Promise<void>;
 
@@ -75,8 +85,14 @@ export function SearchFavorites(arg1:string):Promise<Array<models.FavoriteApp>>;
 
 export function SelectDownloadDirectory(arg1:string):Promise<string>;
 
+export function SelectIPAFile():Promise<string>;
+
 export function SetContext(arg1:context.Context):Promise<void>;
 
 export function Shutdown():Promise<void>;
 
 export function ToggleFavorite(arg1:models.FavoriteApp):Promise<boolean>;
+
+export function UninstallApp(arg1:string):Promise<void>;
+
+export function ValidateIPA(arg1:string):Promise<models.IPAInfo>;

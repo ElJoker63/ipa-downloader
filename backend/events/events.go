@@ -26,6 +26,14 @@ const (
 	EventLogEntry          EventType = "log:entry"
 	EventNotification      EventType = "notification:show"
 	EventFavoritesUpdated  EventType = "favorites:updated"
+
+	// Device management events.
+	EventDeviceConnected       EventType = "device:connected"
+	EventDeviceDisconnected    EventType = "device:disconnected"
+	EventDevicePairStatus      EventType = "device:pair_status"
+	EventDeviceInstallProgress EventType = "device:install_progress"
+	EventDeviceInstallComplete EventType = "device:install_complete"
+	EventDeviceInstallFailed   EventType = "device:install_failed"
 )
 
 // Emitter defines the interface for publishing events to the frontend and persisting logs.

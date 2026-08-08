@@ -190,6 +190,48 @@ export namespace models {
 	        this.searchLimit = source["searchLimit"];
 	    }
 	}
+	export class DeviceInfo {
+	    udid: string;
+	    name: string;
+	    model: string;
+	    productType: string;
+	    deviceClass: string;
+	    iosVersion: string;
+	    buildVersion: string;
+	    serialNumber: string;
+	    wifiAddress?: string;
+	    storageTotal: number;
+	    storageUsed: number;
+	    storageFree: number;
+	    batteryLevel: number;
+	    batteryCharging: boolean;
+	    isPaired: boolean;
+	    isConnected: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new DeviceInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.udid = source["udid"];
+	        this.name = source["name"];
+	        this.model = source["model"];
+	        this.productType = source["productType"];
+	        this.deviceClass = source["deviceClass"];
+	        this.iosVersion = source["iosVersion"];
+	        this.buildVersion = source["buildVersion"];
+	        this.serialNumber = source["serialNumber"];
+	        this.wifiAddress = source["wifiAddress"];
+	        this.storageTotal = source["storageTotal"];
+	        this.storageUsed = source["storageUsed"];
+	        this.storageFree = source["storageFree"];
+	        this.batteryLevel = source["batteryLevel"];
+	        this.batteryCharging = source["batteryCharging"];
+	        this.isPaired = source["isPaired"];
+	        this.isConnected = source["isConnected"];
+	    }
+	}
 	export class DownloadTask {
 	    id: string;
 	    appId: number;
@@ -313,6 +355,64 @@ export namespace models {
 		    }
 		    return a;
 		}
+	}
+	export class IPAInfo {
+	    bundleId: string;
+	    bundleName: string;
+	    version: string;
+	    shortVersion: string;
+	    minimumOs: string;
+	    architectures: string[];
+	    fileSizeBytes: number;
+	    isValid: boolean;
+	    error?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new IPAInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.bundleId = source["bundleId"];
+	        this.bundleName = source["bundleName"];
+	        this.version = source["version"];
+	        this.shortVersion = source["shortVersion"];
+	        this.minimumOs = source["minimumOs"];
+	        this.architectures = source["architectures"];
+	        this.fileSizeBytes = source["fileSizeBytes"];
+	        this.isValid = source["isValid"];
+	        this.error = source["error"];
+	    }
+	}
+	export class InstalledApp {
+	    name: string;
+	    bundleId: string;
+	    version: string;
+	    shortVersion: string;
+	    size: number;
+	    dynamicSize?: number;
+	    vendor?: string;
+	    appType: string;
+	    minimumOs?: string;
+	    signerIdentity?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new InstalledApp(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.bundleId = source["bundleId"];
+	        this.version = source["version"];
+	        this.shortVersion = source["shortVersion"];
+	        this.size = source["size"];
+	        this.dynamicSize = source["dynamicSize"];
+	        this.vendor = source["vendor"];
+	        this.appType = source["appType"];
+	        this.minimumOs = source["minimumOs"];
+	        this.signerIdentity = source["signerIdentity"];
+	    }
 	}
 	export class LogEntry {
 	    id: number;

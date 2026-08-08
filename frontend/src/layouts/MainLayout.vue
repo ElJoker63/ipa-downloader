@@ -5,7 +5,7 @@
       <!-- Top Brand Header in Sidebar -->
       <div class="px-3 py-2 flex items-center justify-between border-b border-white/[0.08] pb-3 mb-2">
         <div class="flex items-center space-x-2.5">
-          <img src="/logo.png" alt="IPA Downloader" class="w-50 h-50 rounded-lg object-contain shadow-sm shrink-0" />
+          <img src="/logo.png" alt="IPA Downloader" class="w-20 h-20 rounded-lg object-contain shadow-sm shrink-0" />
           <!--div>
             <div class="text-[13px] font-bold tracking-tight text-white leading-tight">IPA Downloader</div>
           </div-->
@@ -60,6 +60,22 @@
           >
             {{ downloadsStore.activeCount }}
           </span>
+        </router-link>
+
+        <!-- Apps (Device Management) -->
+        <router-link
+          to="/apps"
+          class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group"
+          :class="isActive('/apps') ? 'nav-item-active' : 'nav-item-inactive'"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          <span class="flex-1">{{ t.nav.apps || 'Apps' }}</span>
+          <span
+            v-if="deviceStore.isConnected"
+            class="w-2 h-2 rounded-full bg-[#30D158] shadow-[0_0_6px_rgba(48,209,88,0.8)]"
+          ></span>
         </router-link>
 
         <!-- Favorites -->
@@ -209,6 +225,7 @@ import ToastContainer from '../components/ToastContainer.vue'
 import { useAuthStore } from '../stores/auth'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'
+import { useDeviceStore } from '../stores/device'
 import { useTheme } from '../composables/useTheme'
 import { useI18n } from '../i18n'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
@@ -217,6 +234,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
+const deviceStore = useDeviceStore()
 const { isDark, toggleTheme } = useTheme()
 const { t, currentLanguage, setLanguage } = useI18n()
 

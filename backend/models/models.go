@@ -154,3 +154,57 @@ type AppDetailsOutput struct {
 	VersionHistory []VersionInfo `json:"versionHistory"`
 	IsFavorite     bool          `json:"isFavorite"`
 }
+
+// DeviceInfo holds iOS device metadata obtained via lockdownd.
+type DeviceInfo struct {
+	UDID            string `json:"udid"`
+	Name            string `json:"name"`
+	Model           string `json:"model"`
+	ProductType     string `json:"productType"`
+	DeviceClass     string `json:"deviceClass"` // "iPhone", "iPad", "iPod"
+	IOSVersion      string `json:"iosVersion"`
+	BuildVersion    string `json:"buildVersion"`
+	SerialNumber    string `json:"serialNumber"`
+	WiFiAddress     string `json:"wifiAddress,omitempty"`
+	StorageTotal    int64  `json:"storageTotal"`
+	StorageUsed     int64  `json:"storageUsed"`
+	StorageFree     int64  `json:"storageFree"`
+	BatteryLevel    int    `json:"batteryLevel"`
+	BatteryCharging bool   `json:"batteryCharging"`
+	IsPaired        bool   `json:"isPaired"`
+	IsConnected     bool   `json:"isConnected"`
+}
+
+// InstalledApp represents an application installed on the device.
+type InstalledApp struct {
+	Name           string `json:"name"`
+	BundleID       string `json:"bundleId"`
+	Version        string `json:"version"`
+	ShortVersion   string `json:"shortVersion"`
+	Size           int64  `json:"size"`
+	DynamicSize    int64  `json:"dynamicSize,omitempty"`
+	Vendor         string `json:"vendor,omitempty"`
+	AppType        string `json:"appType"` // "User", "System"
+	MinimumOS      string `json:"minimumOs,omitempty"`
+	SignerIdentity string `json:"signerIdentity,omitempty"`
+}
+
+// IPAInfo holds validation results from parsing an IPA file header.
+type IPAInfo struct {
+	BundleID      string   `json:"bundleId"`
+	BundleName    string   `json:"bundleName"`
+	Version       string   `json:"version"`
+	ShortVersion  string   `json:"shortVersion"`
+	MinimumOS     string   `json:"minimumOs"`
+	Architectures []string `json:"architectures"`
+	FileSizeBytes int64    `json:"fileSizeBytes"`
+	IsValid       bool     `json:"isValid"`
+	Error         string   `json:"error,omitempty"`
+}
+
+// DeviceInstallProgress tracks IPA installation phases.
+type DeviceInstallProgress struct {
+	Phase   string `json:"phase"`   // "Preparing", "Copying", "Installing", "Verifying", "Complete", "Failed"
+	Percent int    `json:"percent"` // 0-100
+	Message string `json:"message"`
+}
