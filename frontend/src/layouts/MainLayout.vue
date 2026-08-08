@@ -87,7 +87,6 @@
           <!-- Account Mini Card -->
           <div v-if="authStore.isLoggedIn" class="p-2.5 rounded-xl bg-white/5 dark:bg-white/5 light:bg-black/5 border border-white/5">
             <div class="text-xs font-semibold truncate">{{ authStore.account.name || 'Apple User' }}</div>
-            <div class="text-[11px] text-slate-400 dark:text-slate-400 light:text-slate-500 truncate">{{ authStore.account.email }}</div>
           </div>
 
           <div class="flex items-center justify-between px-1">

@@ -62,6 +62,7 @@ type DownloadStatus string
 const (
 	DownloadStatusQueued      DownloadStatus = "queued"
 	DownloadStatusDownloading DownloadStatus = "downloading"
+	DownloadStatusSigning     DownloadStatus = "signing"
 	DownloadStatusPaused      DownloadStatus = "paused"
 	DownloadStatusCompleted   DownloadStatus = "completed"
 	DownloadStatusCancelled   DownloadStatus = "cancelled"

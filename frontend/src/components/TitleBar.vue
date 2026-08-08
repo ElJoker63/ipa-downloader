@@ -19,8 +19,8 @@
       >
         <span class="w-2 h-2 rounded-full" :class="statusDotClass"></span>
         <span>{{ authStore.status }}</span>
-        <span v-if="authStore.isLoggedIn" class="text-slate-400 dark:text-slate-400 light:text-slate-500 font-mono text-[10px] pl-1">
-          ({{ authStore.account.email || authStore.account.storeFrontCountry }})
+        <span v-if="authStore.isLoggedIn" class="text-slate-400 dark:text-slate-400 light:text-slate-500 font-medium text-[10px] pl-1">
+          ({{ authStore.account.name || 'Apple ID' }})
         </span>
       </div>
     </div>

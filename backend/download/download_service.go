@@ -370,16 +370,32 @@ func (m *downloadManager) executeDownload(ctx context.Context, task *models.Down
 		}
 	}
 
-	// 6. Replicate SINF signatures into package
+	// 6. Transition to signing state and show the user what is happening
+	task.Status = models.DownloadStatusSigning
+	task.Progress = 100.0
+	task.SpeedBytesPerSec = 0
+	task.FormattedSpeed = "Signing FairPlay DRM..."
+	task.ETASeconds = 0
+	task.FormattedETA = "Finalizing .ipa..."
+	_ = m.storage.UpdateDownloadProgress(task.ID, models.DownloadStatusSigning, task.TotalBytes, task.TotalBytes, 100.0, 0, 0, "")
+	m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Download stream complete (100%%). Starting FairPlay SINF signing process...", task.AppName), "DownloadManager")
+	m.emitter.Emit(events.EventDownloadStatus, task)
+	m.emitter.EmitDownloadProgress(*task)
+
+	// Replicate SINF signatures into package
 	if len(out.Sinfs) > 0 {
-		m.emitter.EmitLog("INFO", fmt.Sprintf("Signing IPA with FairPlay SINF (%s)...", task.AppName), "DownloadManager")
+		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Injecting %d FairPlay SINF DRM signature(s) into final .ipa package...", task.AppName, len(out.Sinfs)), "DownloadManager")
 		err = appstoreCore.ReplicateSinf(appstore.ReplicateSinfInput{
 			Sinfs:       out.Sinfs,
 			PackagePath: task.DestinationPath,
 		})
 		if err != nil {
-			m.emitter.EmitLog("WARN", fmt.Sprintf("FairPlay SINF warning: %v", err), "DownloadManager")
+			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] FairPlay SINF replication warning: %v", task.AppName, err), "DownloadManager")
+		} else {
+			m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] FairPlay SINF signatures successfully injected into %s", task.AppName, filepath.Base(task.DestinationPath)), "DownloadManager")
 		}
+	} else {
+		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Package finalized (no additional SINF required)", task.AppName), "DownloadManager")
 	}
 
 	return nil

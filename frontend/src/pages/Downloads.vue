@@ -108,11 +108,20 @@
             </div>
           </div>
 
+          <!-- Signing Phase Notification Banner -->
+          <div v-if="task.status === 'signing'" class="flex items-center space-x-2.5 p-2.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-semibold animate-pulse">
+            <svg class="w-4 h-4 animate-spin shrink-0 text-indigo-400" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>Download complete! Injecting Apple FairPlay DRM SINF signature certificates into final .ipa package...</span>
+          </div>
+
           <!-- Progress Bar -->
           <div class="w-full bg-slate-900/60 rounded-full h-2.5 overflow-hidden border border-white/5 relative">
             <div
               class="h-full rounded-full transition-all duration-300 relative overflow-hidden"
-              :class="task.status === 'paused' ? 'bg-amber-500' : 'bg-gradient-to-r from-blue-600 to-cyan-400'"
+              :class="task.status === 'signing' ? 'bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 animate-pulse' : (task.status === 'paused' ? 'bg-amber-500' : 'bg-gradient-to-r from-blue-600 to-cyan-400')"
               :style="{ width: `${Math.max(task.progress, 2)}%` }"
             >
               <div class="absolute inset-0 bg-white/20 animate-pulse-subtle"></div>
@@ -126,8 +135,12 @@
               <span>{{ formatBytes(task.downloadedBytes) }} / {{ formatBytes(task.totalBytes) }}</span>
             </div>
             <div class="flex items-center space-x-3">
-              <span v-if="task.status === 'downloading'" class="text-emerald-400 font-semibold">{{ task.formattedSpeed || 'Streaming...' }}</span>
-              <span v-if="task.status === 'paused'" class="text-amber-400 font-semibold">Paused</span>
+              <span v-if="task.status === 'signing'" class="text-indigo-400 font-bold flex items-center space-x-1.5 animate-pulse">
+                <span class="inline-block w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+                <span>Signing FairPlay DRM...</span>
+              </span>
+              <span v-else-if="task.status === 'downloading'" class="text-emerald-400 font-semibold">{{ task.formattedSpeed || 'Streaming...' }}</span>
+              <span v-else-if="task.status === 'paused'" class="text-amber-400 font-semibold">Paused</span>
               <span v-if="task.formattedETA && task.status === 'downloading'">ETA: {{ task.formattedETA }}</span>
             </div>
           </div>
@@ -253,6 +266,8 @@ function formatBytes(bytes: number): string {
 
 function statusBadgeClass(status: string) {
   switch (status) {
+    case 'signing':
+      return 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-pulse'
     case 'completed':
       return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
     case 'failed':
