@@ -217,6 +217,17 @@
 
           <div class="flex items-center space-x-2 shrink-0">
             <button
+              v-if="deviceStore.isConnected && task.status === 'completed'"
+              type="button"
+              class="btn-primary text-xs px-3.5 py-1.5 flex items-center space-x-1.5"
+              @click="installToDevice(task.destinationPath)"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              <span>Install</span>
+            </button>
+            <button
               v-if="task.status === 'failed'"
               type="button"
               class="btn-primary text-xs px-3.5 py-1.5"
@@ -243,19 +254,34 @@ import { onMounted } from 'vue'
 import { useDownloadsStore } from '../stores/downloads'
 import { useSettingsStore } from '../stores/settings'
 import { useHistoryStore } from '../stores/history'
+import { useDeviceStore } from '../stores/device'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
+import { useRouter } from 'vue-router'
 
 const downloadsStore = useDownloadsStore()
 const settingsStore = useSettingsStore()
 const historyStore = useHistoryStore()
+const deviceStore = useDeviceStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
+const router = useRouter()
 
 onMounted(() => {
   downloadsStore.fetchDownloads()
   settingsStore.fetchSettings()
 })
+
+async function installToDevice(path: string) {
+  try {
+    router.push('/apps')
+    setTimeout(() => {
+      deviceStore.installIPA(path)
+    }, 300)
+  } catch (err: any) {
+    showToast('Installation Failed', err.message || err, 'error')
+  }
+}
 
 async function browseFolder() {
   await settingsStore.browseFolder()

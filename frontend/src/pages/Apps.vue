@@ -52,10 +52,14 @@
     </div>
 
     <!-- Device Info Card (When Connected) -->
-    <div v-if="deviceStore.device && deviceStore.device.isConnected" class="p-5 rounded-2xl bg-[#171A21]/90 border border-white/[0.08] backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div
+      v-if="deviceStore.device && deviceStore.device.isConnected"
+      @click="showDeviceDetails = true"
+      class="p-5 rounded-2xl bg-[#171A21]/90 border border-white/[0.08] hover:border-white/[0.15] cursor-pointer group transition-all duration-300 backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4"
+    >
       <div class="flex items-center space-x-4">
         <!-- Device Icon -->
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0A84FF]/20 to-[#5E5CE6]/20 border border-white/10 flex items-center justify-center shrink-0">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0A84FF]/20 to-[#5E5CE6]/20 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
           <svg class="w-7 h-7 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
@@ -68,9 +72,16 @@
             <span class="text-xs px-2 py-0.5 rounded-md bg-white/10 text-[#8E8E93] font-mono">{{ deviceStore.device.model }}</span>
           </h2>
           <div class="text-xs text-[#8E8E93] mt-1 space-x-3 flex items-center">
-            <span>iOS {{ deviceStore.device.iosVersion }} (Build {{ deviceStore.device.buildVersion }})</span>
+            <span>iOS {{ deviceStore.device.iosVersion }}</span>
             <span>•</span>
-            <span class="font-mono text-[11px]">UDID: {{ truncateUDID(deviceStore.device.udid) }}</span>
+            <div class="flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5" :class="deviceStore.device.batteryCharging ? 'text-[#30D158]' : 'text-[#8E8E93]'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10.5h-1.5V9a1.5 1.5 0 00-1.5-1.5H5A1.5 1.5 0 003.5 9v6a1.5 1.5 0 001.5 1.5h13a1.5 1.5 0 001.5-1.5v-1.5H21v-3z" />
+              </svg>
+              <span>{{ deviceStore.device.batteryLevel }}%</span>
+            </div>
+            <span>•</span>
+            <span>{{ formatAppSize(deviceStore.device.storageFree) }} Free</span>
           </div>
         </div>
       </div>
@@ -83,7 +94,7 @@
 
         <button
           v-if="!deviceStore.device.isPaired"
-          @click="handlePair"
+          @click.stop="handlePair"
           class="px-3 py-1.5 rounded-xl bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/30 text-xs font-medium hover:bg-[#FF9F0A]/30 transition"
         >
           Trust & Pair Device
@@ -189,8 +200,13 @@
           class="p-4 rounded-xl bg-[#171A21]/70 border border-white/[0.08] hover:border-white/20 transition flex items-center justify-between group"
         >
           <div class="flex items-center space-x-3 overflow-hidden">
-            <!-- App Icon Placeholder -->
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 flex items-center justify-center font-bold text-sm text-white shrink-0">
+            <!-- App Icon -->
+            <img
+              v-if="app.artworkUrl"
+              :src="app.artworkUrl"
+              class="w-10 h-10 rounded-xl bg-[#171A21] border border-white/10 shrink-0 object-cover"
+            />
+            <div v-else class="w-10 h-10 rounded-xl bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 flex items-center justify-center font-bold text-sm text-white shrink-0">
               {{ app.name.charAt(0).toUpperCase() }}
             </div>
             <div class="overflow-hidden">
@@ -291,6 +307,137 @@
         </div>
       </div>
     </div>
+
+    <!-- Device Details Modal -->
+    <div
+      v-if="showDeviceDetails && deviceStore.device"
+      class="fixed inset-0 bg-black/80 backdrop-blur-xl z-[60] flex items-center justify-center p-6"
+      @click.self="showDeviceDetails = false"
+    >
+      <div class="w-full max-w-2xl bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-[#0A84FF] flex items-center justify-center text-white">
+              <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white">{{ deviceStore.device.name }}</h3>
+              <p class="text-xs text-[#8E8E93] font-mono mt-0.5">{{ deviceStore.device.model }} • iOS {{ deviceStore.device.iosVersion }}</p>
+            </div>
+          </div>
+          <button @click="showDeviceDetails = false" class="p-2 rounded-full hover:bg-white/10 text-[#8E8E93] transition">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-8">
+          <!-- Main Specs Grid -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Serial Number</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.device.serialNumber }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">UDID</div>
+              <div class="text-sm text-white font-mono break-all">{{ deviceStore.device.udid }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Product Type</div>
+              <div class="text-sm text-white">{{ deviceStore.device.productType }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Build Version</div>
+              <div class="text-sm text-white">{{ deviceStore.device.buildVersion }}</div>
+            </div>
+          </div>
+
+          <!-- Storage & Battery Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Storage Info -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-semibold text-white">Storage Capacity</h4>
+                <span class="text-xs text-[#8E8E93]">{{ formatAppSize(deviceStore.device.storageFree) }} available of {{ formatAppSize(deviceStore.device.storageTotal) }}</span>
+              </div>
+              <div class="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
+                <div
+                  class="h-full bg-[#0A84FF] rounded-full"
+                  :style="{ width: `${((deviceStore.device.storageTotal - deviceStore.device.storageFree) / deviceStore.device.storageTotal) * 100}%` }"
+                ></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-[#8E8E93] font-medium px-1">
+                <div class="flex items-center space-x-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#0A84FF]"></span>
+                  <span>Used: {{ formatAppSize(deviceStore.device.storageUsed) }}</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <span class="w-2 h-2 rounded-full bg-white/10"></span>
+                  <span>Free: {{ formatAppSize(deviceStore.device.storageFree) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Battery Info -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-semibold text-white">Battery Status</h4>
+                <div class="flex items-center space-x-2">
+                  <span v-if="deviceStore.device.batteryCharging" class="text-[10px] font-bold text-[#30D158] uppercase">Charging</span>
+                  <span class="text-sm font-bold text-white">{{ deviceStore.device.batteryLevel }}%</span>
+                </div>
+              </div>
+              <div class="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 relative">
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  :class="deviceStore.device.batteryLevel > 20 ? 'bg-[#30D158]' : 'bg-[#FF453A]'"
+                  :style="{ width: `${deviceStore.device.batteryLevel}%` }"
+                ></div>
+                <div v-if="deviceStore.device.batteryCharging" class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+              </div>
+              <div class="flex items-center space-x-2 text-[10px] text-[#8E8E93]">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Health: Normal</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Connection Details -->
+          <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-4">
+            <h4 class="text-sm font-semibold text-white">Connectivity</h4>
+            <div class="grid grid-cols-2 gap-y-4">
+              <div class="space-y-1">
+                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Wi-Fi Address</div>
+                <div class="text-xs text-white font-mono">{{ deviceStore.device.wifiAddress || 'N/A' }}</div>
+              </div>
+              <div class="space-y-1 text-right">
+                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Pairing Status</div>
+                <div class="text-xs font-bold" :class="deviceStore.device.isPaired ? 'text-[#30D158]' : 'text-[#FF9F0A]'">
+                  {{ deviceStore.device.isPaired ? 'Trusted' : 'Untrusted' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-4 border-t border-white/10 bg-white/[0.01] flex justify-end">
+          <button
+            @click="showDeviceDetails = false"
+            class="px-6 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white transition"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -304,6 +451,7 @@ const deviceStore = useDeviceStore()
 const { t } = useI18n()
 
 const searchQuery = ref('')
+const showDeviceDetails = ref(false)
 
 const filteredApps = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()

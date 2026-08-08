@@ -187,6 +187,7 @@ type InstalledApp struct {
 	AppType        string `json:"appType"` // "User", "System"
 	MinimumOS      string `json:"minimumOs,omitempty"`
 	SignerIdentity string `json:"signerIdentity,omitempty"`
+	ArtworkURL     string `json:"artworkUrl,omitempty"`
 }
 
 // IPAInfo holds validation results from parsing an IPA file header.

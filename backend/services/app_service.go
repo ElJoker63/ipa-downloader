@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"sync"
 
 	"github.com/majd/ipa-downloader/v2/backend/apple"
 	"github.com/majd/ipa-downloader/v2/backend/auth"
@@ -102,7 +103,38 @@ func (s *AppService) PairDevice() error {
 }
 
 func (s *AppService) ListInstalledApps(appType string) ([]models.InstalledApp, error) {
-	return s.deviceService.ListInstalledApps(appType)
+	apps, err := s.deviceService.ListInstalledApps(appType)
+	if err != nil {
+		return nil, err
+	}
+
+	// Enrich apps with artwork concurrently
+	var wg sync.WaitGroup
+	enrichedApps := make([]models.InstalledApp, len(apps))
+	copy(enrichedApps, apps)
+
+	// Limit concurrency to avoid hitting iTunes API rate limits too hard
+	sem := make(chan struct{}, 5)
+
+	for i := range enrichedApps {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			bundleID := enrichedApps[idx].BundleID
+			// Skip system apps or apps that don't look like standard bundles if needed
+			// But usually, we want artwork for all user apps at least.
+			meta, err := s.searchService.Lookup(bundleID, "ios")
+			if err == nil && meta != nil && meta.ArtworkURL != "" {
+				enrichedApps[idx].ArtworkURL = meta.ArtworkURL
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	return enrichedApps, nil
 }
 
 func (s *AppService) InstallIPA(ipaPath string) error {

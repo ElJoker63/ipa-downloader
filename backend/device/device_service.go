@@ -193,6 +193,31 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 		}
 	}
 
+	// Fetch Storage Info
+	if val, err := dev.GetValue("", "TotalDiskCapacity"); err == nil {
+		info.StorageTotal = getInt64FromVal(val)
+	}
+	if val, err := dev.GetValue("", "TotalDataAvailable"); err == nil {
+		info.StorageFree = getInt64FromVal(val)
+	}
+	info.StorageUsed = info.StorageTotal - info.StorageFree
+
+	// Fetch Battery Info
+	if val, err := dev.GetValue("com.apple.mobile.battery", "BatteryCurrentCapacity"); err == nil {
+		if i, ok := val.(uint64); ok {
+			info.BatteryLevel = int(i)
+		} else if i, ok := val.(int64); ok {
+			info.BatteryLevel = int(i)
+		} else if i, ok := val.(int); ok {
+			info.BatteryLevel = i
+		}
+	}
+	if val, err := dev.GetValue("com.apple.mobile.battery", "IsCharging"); err == nil {
+		if b, ok := val.(bool); ok {
+			info.BatteryCharging = b
+		}
+	}
+
 	if info.Name == "" {
 		info.Name = props.SerialNumber
 	}
@@ -522,6 +547,23 @@ func getInt64Val(m map[string]interface{}, key string) int64 {
 		case float64:
 			return int64(v)
 		}
+	}
+	return 0
+}
+
+func getInt64FromVal(val interface{}) int64 {
+	if val == nil {
+		return 0
+	}
+	switch v := val.(type) {
+	case int64:
+		return v
+	case uint64:
+		return int64(v)
+	case int:
+		return int64(v)
+	case float64:
+		return int64(v)
 	}
 	return 0
 }
