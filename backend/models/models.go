@@ -209,3 +209,14 @@ type DeviceInstallProgress struct {
 	Percent int    `json:"percent"` // 0-100
 	Message string `json:"message"`
 }
+
+// UpdateInfo holds information about an available application update.
+type UpdateInfo struct {
+	Available      bool   `json:"available"`
+	LatestVersion  string `json:"latestVersion"`
+	CurrentVersion string `json:"currentVersion"`
+	ReleaseNotes   string `json:"releaseNotes"`
+	DownloadURL    string `json:"downloadUrl"`
+	Mandatory      bool   `json:"mandatory"`
+}
+

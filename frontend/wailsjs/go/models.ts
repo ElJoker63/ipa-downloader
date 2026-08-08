@@ -395,6 +395,7 @@ export namespace models {
 	    appType: string;
 	    minimumOs?: string;
 	    signerIdentity?: string;
+	    artworkUrl?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new InstalledApp(source);
@@ -412,6 +413,7 @@ export namespace models {
 	        this.appType = source["appType"];
 	        this.minimumOs = source["minimumOs"];
 	        this.signerIdentity = source["signerIdentity"];
+	        this.artworkUrl = source["artworkUrl"];
 	    }
 	}
 	export class LogEntry {

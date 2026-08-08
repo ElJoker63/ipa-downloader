@@ -152,7 +152,18 @@ export interface InstalledApp {
   appType: string
   minimumOs?: string
   signerIdentity?: string
+  artworkUrl?: string
 }
+
+export interface UpdateInfo {
+  available: boolean
+  latestVersion: string
+  currentVersion: string
+  releaseNotes: string
+  downloadUrl: string
+  mandatory: boolean
+}
+
 
 export interface IPAInfo {
   bundleId: string

@@ -11,12 +11,26 @@ import type {
   InstalledApp,
   IPAInfo,
   DeviceInstallProgress,
+  UpdateInfo,
 } from '../types'
 
 import * as AppService from '../../wailsjs/go/services/AppService'
 import * as WailsRuntime from '../../wailsjs/runtime/runtime'
 
 export const WailsService = {
+  // Update
+  async checkForUpdate(): Promise<UpdateInfo | null> {
+    try {
+      return (await AppService.CheckForUpdate()) as UpdateInfo
+    } catch {
+      return null
+    }
+  },
+
+  async applyUpdate(downloadUrl: string): Promise<void> {
+    return await AppService.ApplyUpdate(downloadUrl)
+  },
+
   // Auth
   async getAccount(): Promise<AccountProfile> {
     try {

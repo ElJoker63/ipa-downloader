@@ -14,6 +14,7 @@ import (
 	"github.com/majd/ipa-downloader/v2/backend/models"
 	"github.com/majd/ipa-downloader/v2/backend/search"
 	"github.com/majd/ipa-downloader/v2/backend/storage"
+	"github.com/majd/ipa-downloader/v2/backend/update"
 )
 
 // AppService aggregates all domain services and is exposed to the Wails frontend.
@@ -28,6 +29,7 @@ type AppService struct {
 	libraryService  library.LibraryService
 	configService   config.ConfigService
 	deviceService   device.DeviceService
+	updateService   update.UpdateService
 }
 
 // NewAppService instantiates all sub-services and builds the service layer.
@@ -57,6 +59,7 @@ func NewAppService(dataDir string) (*AppService, error) {
 	libraryService := library.NewLibraryService(store, emitter)
 	configService := config.NewConfigService(store, emitter)
 	deviceService := device.NewDeviceService(emitter)
+	updateService := update.NewUpdateService(emitter)
 
 	return &AppService{
 		storage:         store,
@@ -68,6 +71,7 @@ func NewAppService(dataDir string) (*AppService, error) {
 		libraryService:  libraryService,
 		configService:   configService,
 		deviceService:   deviceService,
+		updateService:   updateService,
 	}, nil
 }
 
@@ -314,3 +318,14 @@ func (s *AppService) AddLog(level, message, context string) (*models.LogEntry, e
 	}
 	return entry, err
 }
+
+// ----------------- Update Bindings -----------------
+
+func (s *AppService) CheckForUpdate() (*models.UpdateInfo, error) {
+	return s.updateService.CheckForUpdate()
+}
+
+func (s *AppService) ApplyUpdate(downloadURL string) error {
+	return s.updateService.ApplyUpdate(downloadURL)
+}
+

@@ -15,11 +15,19 @@ jobs:
         arch: [arm64, amd64]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - uses: actions/setup-go@v5
         with:
           go-version: "1.25.0"
           cache: true
-      - run: go build -o ipa-downloader-$GOOS-$GOARCH.exe
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+      - run: go build -o ipa-downloader-windows-$GOARCH.exe
         env:
           GOOS: windows
           GOARCH: ${{ matrix.arch }}
@@ -36,10 +44,18 @@ jobs:
             runner: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - uses: actions/setup-go@v5
         with:
           go-version: "1.25.0"
           cache: true
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
       - run: go build -o ipa-downloader-linux-$GOARCH
         env:
           GOARCH: ${{ matrix.arch }}
@@ -52,11 +68,19 @@ jobs:
         arch: [arm64, amd64]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - uses: actions/setup-go@v5
         with:
           go-version: "1.25.0"
           cache: true
-      - run: go build -o ipa-downloader-$GOOS-$GOARCH
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+      - run: go build -o ipa-downloader-darwin-$GOARCH
         env:
           GOOS: darwin
           GOARCH: ${{ matrix.arch }}

@@ -6,11 +6,10 @@ import (
 	"reflect"
 
 	"github.com/majd/ipa-downloader/v2/pkg/appstore"
+	"github.com/majd/ipa-downloader/v2/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
 )
-
-var version = "dev"
 
 type contextKey string
 
@@ -28,7 +27,7 @@ func rootCmd() *cobra.Command {
 		Short:         "A cli tool for interacting with Apple's ipa files",
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		Version:       version,
+		Version:       version.Version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			ctx := context.WithValue(context.Background(), interactiveKey, !nonInteractive)
 			cmd.SetContext(ctx)

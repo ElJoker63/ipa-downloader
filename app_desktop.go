@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/majd/ipa-downloader/v2/backend/app"
+	"github.com/majd/ipa-downloader/v2/pkg/version"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -22,7 +23,7 @@ func runDesktopApp() error {
 	}
 
 	err = wails.Run(&options.App{
-		Title:             "IPA Downloader",
+		Title:             fmt.Sprintf("IPA Downloader v%s", version.Version),
 		Width:             1200,
 		Height:            800,
 		MinWidth:          980,
