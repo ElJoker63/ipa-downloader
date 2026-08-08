@@ -15,7 +15,7 @@ jobs:
         with:
           go-version: "1.25.0"
           cache: true
-      - run: go generate github.com/ElJoker63/ipatool-1/...
+      - run: go generate github.com/ElJoker63/ipa-downloader/...
       - uses: golangci/golangci-lint-action@v8
         with:
           version: v2.9

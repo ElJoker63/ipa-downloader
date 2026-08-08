@@ -9,14 +9,14 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/ElJoker63/ipatool-1/v2/backend/events"
-	"github.com/ElJoker63/ipatool-1/v2/backend/models"
-	"github.com/ElJoker63/ipatool-1/v2/pkg/version"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/events"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/version"
 	"github.com/inconshreveable/go-update"
 )
 
 const (
-	GithubRepo = "ElJoker63/ipatool-1"
+	GithubRepo = "ElJoker63/ipa-downloader"
 	ReleaseAPI = "https://api.github.com/repos/%s/releases/latest"
 )
 

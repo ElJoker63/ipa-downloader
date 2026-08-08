@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ElJoker63/ipatool-1/v2/pkg/appstore"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/appstore"
 	"github.com/avast/retry-go"
 	"github.com/spf13/cobra"
 )

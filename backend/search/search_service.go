@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ElJoker63/ipatool-1/v2/backend/apple"
-	"github.com/ElJoker63/ipatool-1/v2/backend/events"
-	"github.com/ElJoker63/ipatool-1/v2/backend/models"
-	"github.com/ElJoker63/ipatool-1/v2/backend/storage"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/apple"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/events"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/storage"
 )
 
 // SearchService handles searching for apps, retrieving rich metadata, and managing search history.

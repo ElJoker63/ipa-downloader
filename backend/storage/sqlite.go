@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ElJoker63/ipatool-1/v2/backend/models"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
 	_ "modernc.org/sqlite"
 )
 

@@ -1,10 +1,10 @@
 package appstore
 
 import (
-	"github.com/ElJoker63/ipatool-1/v2/pkg/http"
-	"github.com/ElJoker63/ipatool-1/v2/pkg/keychain"
-	"github.com/ElJoker63/ipatool-1/v2/pkg/util/machine"
-	"github.com/ElJoker63/ipatool-1/v2/pkg/util/operatingsystem"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/http"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/keychain"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/util/machine"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/util/operatingsystem"
 )
 
 type AppStore interface {

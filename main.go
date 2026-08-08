@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/ElJoker63/ipatool-1/v2/cmd"
+	"github.com/ElJoker63/ipa-downloader/v2/cmd"
 )
 
 func main() {

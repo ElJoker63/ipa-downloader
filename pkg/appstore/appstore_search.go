@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/ElJoker63/ipatool-1/v2/pkg/http"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/http"
 )
 
 type SearchInput struct {

@@ -1,4 +1,4 @@
-module github.com/ElJoker63/ipatool-1/v2
+module github.com/ElJoker63/ipa-downloader/v2
 
 go 1.25.0
 

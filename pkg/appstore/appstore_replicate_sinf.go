@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ElJoker63/ipatool-1/v2/pkg/util"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/util"
 	"howett.net/plist"
 )
 
