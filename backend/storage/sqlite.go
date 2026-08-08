@@ -289,7 +289,7 @@ func (s *sqliteStorage) GetActiveDownloads() ([]models.DownloadTask, error) {
 	       destination_path, status, total_bytes, downloaded_bytes, progress,
 	       speed_bytes, eta_seconds, external_version_id, platform, error,
 	       created_at, updated_at, completed_at
-	FROM downloads WHERE status IN ('queued', 'downloading', 'paused') ORDER BY created_at ASC;
+	FROM downloads WHERE status IN ('queued', 'downloading', 'signing', 'paused') ORDER BY created_at ASC;
 	`
 
 	rows, err := s.db.Query(query)

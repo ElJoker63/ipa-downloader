@@ -4,10 +4,10 @@
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 shrink-0">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-[#FFFFFF]">
-          Download Manager
+          {{ t.downloads.title }}
         </h1>
         <p class="text-xs text-[#B8C0CC] mt-0.5 font-normal">
-          Concurrent streaming transfers with real-time speed, pause/resume, and FairPlay SINF DRM signing.
+          {{ t.downloads.subtitle }}
         </p>
       </div>
 
@@ -21,7 +21,7 @@
           <svg class="w-3.5 h-3.5 text-[#64D2FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
-          <span>Destination Folder</span>
+          <span>{{ t.downloads.destinationFolder }}</span>
         </button>
 
         <button
@@ -30,16 +30,16 @@
           class="btn-secondary text-xs px-3.5 py-2 text-[#7D8592] hover:text-[#FFFFFF]"
           @click="downloadsStore.clearCompleted()"
         >
-          Clear Completed
+          {{ t.downloads.clearCompleted }}
         </button>
       </div>
     </div>
 
-    <!-- Active Transfers Section -->
+    <!-- Active Transfers Section (Must NEVER remove signing task until completed) -->
     <div class="space-y-3 shrink-0">
       <div class="flex items-center justify-between px-1">
         <div class="flex items-center space-x-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">Active Transfers</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.downloads.activeTransfers }}</span>
           <span
             v-if="downloadsStore.activeCount > 0"
             class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30"
@@ -48,7 +48,7 @@
           </span>
         </div>
         <span v-if="downloadsStore.activeCount > 0" class="text-xs font-mono text-[#30D158] font-medium">
-          Total Speed: {{ downloadsStore.totalSpeedFormatted }}
+          {{ t.downloads.totalSpeed }} {{ downloadsStore.totalSpeedFormatted }}
         </span>
       </div>
 
@@ -57,7 +57,8 @@
         <div
           v-for="task in downloadsStore.activeDownloads"
           :key="task.id"
-          class="glass-card p-5 rounded-[18px] space-y-3.5"
+          class="glass-card p-5 rounded-[18px] space-y-3.5 transition-all duration-200"
+          :class="task.status === 'signing' ? 'border-[#0A84FF]/40 shadow-[0_0_24px_rgba(10,132,255,0.2)]' : ''"
         >
           <!-- Task Header -->
           <div class="flex items-center justify-between">
@@ -117,40 +118,40 @@
             </div>
           </div>
 
-          <!-- Signing Phase Notification Banner -->
+          <!-- Signing Notification Banner & Progress Area -->
           <div v-if="task.status === 'signing'" class="flex items-center space-x-2.5 p-3 rounded-[12px] bg-[#0A84FF]/15 border border-[#0A84FF]/30 text-[#64D2FF] text-xs font-medium animate-pulse">
             <svg class="w-4 h-4 animate-spin shrink-0 text-[#0A84FF]" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
-            <span>Download complete! Injecting Apple FairPlay DRM SINF signature certificates into final .ipa package...</span>
+            <span>{{ t.downloads.signingNotice }}</span>
           </div>
 
-          <!-- Progress Bar -->
-          <div class="w-full bg-black/40 rounded-full h-2.5 overflow-hidden border border-white/[0.08] relative">
+          <!-- Progress Bar (With Direct Signing Text Display in Same Area) -->
+          <div class="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/[0.08] relative">
             <div
               class="h-full rounded-full transition-all duration-300 relative overflow-hidden"
               :class="task.status === 'signing' ? 'bg-gradient-to-r from-[#0A84FF] via-[#64D2FF] to-[#30D158] animate-pulse' : (task.status === 'paused' ? 'bg-[#FFD60A]' : 'bg-[#0A84FF]')"
-              :style="{ width: `${Math.max(task.progress, 2)}%` }"
+              :style="{ width: `${task.status === 'signing' ? 100 : Math.max(task.progress, 2)}%` }"
             >
               <div class="absolute inset-0 bg-white/20 animate-pulse-subtle"></div>
             </div>
           </div>
 
-          <!-- Progress Stats Footer -->
+          <!-- Progress Stats Footer (With Clear Signing Status Label) -->
           <div class="flex items-center justify-between text-xs text-[#B8C0CC] font-mono">
             <div class="flex items-center space-x-3">
-              <span class="font-bold text-[#FFFFFF]">{{ task.progress.toFixed(1) }}%</span>
+              <span class="font-bold text-[#FFFFFF]">{{ task.status === 'signing' ? '100.0%' : `${task.progress.toFixed(1)}%` }}</span>
               <span>{{ formatBytes(task.downloadedBytes) }} / {{ formatBytes(task.totalBytes) }}</span>
             </div>
             <div class="flex items-center space-x-3">
               <span v-if="task.status === 'signing'" class="text-[#64D2FF] font-semibold flex items-center space-x-1.5 animate-pulse">
                 <span class="inline-block w-2 h-2 rounded-full bg-[#64D2FF] animate-ping"></span>
-                <span>Signing FairPlay DRM...</span>
+                <span>✍️ {{ t.downloads.signingFairPlay }}</span>
               </span>
               <span v-else-if="task.status === 'downloading'" class="text-[#30D158] font-semibold">{{ task.formattedSpeed || 'Streaming...' }}</span>
-              <span v-else-if="task.status === 'paused'" class="text-[#FFD60A] font-semibold">Paused</span>
-              <span v-if="task.formattedETA && task.status === 'downloading'" class="text-[#B8C0CC]">ETA: {{ task.formattedETA }}</span>
+              <span v-else-if="task.status === 'paused'" class="text-[#FFD60A] font-semibold">{{ t.downloads.paused }}</span>
+              <span v-if="task.formattedETA && task.status === 'downloading'" class="text-[#B8C0CC]">{{ t.downloads.eta }} {{ task.formattedETA }}</span>
             </div>
           </div>
         </div>
@@ -161,15 +162,15 @@
         <svg class="w-8 h-8 text-[#7D8592] mx-auto opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
-        <p class="text-sm font-semibold text-[#FFFFFF]">No active downloads</p>
-        <p class="text-xs text-[#B8C0CC]">Search for any iOS or tvOS application to queue downloads.</p>
+        <p class="text-sm font-semibold text-[#FFFFFF]">{{ t.downloads.noActive }}</p>
+        <p class="text-xs text-[#B8C0CC]">{{ t.downloads.noActiveDesc }}</p>
       </div>
     </div>
 
     <!-- Completed & Past Downloads Section -->
     <div v-if="downloadsStore.completedDownloads.length > 0" class="space-y-3 pt-2">
       <div class="flex items-center justify-between px-1">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">Completed & Past Transfers</h2>
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.downloads.completedTitle }}</h2>
       </div>
 
       <div class="glass-card rounded-[18px] divide-y divide-white/[0.08] overflow-hidden">
@@ -201,7 +202,7 @@
                   class="text-[10px] uppercase font-bold text-[#FF453A] hover:text-white underline shrink-0"
                   @click="copyErrorText(task.error)"
                 >
-                  Copy Error
+                  {{ t.downloads.copyError }}
                 </button>
               </div>
             </div>
@@ -214,14 +215,14 @@
               class="btn-primary text-xs px-3.5 py-1.5"
               @click="downloadsStore.retryDownload(task.id)"
             >
-              Retry
+              {{ t.common.retry }}
             </button>
             <button
               type="button"
               class="btn-secondary text-xs px-3.5 py-1.5"
               @click="revealInExplorer(task.destinationPath)"
             >
-              Show in Folder
+              {{ t.downloads.showInFolder }}
             </button>
           </div>
         </div>
@@ -235,11 +236,13 @@ import { onMounted } from 'vue'
 import { useDownloadsStore } from '../stores/downloads'
 import { useSettingsStore } from '../stores/settings'
 import { useHistoryStore } from '../stores/history'
+import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const downloadsStore = useDownloadsStore()
 const settingsStore = useSettingsStore()
 const historyStore = useHistoryStore()
+const { t } = useI18n()
 const { showToast } = useNotifications()
 
 onMounted(() => {
@@ -249,7 +252,7 @@ onMounted(() => {
 
 async function browseFolder() {
   await settingsStore.browseFolder()
-  showToast('Download Folder Updated', settingsStore.settings.defaultDownloadFolder, 'info')
+  showToast(t.value.downloads.destinationFolder, settingsStore.settings.defaultDownloadFolder, 'info')
 }
 
 function revealInExplorer(path: string) {
@@ -259,7 +262,7 @@ function revealInExplorer(path: string) {
 async function copyErrorText(errText: string) {
   try {
     await navigator.clipboard.writeText(errText)
-    showToast('Error Copied', 'Error details copied to clipboard', 'info')
+    showToast(t.value.downloads.copyErrorTitle, t.value.downloads.copied, 'info')
   } catch {
     showToast('Copy Failed', errText, 'error')
   }

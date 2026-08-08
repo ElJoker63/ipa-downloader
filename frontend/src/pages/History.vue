@@ -4,10 +4,10 @@
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 shrink-0">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-[#FFFFFF]">
-          Download History
+          {{ t.history.title }}
         </h1>
         <p class="text-xs text-[#B8C0CC] mt-0.5 font-normal">
-          Complete chronological record of all .ipa packages, signature injections, and file destinations.
+          {{ t.history.subtitle }}
         </p>
       </div>
 
@@ -19,7 +19,7 @@
           class="btn-secondary text-xs px-3.5 py-2 text-[#FF453A] hover:bg-[#FF453A]/15 hover:border-[#FF453A]/30"
           @click="clearHistory"
         >
-          Clear History
+          {{ t.history.clearHistory }}
         </button>
       </div>
     </div>
@@ -58,13 +58,13 @@
             <button
               type="button"
               class="btn-secondary text-xs px-3 py-1.5 flex items-center space-x-1"
-              title="Copy destination path"
+              :title="t.history.copyPath"
               @click="copyPath(item.destinationPath)"
             >
               <svg class="w-3.5 h-3.5 text-[#B8C0CC]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              <span>Copy Path</span>
+              <span>{{ t.history.copyPath }}</span>
             </button>
 
             <button
@@ -75,13 +75,13 @@
               <svg class="w-3.5 h-3.5 text-[#64D2FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              <span>Show in Folder</span>
+              <span>{{ t.history.showInFolder }}</span>
             </button>
 
             <button
               type="button"
               class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
-              title="Delete record"
+              :title="t.history.deleteRecord"
               @click="deleteItem(item.id)"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -97,9 +97,9 @@
         <svg class="w-10 h-10 text-[#7D8592] mx-auto opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h3 class="text-base font-semibold text-[#FFFFFF]">No download history yet</h3>
+        <h3 class="text-base font-semibold text-[#FFFFFF]">{{ t.history.emptyTitle }}</h3>
         <p class="text-xs text-[#B8C0CC]">
-          Downloaded packages and completed FairPlay DRM signatures will be logged here automatically.
+          {{ t.history.emptyDesc }}
         </p>
       </div>
     </div>
@@ -109,9 +109,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useHistoryStore } from '../stores/history'
+import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const historyStore = useHistoryStore()
+const { t } = useI18n()
 const { showToast } = useNotifications()
 
 onMounted(async () => {
@@ -125,7 +127,7 @@ function revealInExplorer(path: string) {
 async function copyPath(path: string) {
   try {
     await navigator.clipboard.writeText(path)
-    showToast('Copied to Clipboard', path, 'info')
+    showToast(t.value.history.copyPath, path, 'info')
   } catch {
     showToast('Copy Failed', path, 'error')
   }
@@ -133,12 +135,12 @@ async function copyPath(path: string) {
 
 async function deleteItem(id: string) {
   await historyStore.deleteItem(id)
-  showToast('Record Removed', 'History item deleted', 'info')
+  showToast(t.value.history.deleteRecord, id, 'info')
 }
 
 async function clearHistory() {
   await historyStore.clearHistory()
-  showToast('History Cleared', 'All download records removed', 'info')
+  showToast(t.value.history.clearedTitle, t.value.history.clearedDesc, 'info')
 }
 
 function statusBadgeClass(status: string) {

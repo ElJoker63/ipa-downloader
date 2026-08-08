@@ -5,10 +5,10 @@
       <div class="flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold tracking-tight text-[#FFFFFF]">
-            App Store Search
+            {{ t.search.title }}
           </h1>
           <p class="text-xs text-[#B8C0CC] mt-0.5 font-normal">
-            Query the App Store in real time with high-resolution artwork, screenshots, and version builds.
+            {{ t.search.subtitle }}
           </p>
         </div>
 
@@ -20,7 +20,7 @@
             :class="searchStore.platform === 'ios' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('ios')"
           >
-            <span>iPhone</span>
+            <span>{{ t.search.iphone }}</span>
           </button>
           <button
             type="button"
@@ -28,7 +28,7 @@
             :class="searchStore.platform === 'ipados' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('ipados')"
           >
-            <span>iPad</span>
+            <span>{{ t.search.ipad }}</span>
           </button>
           <button
             type="button"
@@ -36,7 +36,7 @@
             :class="searchStore.platform === 'tvos' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('tvos')"
           >
-            <span>Apple TV</span>
+            <span>{{ t.search.appleTv }}</span>
           </button>
         </div>
       </div>
@@ -49,7 +49,7 @@
         <input
           v-model="searchTerm"
           type="text"
-          placeholder="Search by app name, developer, or bundle ID... (e.g. Spotify, Telegram, Minecraft)"
+          :placeholder="t.search.placeholder"
           class="glass-input w-full pl-11 pr-28 py-3 text-sm"
           @input="onSearchInput"
           @keydown.enter="searchStore.search(searchTerm)"
@@ -60,7 +60,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
-            <span>Searching...</span>
+            <span>{{ t.search.searching }}</span>
           </span>
           <span v-else class="px-2 py-0.5 rounded-md bg-white/[0.08] text-[10px] font-mono text-[#7D8592] border border-white/[0.12]">Ctrl+K</span>
         </div>
@@ -68,7 +68,7 @@
 
       <!-- Recent Searches Chips -->
       <div v-if="searchStore.searchHistory.length > 0 && searchStore.results.length === 0 && !searchStore.isLoading" class="flex flex-wrap items-center gap-2 pt-1">
-        <span class="text-xs text-[#7D8592] font-medium">Recent:</span>
+        <span class="text-xs text-[#7D8592] font-medium">{{ t.search.recentSearches }}</span>
         <button
           v-for="item in searchStore.searchHistory.slice(0, 6)"
           :key="item.id"
@@ -117,7 +117,7 @@
               <p class="text-xs text-[#B8C0CC] truncate mt-0.5">{{ app.developer }}</p>
               <div class="flex flex-wrap items-center gap-1.5 mt-2">
                 <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-[#0A84FF]/15 text-[#0A84FF] border border-[#0A84FF]/30">
-                  {{ app.formattedPrice || 'Free' }}
+                  {{ app.formattedPrice || t.common.free }}
                 </span>
                 <span class="px-2 py-0.5 text-[10px] font-mono rounded-md bg-white/[0.06] text-[#B8C0CC] border border-white/[0.08]">
                   v{{ app.version }}
@@ -136,7 +136,7 @@
               class="btn-secondary text-xs px-3 py-1.5 flex-1"
               @click="openDetails(app)"
             >
-              View Details
+              {{ t.common.viewDetails }}
             </button>
             <button
               type="button"
@@ -146,7 +146,7 @@
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              <span>Download</span>
+              <span>{{ t.common.download }}</span>
             </button>
           </div>
         </div>
@@ -157,9 +157,9 @@
         <svg class="w-12 h-12 text-[#0A84FF] mx-auto opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <h3 class="text-base font-semibold text-[#FFFFFF]">Search Apple App Store</h3>
+        <h3 class="text-base font-semibold text-[#FFFFFF]">{{ t.search.emptyTitle }}</h3>
         <p class="text-xs text-[#B8C0CC]">
-          Type any application name to query and download iOS, iPadOS, or tvOS packages with FairPlay DRM replication.
+          {{ t.search.emptyDesc }}
         </p>
       </div>
     </div>
@@ -171,12 +171,14 @@ import { ref, onMounted } from 'vue'
 import { useSearchStore } from '../stores/search'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'
+import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 import type { AppMetadata } from '../types'
 
 const searchStore = useSearchStore()
 const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
+const { t } = useI18n()
 const { showToast } = useNotifications()
 
 const searchTerm = ref('')
@@ -215,7 +217,7 @@ async function toggleFav(app: AppMetadata) {
     createdAt: new Date().toISOString(),
   })
   app.isFavorite = !app.isFavorite
-  showToast(app.isFavorite ? 'Added to Favorites' : 'Removed from Favorites', app.name, 'info')
+  showToast(app.isFavorite ? t.value.search.addedFav : t.value.search.removedFav, app.name, 'info')
 }
 
 function openDetails(app: AppMetadata) {
@@ -225,9 +227,9 @@ function openDetails(app: AppMetadata) {
 async function downloadApp(app: AppMetadata) {
   try {
     await downloadsStore.queueDownload(app, searchStore.platform)
-    showToast('Download Queued', `Starting download for ${app.name}`, 'info')
+    showToast(t.value.search.downloadQueued, app.name, 'info')
   } catch (err: any) {
-    showToast('Download Error', err?.message || 'Failed to queue download', 'error')
+    showToast(t.value.search.downloadError, err?.message || 'Failed to queue download', 'error')
   }
 }
 </script>

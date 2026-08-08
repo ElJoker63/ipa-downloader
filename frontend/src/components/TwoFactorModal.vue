@@ -8,15 +8,15 @@
         <div class="w-12 h-12 rounded-[14px] bg-[#0A84FF]/15 border border-[#0A84FF]/30 flex items-center justify-center mx-auto text-xl">
           🔐
         </div>
-        <h2 class="text-lg font-bold text-[#FFFFFF]">Two-Factor Verification</h2>
+        <h2 class="text-lg font-bold text-[#FFFFFF]">{{ t.twoFactor.title }}</h2>
         <p class="text-xs text-[#B8C0CC]">
-          Enter the 6-digit security code sent to your trusted Apple device or phone number.
+          {{ t.twoFactor.subtitle }}
         </p>
       </div>
 
       <form class="space-y-4" @submit.prevent="submit2FA">
         <div class="space-y-1.5">
-          <label class="text-xs font-medium text-[#B8C0CC]">6-Digit Apple Verification Code</label>
+          <label class="text-xs font-medium text-[#B8C0CC]">{{ t.twoFactor.label }}</label>
           <input
             ref="inputRef"
             v-model="code"
@@ -34,15 +34,15 @@
             class="btn-secondary text-xs px-4 py-2.5 flex-1"
             @click="authStore.is2FAModalOpen = false"
           >
-            Cancel
+            {{ t.common.cancel }}
           </button>
           <button
             type="submit"
             class="btn-primary text-xs px-5 py-2.5 flex-1"
             :disabled="authStore.isLoading"
           >
-            <span v-if="authStore.isLoading">Verifying...</span>
-            <span v-else>Verify & Sign In</span>
+            <span v-if="authStore.isLoading">{{ t.twoFactor.verifying }}</span>
+            <span v-else>{{ t.twoFactor.verifyButton }}</span>
           </button>
         </div>
       </form>
@@ -51,11 +51,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 const { showToast } = useNotifications()
 
 const code = ref('')
@@ -75,13 +77,13 @@ watch(
 
 async function submit2FA() {
   if (!code.value || code.value.length < 6) {
-    showToast('Invalid Code', 'Please enter a valid 6-digit code', 'error')
+    showToast('Invalid Code', t.value.twoFactor.invalidCode, 'error')
     return
   }
 
   try {
     await authStore.submit2FACode(code.value)
-    showToast('Verified', 'Signed in successfully with Apple ID', 'success')
+    showToast('Verified', t.value.twoFactor.verifiedToast, 'success')
   } catch (err: any) {
     showToast('Verification Failed', err?.message || 'Invalid 2FA code', 'error')
   }

@@ -4,10 +4,10 @@
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 shrink-0">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-[#FFFFFF]">
-          Real-Time Diagnostic Logs
+          {{ t.logs.title }}
         </h1>
         <p class="text-xs text-[#B8C0CC] mt-0.5 font-normal">
-          Stream Apple Storefront requests, authentication cycles, chunked transfer bytes, and FairPlay SINF DRM signing events.
+          {{ t.logs.subtitle }}
         </p>
       </div>
 
@@ -17,7 +17,7 @@
           v-model="logsStore.filterLevel"
           class="glass-input px-3 py-1.5 rounded-[12px] text-xs font-semibold outline-none cursor-pointer"
         >
-          <option value="ALL">All Levels</option>
+          <option value="ALL">{{ t.logs.allLevels }}</option>
           <option value="INFO">INFO</option>
           <option value="SUCCESS">SUCCESS</option>
           <option value="WARN">WARN</option>
@@ -32,7 +32,7 @@
           :class="logsStore.autoScroll ? 'border-[#0A84FF]/40 text-[#0A84FF]' : 'text-[#7D8592]'"
           @click="logsStore.autoScroll = !logsStore.autoScroll"
         >
-          <span>Auto-Scroll: {{ logsStore.autoScroll ? 'ON' : 'OFF' }}</span>
+          <span>{{ t.logs.autoScroll }} {{ logsStore.autoScroll ? t.logs.on : t.logs.off }}</span>
         </button>
 
         <button
@@ -40,7 +40,7 @@
           class="btn-secondary text-xs px-3 py-1.5 text-[#B8C0CC] hover:text-white"
           @click="copyLogs"
         >
-          Copy
+          {{ t.common.copy }}
         </button>
 
         <button
@@ -48,7 +48,7 @@
           class="btn-secondary text-xs px-3 py-1.5 text-[#B8C0CC] hover:text-white"
           @click="exportLogs"
         >
-          Export
+          {{ t.common.export }}
         </button>
 
         <button
@@ -56,7 +56,7 @@
           class="btn-secondary text-xs px-3 py-1.5 text-[#FF453A] hover:bg-[#FF453A]/15 hover:border-[#FF453A]/30"
           @click="clearLogs"
         >
-          Clear
+          {{ t.common.clear }}
         </button>
       </div>
     </div>
@@ -67,7 +67,7 @@
       class="flex-1 rounded-[18px] border border-white/[0.12] bg-[#0A0D14]/90 backdrop-blur-[30px] p-4 font-mono text-xs overflow-y-auto space-y-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.35)] min-h-[420px]"
     >
       <div v-if="logsStore.filteredLogs.length === 0" class="text-[#7D8592] text-center py-24 font-sans text-xs">
-        No log entries recorded yet. Activities and streaming events will appear here in real time.
+        {{ t.logs.empty }}
       </div>
 
       <div
@@ -92,9 +92,11 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue'
 import { useLogsStore } from '../stores/logs'
+import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const logsStore = useLogsStore()
+const { t } = useI18n()
 const { showToast } = useNotifications()
 const logContainerRef = ref<HTMLElement | null>(null)
 
@@ -147,7 +149,7 @@ async function copyLogs() {
       .map((l) => `[${formatTime(l.timestamp)}] [${l.level}] [${l.context}] ${l.message}`)
       .join('\n')
     await navigator.clipboard.writeText(text)
-    showToast('Logs Copied', 'All log entries copied to clipboard', 'info')
+    showToast(t.value.logs.copiedToast, '', 'info')
   } catch {
     showToast('Copy Failed', 'Could not copy logs to clipboard', 'error')
   }
@@ -156,12 +158,12 @@ async function copyLogs() {
 async function exportLogs() {
   const path = await logsStore.exportLogs()
   if (path) {
-    showToast('Logs Exported', `Saved to ${path}`, 'success')
+    showToast(t.value.logs.exportedToast, path, 'success')
   }
 }
 
 async function clearLogs() {
   await logsStore.clearLogs()
-  showToast('Logs Cleared', 'All log entries removed', 'info')
+  showToast(t.value.logs.clearedToast, '', 'info')
 }
 </script>

@@ -21,7 +21,7 @@
             <p class="text-xs text-[#B8C0CC] truncate mt-0.5">{{ app.developer }}</p>
             <div class="flex flex-wrap items-center gap-2 mt-2">
               <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">
-                {{ app.formattedPrice || 'Free' }}
+                {{ app.formattedPrice || t.common.free }}
               </span>
               <span class="px-2.5 py-0.5 text-xs font-mono rounded-md bg-white/[0.08] text-[#B8C0CC] border border-white/[0.12]">
                 v{{ app.version }}
@@ -46,7 +46,7 @@
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            <span>Download</span>
+            <span>{{ t.common.download }}</span>
           </button>
           <button
             type="button"
@@ -64,7 +64,7 @@
       <div class="p-6 overflow-y-auto space-y-6 flex-1">
         <!-- Screenshots Lightbox Gallery -->
         <div v-if="screenshots.length > 0" class="space-y-2">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">Screenshots</h3>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.screenshots }}</h3>
           <div class="flex space-x-3 overflow-x-auto pb-2 pt-1">
             <img
               v-for="(img, idx) in screenshots"
@@ -78,7 +78,7 @@
 
         <!-- Description -->
         <div v-if="app.description" class="space-y-2">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">Description</h3>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.description }}</h3>
           <div class="p-4 rounded-[14px] bg-white/[0.04] border border-white/[0.08] text-xs text-[#B8C0CC] leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto font-normal">
             {{ app.description }}
           </div>
@@ -87,29 +87,29 @@
         <!-- Metadata Properties Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
           <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
-            <span class="text-[#7D8592] block">Bundle Identifier</span>
+            <span class="text-[#7D8592] block">{{ t.details.bundleId }}</span>
             <span class="font-mono text-[#FFFFFF] truncate block mt-0.5">{{ app.bundleId }}</span>
           </div>
 
           <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
-            <span class="text-[#7D8592] block">Minimum OS Version</span>
+            <span class="text-[#7D8592] block">{{ t.details.minOs }}</span>
             <span class="font-mono text-[#FFFFFF] block mt-0.5">iOS {{ app.minimumOsVersion || '12.0' }}</span>
           </div>
 
           <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
-            <span class="text-[#7D8592] block">Release Date</span>
+            <span class="text-[#7D8592] block">{{ t.details.releaseDate }}</span>
             <span class="text-[#FFFFFF] block mt-0.5">{{ formatDate(app.releaseDate) }}</span>
           </div>
 
           <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
-            <span class="text-[#7D8592] block">Apple Adam ID</span>
+            <span class="text-[#7D8592] block">{{ t.details.adamId }}</span>
             <span class="font-mono text-[#FFFFFF] block mt-0.5">{{ app.id }}</span>
           </div>
         </div>
 
         <!-- Version History List with Direct Version Download -->
         <div v-if="searchStore.selectedApp?.versionHistory && searchStore.selectedApp.versionHistory.length > 0" class="space-y-2">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">Available Version Builds</h3>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.versionBuilds }}</h3>
           <div class="rounded-[14px] border border-white/[0.08] divide-y divide-white/[0.08] max-h-48 overflow-y-auto bg-white/[0.02]">
             <div
               v-for="v in searchStore.selectedApp.versionHistory"
@@ -125,7 +125,7 @@
                 class="btn-secondary text-xs px-3 py-1"
                 @click="downloadVersion(v.externalVersionId)"
               >
-                Download Build
+                {{ t.details.downloadBuild }}
               </button>
             </div>
           </div>
@@ -139,10 +139,12 @@
 import { computed } from 'vue'
 import { useSearchStore } from '../stores/search'
 import { useDownloadsStore } from '../stores/downloads'
+import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const searchStore = useSearchStore()
 const downloadsStore = useDownloadsStore()
+const { t } = useI18n()
 const { showToast } = useNotifications()
 
 const app = computed(() => searchStore.selectedApp?.metadata)
@@ -168,9 +170,9 @@ async function downloadCurrent() {
   try {
     await downloadsStore.queueDownload(app.value, searchStore.platform)
     searchStore.isDetailsModalOpen = false
-    showToast('Download Queued', `Starting download for ${app.value.name}`, 'info')
+    showToast(t.value.search.downloadQueued, app.value.name, 'info')
   } catch (err: any) {
-    showToast('Download Error', err?.message || 'Failed to queue download', 'error')
+    showToast(t.value.search.downloadError, err?.message || 'Failed to queue download', 'error')
   }
 }
 
@@ -179,9 +181,9 @@ async function downloadVersion(versionId: string) {
   try {
     await downloadsStore.queueDownload(app.value, searchStore.platform, versionId)
     searchStore.isDetailsModalOpen = false
-    showToast('Download Queued', `Starting build ${versionId} for ${app.value.name}`, 'info')
+    showToast(t.value.search.downloadQueued, `Build ${versionId} for ${app.value.name}`, 'info')
   } catch (err: any) {
-    showToast('Download Error', err?.message || 'Failed to queue build', 'error')
+    showToast(t.value.search.downloadError, err?.message || 'Failed to queue build', 'error')
   }
 }
 </script>
