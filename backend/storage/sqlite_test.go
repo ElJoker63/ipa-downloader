@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/majd/ipatool/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/models"
 )
 
 func TestSQLiteStorage(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "ipatool-sqlite-test-*")
+	tempDir, err := os.MkdirTemp("", "ipa-downloader-sqlite-test-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}

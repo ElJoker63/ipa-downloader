@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/majd/ipatool/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/models"
 	_ "modernc.org/sqlite"
 )
 
@@ -66,7 +66,7 @@ func NewSQLiteStorage(dataDir string) (Storage, error) {
 		return nil, fmt.Errorf("failed to create storage directory: %w", err)
 	}
 
-	dbPath := filepath.Join(dataDir, "ipatool.db")
+	dbPath := filepath.Join(dataDir, "ipa-downloader.db")
 	db, err := sql.Open("sqlite", dbPath+"?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite database: %w", err)

@@ -8,16 +8,16 @@ import (
 
 	"github.com/byteness/keyring"
 	cookiejar "github.com/juju/persistent-cookiejar"
-	"github.com/majd/ipatool/v2/backend/models"
-	"github.com/majd/ipatool/v2/pkg/appstore"
-	"github.com/majd/ipatool/v2/pkg/keychain"
-	"github.com/majd/ipatool/v2/pkg/util/machine"
-	"github.com/majd/ipatool/v2/pkg/util/operatingsystem"
+	"github.com/majd/ipa-downloader/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/pkg/appstore"
+	"github.com/majd/ipa-downloader/v2/pkg/keychain"
+	"github.com/majd/ipa-downloader/v2/pkg/util/machine"
+	"github.com/majd/ipa-downloader/v2/pkg/util/operatingsystem"
 )
 
 const (
-	KeychainServiceName = "ipatool"
-	ConfigDirectoryName = ".ipatool"
+	KeychainServiceName = "ipa-downloader"
+	ConfigDirectoryName = ".ipa-downloader"
 	CookieJarFileName   = "cookiejar"
 )
 
@@ -68,7 +68,7 @@ func NewClient(passphrase string) (Client, error) {
 			if passphrase != "" {
 				return passphrase, nil
 			}
-			return "ipatool-default-keychain-passphrase", nil
+			return "ipa-downloader-default-keychain-passphrase", nil
 		},
 	})
 	if err != nil {

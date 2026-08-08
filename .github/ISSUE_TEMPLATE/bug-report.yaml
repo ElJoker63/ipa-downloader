@@ -14,7 +14,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of ipatool are you running?
+      description: What version of ipa-downloader are you running?
     validations:
       required: true
   - type: textarea

@@ -4,7 +4,7 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/majd/ipatool/v2/backend/app"
+	"github.com/majd/ipa-downloader/v2/backend/app"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"

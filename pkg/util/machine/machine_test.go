@@ -4,7 +4,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/majd/ipatool/v2/pkg/util/operatingsystem"
+	"github.com/majd/ipa-downloader/v2/pkg/util/operatingsystem"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
@@ -53,7 +53,7 @@ var _ = Describe("Machine", func() {
 
 	When("reading password from stdout", func() {
 		It("returns error", func() {
-			_, err := machine.ReadPassword(syscall.Stdout)
+			_, err := machine.ReadPassword(int(syscall.Stdout))
 			Expect(err).To(HaveOccurred())
 		})
 	})

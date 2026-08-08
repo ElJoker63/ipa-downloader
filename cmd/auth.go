@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/majd/ipatool/v2/pkg/appstore"
-	"github.com/majd/ipatool/v2/pkg/util"
+	"github.com/majd/ipa-downloader/v2/pkg/appstore"
+	"github.com/majd/ipa-downloader/v2/pkg/util"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )

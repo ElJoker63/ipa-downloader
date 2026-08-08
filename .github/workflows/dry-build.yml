@@ -19,7 +19,7 @@ jobs:
         with:
           go-version: "1.25.0"
           cache: true
-      - run: go build -o ipatool-$GOOS-$GOARCH.exe
+      - run: go build -o ipa-downloader-$GOOS-$GOARCH.exe
         env:
           GOOS: windows
           GOARCH: ${{ matrix.arch }}
@@ -40,7 +40,7 @@ jobs:
         with:
           go-version: "1.25.0"
           cache: true
-      - run: go build -o ipatool-linux-$GOARCH
+      - run: go build -o ipa-downloader-linux-$GOARCH
         env:
           GOARCH: ${{ matrix.arch }}
   build_macos:
@@ -56,7 +56,7 @@ jobs:
         with:
           go-version: "1.25.0"
           cache: true
-      - run: go build -o ipatool-$GOOS-$GOARCH
+      - run: go build -o ipa-downloader-$GOOS-$GOARCH
         env:
           GOOS: darwin
           GOARCH: ${{ matrix.arch }}

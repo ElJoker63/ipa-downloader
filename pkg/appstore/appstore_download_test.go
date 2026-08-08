@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/majd/ipatool/v2/pkg/http"
-	"github.com/majd/ipatool/v2/pkg/keychain"
-	"github.com/majd/ipatool/v2/pkg/util/machine"
-	"github.com/majd/ipatool/v2/pkg/util/operatingsystem"
+	"github.com/majd/ipa-downloader/v2/pkg/http"
+	"github.com/majd/ipa-downloader/v2/pkg/keychain"
+	"github.com/majd/ipa-downloader/v2/pkg/util/machine"
+	"github.com/majd/ipa-downloader/v2/pkg/util/operatingsystem"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
@@ -626,7 +626,7 @@ var _ = Describe("AppStore (Download)", func() {
 
 	Describe("package platform validation", func() {
 		writePackage := func(platforms []string) string {
-			file, err := os.CreateTemp("", "ipatool-platform-*.ipa")
+			file, err := os.CreateTemp("", "ipa-downloader-platform-*.ipa")
 			Expect(err).ToNot(HaveOccurred())
 			defer file.Close()
 

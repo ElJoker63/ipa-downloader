@@ -3,16 +3,16 @@ package services
 import (
 	"context"
 
-	"github.com/majd/ipatool/v2/backend/apple"
-	"github.com/majd/ipatool/v2/backend/auth"
-	"github.com/majd/ipatool/v2/backend/config"
-	"github.com/majd/ipatool/v2/backend/device"
-	"github.com/majd/ipatool/v2/backend/download"
-	"github.com/majd/ipatool/v2/backend/events"
-	"github.com/majd/ipatool/v2/backend/library"
-	"github.com/majd/ipatool/v2/backend/models"
-	"github.com/majd/ipatool/v2/backend/search"
-	"github.com/majd/ipatool/v2/backend/storage"
+	"github.com/majd/ipa-downloader/v2/backend/apple"
+	"github.com/majd/ipa-downloader/v2/backend/auth"
+	"github.com/majd/ipa-downloader/v2/backend/config"
+	"github.com/majd/ipa-downloader/v2/backend/device"
+	"github.com/majd/ipa-downloader/v2/backend/download"
+	"github.com/majd/ipa-downloader/v2/backend/events"
+	"github.com/majd/ipa-downloader/v2/backend/library"
+	"github.com/majd/ipa-downloader/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/search"
+	"github.com/majd/ipa-downloader/v2/backend/storage"
 )
 
 // AppService aggregates all domain services and is exposed to the Wails frontend.

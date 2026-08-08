@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/majd/ipatool/v2/pkg/http"
+	"github.com/majd/ipa-downloader/v2/pkg/http"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"

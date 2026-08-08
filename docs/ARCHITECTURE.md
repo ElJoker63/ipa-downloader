@@ -1,8 +1,8 @@
-# IPATool Desktop - Architecture & Developer Guide
+# IPA Downloader Desktop - Architecture & Developer Guide
 
 ## Overview
 
-**IPATool Desktop** is a modern, cross-platform desktop application and CLI suite that enables searching, querying, version-browsing, and downloading encrypted iOS and tvOS `.ipa` packages directly from Apple's App Store.
+**IPA Downloader Desktop** is a modern, cross-platform desktop application and CLI suite that enables searching, querying, version-browsing, and downloading encrypted iOS and tvOS `.ipa` packages directly from Apple's App Store.
 
 It is built with **Go 1.26+**, **Wails v2**, **Vue 3**, **TypeScript**, **TailwindCSS**, **Pinia**, and **pure-Go SQLite (`modernc.org/sqlite`)**.
 
@@ -11,7 +11,7 @@ It is built with **Go 1.26+**, **Wails v2**, **Vue 3**, **TypeScript**, **Tailwi
 ## Clean Architecture Layers
 
 ```
-ipatool-desktop/
+ipa-downloader-desktop/
 ├── backend/
 │   ├── app/         # Wails application lifecycle (Startup, DomReady, Shutdown, Native Dialogs)
 │   ├── apple/       # Apple Storefront, Bag, Plist HTTP protocol wrappers
@@ -54,15 +54,15 @@ wails build
 
 # Or directly using Go:
 cd frontend && npm run build && cd ..
-go build -o ipatool-desktop.exe .
+go build -o ipa-downloader-desktop.exe .
 ```
 
 ### 3. Run CLI Mode
 ```bash
 # CLI commands continue to work seamlessly:
-./ipatool-desktop.exe auth login -e "user@icloud.com"
-./ipatool-desktop.exe search "Spotify"
-./ipatool-desktop.exe download -b "com.spotify.client" --purchase
+./ipa-downloader-desktop.exe auth login -e "user@icloud.com"
+./ipa-downloader-desktop.exe search "Spotify"
+./ipa-downloader-desktop.exe download -b "com.spotify.client" --purchase
 ```
 
 ---

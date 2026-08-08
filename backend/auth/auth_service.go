@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/majd/ipatool/v2/backend/apple"
-	"github.com/majd/ipatool/v2/backend/events"
-	"github.com/majd/ipatool/v2/backend/models"
-	"github.com/majd/ipatool/v2/backend/storage"
-	"github.com/majd/ipatool/v2/pkg/appstore"
+	"github.com/majd/ipa-downloader/v2/backend/apple"
+	"github.com/majd/ipa-downloader/v2/backend/events"
+	"github.com/majd/ipa-downloader/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/storage"
+	"github.com/majd/ipa-downloader/v2/pkg/appstore"
 )
 
 // AuthService manages Apple ID login, session state, and credentials.

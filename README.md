@@ -58,7 +58,7 @@ npm run build
 cd ..
 
 # Compile desktop binary
-go build -o ipatool-desktop.exe .
+go build -o ipa-downloader-desktop.exe .
 ```
 
 ### Build CLI Tool
@@ -66,7 +66,7 @@ go build -o ipatool-desktop.exe .
 To compile the command-line binary:
 
 ```shell
-go build -o ipatool.exe main.go
+go build -o ipa-downloader.exe main.go
 ```
 
 ### Development Mode
@@ -85,44 +85,44 @@ wails dev
 
 ```shell
 # Authenticate with Apple ID
-ipatool auth login --email "name@icloud.com" --password "secret"
+ipa-downloader auth login --email "name@icloud.com" --password "secret"
 
 # Check current authentication status
-ipatool auth info
+ipa-downloader auth info
 
 # Revoke credentials
-ipatool auth revoke
+ipa-downloader auth revoke
 ```
 
 ### Search
 
 ```shell
 # Search for apps by name or bundle ID
-ipatool search "Telegram" --limit 10 --platform iphone
+ipa-downloader search "Telegram" --limit 10 --platform iphone
 ```
 
 ### License Purchase
 
 ```shell
 # Acquire a license for a free application
-ipatool purchase --bundle-identifier "ph.telegra.Telegraph"
+ipa-downloader purchase --bundle-identifier "ph.telegra.Telegraph"
 ```
 
 ### Version Listing
 
 ```shell
 # List all historical version build identifiers available from Apple
-ipatool list-versions --bundle-identifier "ph.telegra.Telegraph"
+ipa-downloader list-versions --bundle-identifier "ph.telegra.Telegraph"
 ```
 
 ### Download
 
 ```shell
 # Download latest version
-ipatool download --bundle-identifier "ph.telegra.Telegraph" --output "./Telegram.ipa"
+ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --output "./Telegram.ipa"
 
 # Download a specific historical build
-ipatool download --bundle-identifier "ph.telegra.Telegraph" --external-version-id "854000123" --output "./Telegram_v10.ipa"
+ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --external-version-id "854000123" --output "./Telegram_v10.ipa"
 ```
 
 ---

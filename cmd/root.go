@@ -5,7 +5,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/majd/ipatool/v2/pkg/appstore"
+	"github.com/majd/ipa-downloader/v2/pkg/appstore"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
 )
@@ -24,7 +24,7 @@ func rootCmd() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:           "ipatool",
+		Use:           "ipa-downloader",
 		Short:         "A cli tool for interacting with Apple's ipa files",
 		SilenceErrors: true,
 		SilenceUsage:  true,

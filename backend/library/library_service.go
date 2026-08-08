@@ -8,9 +8,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/majd/ipatool/v2/backend/events"
-	"github.com/majd/ipatool/v2/backend/models"
-	"github.com/majd/ipatool/v2/backend/storage"
+	"github.com/majd/ipa-downloader/v2/backend/events"
+	"github.com/majd/ipa-downloader/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/storage"
 )
 
 // LibraryService handles favorites, download history, and native file manager operations.

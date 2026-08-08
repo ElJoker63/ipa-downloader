@@ -15,14 +15,14 @@ jobs:
         with:
           go-version: "1.25.0"
           cache: true
-      - run: go build -o ipatool
+      - run: go build -o ipa-downloader
         env:
           CGO_CFLAGS: -mmacosx-version-min=10.15
           CGO_LDFLAGS: -mmacosx-version-min=10.15
       - uses: actions/upload-artifact@v4
         with:
-          name: ipatool
-          path: ipatool
+          name: ipa-downloader
+          path: ipa-downloader
           if-no-files-found: error
   test:
     name: Test
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: ipatool
+          name: ipa-downloader
           path: build
-      - run: chmod +x ./build/ipatool
-      - run: ./build/ipatool ${{ matrix.command }} --help
+      - run: chmod +x ./build/ipa-downloader
+      - run: ./build/ipa-downloader ${{ matrix.command }} --help

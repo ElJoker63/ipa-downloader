@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/majd/ipatool/v2/pkg/util"
+	"github.com/majd/ipa-downloader/v2/pkg/util"
 	"howett.net/plist"
 )
 

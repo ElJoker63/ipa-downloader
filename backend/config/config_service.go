@@ -6,9 +6,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/majd/ipatool/v2/backend/events"
-	"github.com/majd/ipatool/v2/backend/models"
-	"github.com/majd/ipatool/v2/backend/storage"
+	"github.com/majd/ipa-downloader/v2/backend/events"
+	"github.com/majd/ipa-downloader/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/storage"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -113,7 +113,7 @@ func (s *configService) ExportLogs(destinationPath string) (string, error) {
 
 	if destinationPath == "" && ctx != nil {
 		selected, err := runtime.SaveFileDialog(ctx, runtime.SaveDialogOptions{
-			DefaultFilename: "ipatool-diagnostics.log",
+			DefaultFilename: "ipa-downloader-diagnostics.log",
 			Title:           "Export Application Logs",
 			Filters: []runtime.FileFilter{
 				{DisplayName: "Log Files (*.log)", Pattern: "*.log"},

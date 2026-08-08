@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/majd/ipatool/v2/backend/services"
+	"github.com/majd/ipa-downloader/v2/backend/services"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -22,7 +22,7 @@ func NewApp() (*App, *services.AppService, error) {
 	if err != nil {
 		home = "."
 	}
-	dataDir := filepath.Join(home, ".ipatool")
+	dataDir := filepath.Join(home, ".ipa-downloader")
 
 	appService, err := services.NewAppService(dataDir)
 	if err != nil {
@@ -41,7 +41,7 @@ func NewApp() (*App, *services.AppService, error) {
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 	a.service.SetContext(ctx)
-	_, _ = a.service.AddLog("INFO", "IPATool Desktop started successfully", "AppLifecycle")
+	_, _ = a.service.AddLog("INFO", "IPA Downloader Desktop started successfully", "AppLifecycle")
 }
 
 // DomReady is called after the front-end has finished loading.

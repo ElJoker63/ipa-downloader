@@ -1,10 +1,10 @@
 package appstore
 
 import (
-	"github.com/majd/ipatool/v2/pkg/http"
-	"github.com/majd/ipatool/v2/pkg/keychain"
-	"github.com/majd/ipatool/v2/pkg/util/machine"
-	"github.com/majd/ipatool/v2/pkg/util/operatingsystem"
+	"github.com/majd/ipa-downloader/v2/pkg/http"
+	"github.com/majd/ipa-downloader/v2/pkg/keychain"
+	"github.com/majd/ipa-downloader/v2/pkg/util/machine"
+	"github.com/majd/ipa-downloader/v2/pkg/util/operatingsystem"
 )
 
 type AppStore interface {

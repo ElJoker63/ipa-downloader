@@ -3,7 +3,7 @@
 This file provides guidance for coding agents working in this repository.
 
 ## Repository overview
-- Project: `ipatool`
+- Project: `ipa-downloader`
 - Language: Go
 - Entry point: `main.go`
 - CLI command implementations: `cmd/`

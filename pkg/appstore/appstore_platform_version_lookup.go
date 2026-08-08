@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/majd/ipatool/v2/pkg/http"
+	"github.com/majd/ipa-downloader/v2/pkg/http"
 )
 
 type platformVersionLookupResult struct {

@@ -1,4 +1,4 @@
-module github.com/majd/ipatool/v2
+module github.com/majd/ipa-downloader/v2
 
 go 1.25.0
 

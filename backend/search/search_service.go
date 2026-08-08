@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/majd/ipatool/v2/backend/apple"
-	"github.com/majd/ipatool/v2/backend/events"
-	"github.com/majd/ipatool/v2/backend/models"
-	"github.com/majd/ipatool/v2/backend/storage"
+	"github.com/majd/ipa-downloader/v2/backend/apple"
+	"github.com/majd/ipa-downloader/v2/backend/events"
+	"github.com/majd/ipa-downloader/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/storage"
 )
 
 // SearchService handles searching for apps, retrieving rich metadata, and managing search history.

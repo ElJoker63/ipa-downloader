@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/majd/ipatool/v2/pkg/http"
-	"github.com/majd/ipatool/v2/pkg/keychain"
-	"github.com/majd/ipatool/v2/pkg/util/machine"
+	"github.com/majd/ipa-downloader/v2/pkg/http"
+	"github.com/majd/ipa-downloader/v2/pkg/keychain"
+	"github.com/majd/ipa-downloader/v2/pkg/util/machine"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"

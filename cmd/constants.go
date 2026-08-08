@@ -1,7 +1,7 @@
 package cmd
 
 const (
-	ConfigDirectoryName = ".ipatool"
+	ConfigDirectoryName = ".ipa-downloader"
 	CookieJarFileName   = "cookies"
-	KeychainServiceName = "ipatool-auth.service"
+	KeychainServiceName = "ipa-downloader-auth.service"
 )

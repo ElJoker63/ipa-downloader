@@ -12,8 +12,8 @@ import (
 	"time"
 
 	giDevice "github.com/electricbubble/gidevice"
-	"github.com/majd/ipatool/v2/backend/events"
-	"github.com/majd/ipatool/v2/backend/models"
+	"github.com/majd/ipa-downloader/v2/backend/events"
+	"github.com/majd/ipa-downloader/v2/backend/models"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"howett.net/plist"
 )

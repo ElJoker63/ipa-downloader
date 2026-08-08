@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	apphttp "github.com/majd/ipatool/v2/pkg/http"
+	apphttp "github.com/majd/ipa-downloader/v2/pkg/http"
 	"howett.net/plist"
 )
 

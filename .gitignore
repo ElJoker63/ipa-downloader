@@ -9,7 +9,7 @@ exp/
 *.dll
 *.so
 *.dylib
-ipatool-desktop.exe
+ipa-downloader-desktop.exe
 build/bin/
 *.tsbuildinfo
 frontend/node_modules/
