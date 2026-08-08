@@ -90,8 +90,11 @@ jobs:
         if: matrix.platform == 'darwin/universal'
         run: |
           cd build/bin
-          mv ipa-downloader-macos "IPA Downloader.app"
-          zip -r ipa-downloader-macos-universal.zip "IPA Downloader.app"
+          # Wails on macOS creates a .app directory automatically.
+          # The -o flag might behave differently on macOS for bundles.
+          # Let's find what was actually built.
+          ls -R .
+          zip -r ipa-downloader-macos-universal.zip *.app
 
 
       - name: Upload to Release
