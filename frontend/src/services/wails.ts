@@ -10,11 +10,12 @@ import type {
   DeviceInfo,
   InstalledApp,
   IPAInfo,
-  DeviceInstallProgress,
+  DeviceInstallTask,
   UpdateInfo,
   Firmware,
   AppleHardware,
 } from '../types'
+
 
 
 import * as AppService from '../../wailsjs/go/services/AppService'

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { DeviceInfo, InstalledApp, DeviceInstallProgress } from '../types'
+import type { DeviceInfo, InstalledApp, DeviceInstallTask } from '../types'
 import { WailsService } from '../services/wails'
 
 export const useDeviceStore = defineStore('device', () => {
@@ -8,8 +8,9 @@ export const useDeviceStore = defineStore('device', () => {
   const selectedUdid = ref<string>('')
   const installedApps = ref<InstalledApp[]>([])
   const isLoadingApps = ref(false)
-  const installTasks = ref<DeviceInstallProgress[]>([])
+  const installTasks = ref<DeviceInstallTask[]>([])
   const activeTab = ref<'user' | 'system'>('user')
+
   const isInstalling = ref(false)
   const installError = ref<string | null>(null)
 
@@ -151,7 +152,7 @@ export const useDeviceStore = defineStore('device', () => {
       }
     })
 
-    WailsService.onEvent('device:install_progress', (prog: DeviceInstallProgress) => {
+    WailsService.onEvent('device:install_progress', (prog: DeviceInstallTask) => {
       const idx = installTasks.value.findIndex(t => t.id === prog.id)
       if (idx !== -1) {
         installTasks.value[idx] = prog
@@ -159,6 +160,7 @@ export const useDeviceStore = defineStore('device', () => {
         installTasks.value.unshift(prog)
       }
     })
+
 
     WailsService.onEvent('device:install_complete', (data: any) => {
       if (data.udid === selectedUdid.value) {

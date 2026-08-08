@@ -196,7 +196,7 @@ export interface IPAInfo {
   error?: string
 }
 
-export interface DeviceInstallProgress {
+export interface DeviceInstallTask {
   id: string
   ipaName: string
   udid: string
@@ -204,6 +204,7 @@ export interface DeviceInstallProgress {
   percent: number
   message: string
 }
+
 
 
 export interface Firmware {
