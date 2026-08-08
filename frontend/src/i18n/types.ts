@@ -57,24 +57,23 @@ export interface Translations {
   }
 
   home: {
-
-    badge: string
     title: string
     subtitle: string
-    session: string
-    guestMode: string
-    signInPrompt: string
-    storefront: string
-    region: string
+    searchWidget: string
+    searchWidgetDesc: string
+    downloadsWidget: string
+    downloadsWidgetDesc: string
+    appsWidget: string
+    appsWidgetDesc: string
+    firmwareWidget: string
+    firmwareWidgetDesc: string
+    favoritesWidget: string
+    favoritesWidgetDesc: string
+    logsWidget: string
+    logsWidgetDesc: string
     activeQueue: string
     savedFavorites: string
     bookmarkedApps: string
-    sessionSecurity: string
-    encryptedKeychain: string
-    fairplaySigning: string
-    active: string
-    autoLicensing: string
-    enabled: string
     searchAppStore: string
     signOut: string
     signInTitle: string
@@ -94,6 +93,7 @@ export interface Translations {
     feat4Title: string
     feat4Desc: string
   }
+
   search: {
     title: string
     subtitle: string
