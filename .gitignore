@@ -5,3 +5,14 @@
 .idea/
 **/*_mock.go
 exp/
+*.exe
+*.dll
+*.so
+*.dylib
+ipatool-desktop.exe
+build/bin/
+*.tsbuildinfo
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/package.json.md5

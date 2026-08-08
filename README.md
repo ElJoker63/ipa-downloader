@@ -1,26 +1,22 @@
-# IPATool
+# IPATool Desktop & CLI
 
 [![Release](https://img.shields.io/github/release/majd/ipatool.svg?label=Release)](https://GitHub.com/majd/ipatool/releases/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/majd/ipatool/blob/main/LICENSE)
 
-`ipatool` is a command line tool that allows you to search for iOS apps on the [App Store](https://apps.apple.com) and download a copy of the app package, known as an _ipa_ file.
+`ipatool` is a modern cross-platform desktop application and command line suite that allows you to search for iOS and tvOS apps on the [App Store](https://apps.apple.com) and download encrypted copies of the app package (`.ipa` files) with FairPlay signature replication.
 
-![Demo](./resources/demo.gif)
+---
 
-- [Requirements](#requirements)
-- [Installation](#installation)
-  - [Manual](#manual)
-  - [Package Manager (macOS)](#package-manager-macos)
-- [Usage](#usage)
-- [Compiling](#compiling)
-- [License](#license)
-- [Releases](https://github.com/majd/ipatool/releases)
-- [FAQ](https://github.com/majd/ipatool/wiki/FAQ)
+## Features
 
-## Requirements
-
-- Supported operating system (Windows, Linux or macOS).
-- Apple ID set up to use the App Store.
+- 🖥️ **Modern Desktop GUI**: Built with Wails v2, Vue 3, TypeScript, TailwindCSS, and Pinia.
+- 🎨 **Dark & Light Themes**: Sleek glassmorphism interface with automatic system preference detection.
+- 🔐 **Direct Apple ID Authentication**: Native 2FA modal verification with encrypted local keychain storage.
+- 🔍 **Live Search & Metadata**: Search iOS, iPadOS, and tvOS apps with high-res artwork, screenshots gallery, and version history.
+- ⬇️ **Concurrent Download Manager**: Chunked streaming, live speed & ETA calculations, pause/resume, and auto-license acquisition.
+- ⭐ **Local Favorites & History**: Instant local bookmarks, search history, and download history powered by pure-Go SQLite.
+- 📄 **Real-Time Logs**: Streaming diagnostic log viewer with color-coded severity levels and file export.
+- 💻 **Backward-Compatible CLI**: Full command line tool preserved sharing the exact same backend services.
 
 ## Installation
 
