@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/appstore"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/keychain"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/util/machine"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/util/operatingsystem"
+	"github.com/ElJoker63/ipa-downloader/v2/pkg/util/storefront"
 	"github.com/byteness/keyring"
 	cookiejar "github.com/juju/persistent-cookiejar"
 )
@@ -101,7 +101,7 @@ func (c *client) GetAccount() (*models.AccountProfile, error) {
 		return &models.AccountProfile{IsLoggedIn: false}, nil
 	}
 
-	country := extractCountryFromStorefront(info.Account.StoreFront)
+	country := storefront.Format(info.Account.StoreFront)
 
 	return &models.AccountProfile{
 		Name:                info.Account.Name,
@@ -132,7 +132,7 @@ func (c *client) Login(email, password, authCode, endpoint string) (*models.Acco
 		return nil, err
 	}
 
-	country := extractCountryFromStorefront(out.Account.StoreFront)
+	country := storefront.Format(out.Account.StoreFront)
 
 	return &models.AccountProfile{
 		Name:                out.Account.Name,
@@ -293,15 +293,6 @@ func parseApplePlatform(p models.Platform) (appstore.Platform, error) {
 	default:
 		return appstore.ParsePlatform(string(p))
 	}
-}
-
-func extractCountryFromStorefront(sf string) string {
-	parts := strings.Split(sf, "-")
-	if len(parts) > 0 {
-		code := strings.TrimSpace(parts[0])
-		return code
-	}
-	return "US"
 }
 
 func convertAppToMetadata(a appstore.App) models.AppMetadata {
