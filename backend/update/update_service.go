@@ -63,9 +63,10 @@ func (s *updateService) CheckForUpdate() (*models.UpdateInfo, error) {
 	latestVersion := strings.TrimPrefix(release.TagName, "v")
 	currentVersion := version.Version
 
-	if latestVersion == currentVersion {
+	if !isNewer(latestVersion, currentVersion) {
 		return &models.UpdateInfo{Available: false, CurrentVersion: currentVersion}, nil
 	}
+
 
 	// Find the correct asset for the current platform
 	downloadURL := ""
@@ -148,3 +149,28 @@ func (r *progressReader) Read(p []byte) (int, error) {
 	}
 	return n, err
 }
+
+func isNewer(latest, current string) bool {
+	if latest == current {
+		return false
+	}
+
+	lParts := strings.Split(latest, ".")
+	cParts := strings.Split(current, ".")
+
+	for i := 0; i < len(lParts) && i < len(cParts); i++ {
+		var lV, cV int
+		fmt.Sscanf(lParts[i], "%d", &lV)
+		fmt.Sscanf(cParts[i], "%d", &cV)
+
+		if lV > cV {
+			return true
+		}
+		if lV < cV {
+			return false
+		}
+	}
+
+	return len(lParts) > len(cParts)
+}
+
