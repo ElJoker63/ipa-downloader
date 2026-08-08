@@ -151,8 +151,10 @@
             </div>
             <div class="flex items-center space-x-3">
               <span v-if="task.status === 'signing'" class="text-[#64D2FF] font-semibold flex items-center space-x-1.5 animate-pulse">
-                <span class="inline-block w-2 h-2 rounded-full bg-[#64D2FF] animate-ping"></span>
-                <span>✍️ {{ t.downloads.signingFairPlay }}</span>
+                <svg class="w-3.5 h-3.5 text-[#64D2FF] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>{{ t.downloads.signingFairPlay }}</span>
               </span>
               <span v-else-if="task.status === 'downloading'" class="text-[#30D158] font-semibold">{{ task.formattedSpeed || 'Streaming...' }}</span>
               <span v-else-if="task.status === 'paused'" class="text-[#FFD60A] font-semibold">{{ t.downloads.paused }}</span>

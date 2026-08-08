@@ -186,5 +186,9 @@ export interface Translations {
     adamId: string
     versionBuilds: string
     downloadBuild: string
+    versionFilterPlaceholder: string
+    signInForFullHistory: string
+    loadingVersions: string
+    latestBadge: string
   }
 }

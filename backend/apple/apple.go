@@ -265,25 +265,17 @@ func (c *client) ListVersions(app models.AppMetadata) ([]models.VersionInfo, err
 	}
 
 	var versions []models.VersionInfo
-	for _, vid := range listOut.ExternalVersionIdentifiers {
-		meta, err := c.appstore.GetVersionMetadata(appstore.GetVersionMetadataInput{
-			Account:   accInfo.Account,
-			App:       appstore.App{ID: app.ID, BundleID: app.BundleID},
-			VersionID: vid,
-		})
-		if err != nil {
-			versions = append(versions, models.VersionInfo{
-				ExternalVersionID: vid,
-				DisplayVersion:    vid,
-			})
-			continue
+	// Return in reverse chronological order (newest on top, previous versions below)
+	for i := len(listOut.ExternalVersionIdentifiers) - 1; i >= 0; i-- {
+		vid := listOut.ExternalVersionIdentifiers[i]
+		display := fmt.Sprintf("Build %s", vid)
+		if vid == listOut.LatestExternalVersionID && app.Version != "" {
+			display = fmt.Sprintf("v%s (Build %s)", app.Version, vid)
 		}
 
 		versions = append(versions, models.VersionInfo{
 			ExternalVersionID: vid,
-			DisplayVersion:    meta.DisplayVersion,
-			ReleaseDate:       meta.ReleaseDate,
-			FormattedDate:     meta.ReleaseDate.Format("2006-01-02"),
+			DisplayVersion:    display,
 		})
 	}
 

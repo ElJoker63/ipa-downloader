@@ -226,8 +226,13 @@ func (s *searchService) GetAppDetails(appID int64, bundleID string, platform str
 
 	// Fetch version history if available
 	var versions []models.VersionInfo
-	if vList, err := s.appleClient.ListVersions(*meta); err == nil {
+	if vList, err := s.appleClient.ListVersions(*meta); err == nil && len(vList) > 0 {
 		versions = vList
+	} else if meta.Version != "" {
+		versions = append(versions, models.VersionInfo{
+			ExternalVersionID: meta.Version,
+			DisplayVersion:    fmt.Sprintf("v%s (Current)", meta.Version),
+		})
 	}
 
 	return &models.AppDetailsOutput{

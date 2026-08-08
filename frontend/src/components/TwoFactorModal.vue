@@ -4,9 +4,11 @@
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-200"
   >
     <div class="glass-card w-full max-w-md rounded-[22px] border border-white/[0.18] p-6 shadow-[0_16px_48px_rgba(0,0,0,0.45)] space-y-5 animate-modal font-sans">
-      <div class="text-center space-y-1">
-        <div class="w-12 h-12 rounded-[14px] bg-[#0A84FF]/15 border border-[#0A84FF]/30 flex items-center justify-center mx-auto text-xl">
-          🔐
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 rounded-[14px] bg-[#0A84FF]/15 border border-[#0A84FF]/30 flex items-center justify-center mx-auto text-[#0A84FF] shadow-sm">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
         </div>
         <h2 class="text-lg font-bold text-[#FFFFFF]">{{ t.twoFactor.title }}</h2>
         <p class="text-xs text-[#B8C0CC]">

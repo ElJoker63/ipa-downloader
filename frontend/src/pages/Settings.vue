@@ -25,7 +25,7 @@
               :class="currentLanguage === 'es' ? 'bg-[#0A84FF]/20 border-[#0A84FF] text-white shadow-sm' : 'bg-white/[0.04] border-white/[0.08] text-[#B8C0CC] hover:text-white'"
               @click="changeLang('es')"
             >
-              <span>🇪🇸</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-white/[0.1] text-[#64D2FF]">ES</span>
               <span>{{ t.common.spanish }}</span>
             </button>
             <button
@@ -34,7 +34,7 @@
               :class="currentLanguage === 'en' ? 'bg-[#0A84FF]/20 border-[#0A84FF] text-white shadow-sm' : 'bg-white/[0.04] border-white/[0.08] text-[#B8C0CC] hover:text-white'"
               @click="changeLang('en')"
             >
-              <span>🇺🇸</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-white/[0.1] text-[#64D2FF]">EN</span>
               <span>{{ t.common.english }}</span>
             </button>
           </div>

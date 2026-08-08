@@ -186,7 +186,11 @@ export const en: Translations = {
     minOs: 'Minimum OS Version',
     releaseDate: 'Release Date',
     adamId: 'Apple Adam ID',
-    versionBuilds: 'Available Version Builds',
+    versionBuilds: 'Previous Version History',
     downloadBuild: 'Download Build',
+    versionFilterPlaceholder: 'Filter versions by build...',
+    signInForFullHistory: 'Sign in with your Apple ID to unlock all historical versions.',
+    loadingVersions: 'Fetching available version builds...',
+    latestBadge: 'Latest',
   },
 }

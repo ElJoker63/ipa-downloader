@@ -186,7 +186,11 @@ export const es: Translations = {
     minOs: 'Versión Mínima de iOS',
     releaseDate: 'Fecha de Lanzamiento',
     adamId: 'Apple Adam ID',
-    versionBuilds: 'Compilaciones de Versiones Disponibles',
-    downloadBuild: 'Descargar Compilación',
+    versionBuilds: 'Historial de Versiones Anteriores',
+    downloadBuild: 'Descargar Versión',
+    versionFilterPlaceholder: 'Filtrar versiones por compilación...',
+    signInForFullHistory: 'Inicia sesión con tu Apple ID para desbloquear el historial completo de versiones anteriores.',
+    loadingVersions: 'Consultando versiones disponibles...',
+    latestBadge: 'Actual',
   },
 }

@@ -122,27 +122,79 @@
           </div>
         </div>
 
-        <!-- Version History List with Direct Version Download -->
-        <div v-if="searchStore.selectedApp?.versionHistory && searchStore.selectedApp.versionHistory.length > 0" class="space-y-2">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.versionBuilds }}</h3>
-          <div class="rounded-[14px] border border-white/[0.08] divide-y divide-white/[0.08] max-h-48 overflow-y-auto bg-white/[0.02]">
+        <!-- Version History List with All Previous Builds Available -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.versionBuilds }}</h3>
+              <span v-if="filteredVersions.length > 0" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/[0.08] text-[#B8C0CC] border border-white/[0.12]">
+                {{ filteredVersions.length }}
+              </span>
+            </div>
+
+            <!-- Version Filter Search Input -->
+            <input
+              v-if="allVersions.length > 5"
+              v-model="versionFilter"
+              type="text"
+              :placeholder="t.details.versionFilterPlaceholder"
+              class="glass-input px-3 py-1 text-xs w-48 font-mono"
+            />
+          </div>
+
+          <!-- Loading Indicator when fetching version builds -->
+          <div v-if="searchStore.isDetailsLoading" class="p-4 rounded-[14px] bg-white/[0.03] border border-white/[0.08] text-center text-xs text-[#0A84FF] font-medium flex items-center justify-center space-x-2 animate-pulse">
+            <svg class="animate-spin h-4 w-4 text-[#0A84FF]" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>{{ t.details.loadingVersions }}</span>
+          </div>
+
+          <!-- Version History Scrollable List -->
+          <div v-else-if="filteredVersions.length > 0" class="rounded-[14px] border border-white/[0.08] divide-y divide-white/[0.08] max-h-60 overflow-y-auto bg-white/[0.02]">
             <div
-              v-for="v in searchStore.selectedApp.versionHistory"
+              v-for="(v, index) in filteredVersions"
               :key="v.externalVersionId"
-              class="p-3 flex items-center justify-between text-xs hover:bg-white/[0.04] transition duration-150"
+              class="p-3.5 flex items-center justify-between text-xs hover:bg-white/[0.04] transition duration-150 gap-3"
             >
-              <div class="flex items-center space-x-2.5">
-                <span class="font-bold text-[#FFFFFF]">Build {{ v.displayVersion || v.externalVersionId }}</span>
-                <span class="text-[11px] font-mono text-[#7D8592]">ID: {{ v.externalVersionId }}</span>
+              <div class="flex items-center space-x-3 min-w-0">
+                <div class="flex items-center space-x-2">
+                  <span class="font-bold text-[#FFFFFF]">{{ v.displayVersion || `Build ${v.externalVersionId}` }}</span>
+                  <span
+                    v-if="index === 0 || v.displayVersion?.includes('Latest')"
+                    class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30"
+                  >
+                    {{ t.details.latestBadge }}
+                  </span>
+                </div>
+                <span class="text-[11px] font-mono text-[#7D8592] truncate">Build ID: {{ v.externalVersionId }}</span>
               </div>
+
               <button
                 type="button"
-                class="btn-secondary text-xs px-3 py-1"
+                class="btn-secondary text-xs px-3.5 py-1.5 shrink-0 flex items-center space-x-1.5 hover:border-[#0A84FF]/60 hover:text-[#0A84FF]"
                 @click="downloadVersion(v.externalVersionId)"
               >
-                {{ t.details.downloadBuild }}
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>{{ t.details.downloadBuild }}</span>
               </button>
             </div>
+          </div>
+
+          <!-- Informative Banner when not signed in -->
+          <div v-if="!authStore.isLoggedIn && allVersions.length <= 1" class="p-3.5 rounded-[12px] bg-[#0A84FF]/10 border border-[#0A84FF]/25 text-xs text-[#64D2FF] flex items-center justify-between gap-3">
+            <div class="flex items-center space-x-2.5">
+              <svg class="w-4 h-4 text-[#64D2FF] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ t.details.signInForFullHistory }}</span>
+            </div>
+            <router-link to="/" class="btn-primary text-xs px-3 py-1 shrink-0" @click="closeModal">
+              Sign In
+            </router-link>
           </div>
         </div>
       </div>
@@ -213,16 +265,19 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSearchStore } from '../stores/search'
 import { useDownloadsStore } from '../stores/downloads'
+import { useAuthStore } from '../stores/auth'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const searchStore = useSearchStore()
 const downloadsStore = useDownloadsStore()
+const authStore = useAuthStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 
 const isLightboxOpen = ref(false)
 const activeScreenshotIndex = ref(0)
+const versionFilter = ref('')
 
 const app = computed(() => searchStore.selectedApp?.metadata)
 
@@ -231,6 +286,18 @@ const screenshots = computed(() => {
   return app.value.screenshots && app.value.screenshots.length > 0
     ? app.value.screenshots
     : app.value.ipadScreenshots || []
+})
+
+const allVersions = computed(() => {
+  return searchStore.selectedApp?.versionHistory || []
+})
+
+const filteredVersions = computed(() => {
+  if (!versionFilter.value.trim()) return allVersions.value
+  const q = versionFilter.value.toLowerCase()
+  return allVersions.value.filter(
+    (v) => v.externalVersionId.toLowerCase().includes(q) || (v.displayVersion && v.displayVersion.toLowerCase().includes(q))
+  )
 })
 
 function openLightbox(idx: number) {
