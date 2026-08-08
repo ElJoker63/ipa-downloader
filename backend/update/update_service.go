@@ -40,7 +40,7 @@ type githubRelease struct {
 	Body    string `json:"body"`
 	Assets  []struct {
 		Name               string `json:"name"`
-		BrowserDownloadURL string `json:"download_url"`
+		BrowserDownloadURL string `json:"browser_download_url"`
 	} `json:"assets"`
 }
 
@@ -86,14 +86,9 @@ func (s *updateService) CheckForUpdate() (*models.UpdateInfo, error) {
 			break
 		}
 	}
-		if strings.Contains(asset.Name, expectedName) {
-			downloadURL = asset.BrowserDownloadURL
-			break
-		}
-	}
 
 	if downloadURL == "" {
-		return nil, fmt.Errorf("could not find compatible binary for %s/%s in release %s", platform, arch, release.TagName)
+		return nil, fmt.Errorf("could not find compatible binary for %s in release %s", osName, release.TagName)
 	}
 
 	return &models.UpdateInfo{
@@ -102,7 +97,7 @@ func (s *updateService) CheckForUpdate() (*models.UpdateInfo, error) {
 		CurrentVersion: currentVersion,
 		ReleaseNotes:   release.Body,
 		DownloadURL:    downloadURL,
-		Mandatory:      true, // User requested mandatory update
+		Mandatory:      true,
 	}, nil
 }
 
@@ -119,8 +114,6 @@ func (s *updateService) ApplyUpdate(downloadURL string) error {
 		return fmt.Errorf("failed to download update: status %d", resp.StatusCode)
 	}
 
-	// Track download progress if possible, but go-update takes a reader.
-	// We can wrap the reader to emit events.
 	progressReader := &progressReader{
 		Reader:  resp.Body,
 		Total:   resp.ContentLength,
@@ -134,10 +127,6 @@ func (s *updateService) ApplyUpdate(downloadURL string) error {
 	}
 
 	s.emitter.EmitLog("SUCCESS", "Update applied successfully. Restarting...", "UpdateService")
-
-	// Restart logic depends on platform, but usually we just exit and let the user (o standard wrapper) restart.
-	// For Wails, we might want to tell the frontend to show a "Restart Now" button or just exit.
-	// The user requested "reemplazando el .exe que estaba en ejecucion", which go-update does.
 
 	os.Exit(0)
 	return nil

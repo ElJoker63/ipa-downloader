@@ -79,7 +79,6 @@ jobs:
           VERSION=${{ needs.get_version.outputs.version }}
           cd build/bin
           zip -r ipa-downloader-$VERSION-macos-universal.zip *.app
-          # Remove the directory so it doesn't get uploaded as-is
           rm -rf *.app
 
       - name: Upload to Release
