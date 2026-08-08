@@ -34,7 +34,7 @@ export const en: Translations = {
     home: 'Account & Home',
     search: 'App Store Search',
     downloads: 'Downloads',
-    apps: 'iOS Apps',
+    apps: 'Device',
     favorites: 'Favorites',
     history: 'History',
     settings: 'Settings',
