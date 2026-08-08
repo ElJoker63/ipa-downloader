@@ -10,19 +10,19 @@
             class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 flex items-center space-x-1.5"
           >
             <span class="w-2 h-2 rounded-full bg-[#30D158] animate-pulse"></span>
-            <span>{{ deviceStore.devices.length }} Devices Connected</span>
+            <span>{{ deviceStore.devices.length }} {{ t.apps.connectedCount }}</span>
           </span>
           <span
             v-else
             class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-white/10 text-[#8E8E93] border border-white/10 flex items-center space-x-1.5"
           >
             <span class="w-2 h-2 rounded-full bg-[#8E8E93]"></span>
-            <span>No Device</span>
+            <span>{{ t.apps.noDevice }}</span>
           </span>
 
         </h1>
         <p class="text-sm text-[#8E8E93] mt-1">
-          {{ t.apps?.subtitle || 'Manage iOS applications and install IPAs on USB connected devices' }}
+          {{ t.apps.subtitle }}
         </p>
       </div>
 
@@ -36,7 +36,7 @@
           <svg class="w-4 h-4 text-[#8E8E93]" :class="{ 'animate-spin': deviceStore.isLoadingApps }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>Refresh</span>
+          <span>{{ t.apps.refresh }}</span>
         </button>
 
         <button
@@ -47,9 +47,10 @@
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          <span>Install IPA</span>
+          <span>{{ t.apps.install }}</span>
         </button>
       </div>
+
     </div>
 
     <!-- Device Selection & Info -->
@@ -110,7 +111,7 @@
         <!-- Quick Badges & Pair Button -->
         <div class="flex items-center space-x-3 shrink-0">
           <div class="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-[#8E8E93]">
-            <span class="text-white font-medium">{{ deviceStore.userApps.length }}</span> User Apps
+            <span class="text-white font-medium">{{ deviceStore.userApps.length }}</span> {{ t.apps.userApps }}
           </div>
 
           <button
@@ -118,7 +119,7 @@
             @click.stop="handlePair(deviceStore.selectedDevice.udid)"
             class="px-3 py-1.5 rounded-xl bg-[#FF9F0A]/20 text-[#FF9F0A] border border-[#FF9F0A]/30 text-xs font-medium hover:bg-[#FF9F0A]/30 transition"
           >
-            Trust & Pair Device
+            {{ t.apps.trustAndPair }}
           </button>
         </div>
       </div>
@@ -133,9 +134,9 @@
         </svg>
       </div>
       <div class="max-w-md">
-        <h3 class="text-lg font-semibold text-white">No iOS Device Connected</h3>
+        <h3 class="text-lg font-semibold text-white">{{ t.apps.noDeviceTitle }}</h3>
         <p class="text-sm text-[#8E8E93] mt-1 leading-relaxed">
-          Connect your iPhone or iPad via USB cable to inspect installed apps and install .ipa packages directly.
+          {{ t.apps.noDeviceDesc }}
         </p>
       </div>
 
@@ -145,12 +146,12 @@
           <svg class="w-4 h-4 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Connection Requirements:</span>
+          <span>{{ t.apps.requirementsTitle }}</span>
         </div>
         <ul class="list-disc list-inside space-y-1 pl-1">
-          <li>Unlock your device screen and tap <strong>"Trust This Computer"</strong> when prompted.</li>
-          <li>On Windows, ensure <strong>Apple Mobile Device Support</strong> (iTunes / Apple Devices app) is installed.</li>
-          <li>For iOS 17+, lockdown querying works directly; tunnel service may be required for full dev debug tools.</li>
+          <li>{{ t.apps.requirement1 }}</li>
+          <li>{{ t.apps.requirement2 }}</li>
+          <li>{{ t.apps.requirement3 }}</li>
         </ul>
       </div>
     </div>
@@ -164,9 +165,10 @@
       <svg class="w-8 h-8 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
         <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
       </svg>
-      <div class="text-sm font-medium text-white">Drag & Drop .ipa file here to install</div>
-      <div class="text-xs text-[#8E8E93]">or click to select file from file manager</div>
+      <div class="text-sm font-medium text-white">{{ t.apps.dragDropText }}</div>
+      <div class="text-xs text-[#8E8E93]">{{ t.apps.orClickToSelect }}</div>
     </div>
+
 
     <!-- Installed Apps Section (When Connected) -->
     <div v-if="deviceStore.isConnected" class="space-y-4">
@@ -180,7 +182,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search installed apps by name or bundle ID..."
+            :placeholder="t.apps.searchPlaceholder"
             class="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-[#8E8E93] focus:outline-none focus:border-[#0A84FF] transition"
           />
         </div>
@@ -192,16 +194,17 @@
             class="px-3 py-1.5 rounded-lg transition"
             :class="deviceStore.activeTab === 'user' ? 'bg-[#0A84FF] text-white shadow-sm' : 'text-[#8E8E93] hover:text-white'"
           >
-            User Apps ({{ deviceStore.userApps.length }})
+            {{ t.apps.userApps }} ({{ deviceStore.userApps.length }})
           </button>
           <button
             @click="switchTab('system')"
             class="px-3 py-1.5 rounded-lg transition"
             :class="deviceStore.activeTab === 'system' ? 'bg-[#0A84FF] text-white shadow-sm' : 'text-[#8E8E93] hover:text-white'"
           >
-            System Apps ({{ deviceStore.systemApps.length }})
+            {{ t.apps.systemApps }} ({{ deviceStore.systemApps.length }})
           </button>
         </div>
+
       </div>
 
       <!-- Apps Grid / List -->
@@ -363,27 +366,27 @@
           <!-- Main Specs Grid -->
           <div class="grid grid-cols-2 gap-4">
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">iOS Version</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.iosVersion }}</div>
               <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.iosVersion }} ({{ deviceStore.selectedDevice.buildVersion }})</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Serial Number</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.serialNumber }}</div>
               <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.serialNumber }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">IMEI</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.imei }}</div>
               <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.imei || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Model Name</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.modelName }}</div>
               <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.modelNumber || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Sales Region</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.region }}</div>
               <div class="text-sm text-white">{{ deviceStore.selectedDevice.regionInfo || 'N/A' }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Activation</div>
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.activation }}</div>
               <div class="text-sm" :class="deviceStore.selectedDevice.activationState === 'Activated' ? 'text-[#30D158]' : 'text-white'">
                 {{ deviceStore.selectedDevice.activationState || 'N/A' }}
               </div>
@@ -395,8 +398,8 @@
             <!-- Storage Info -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <h4 class="text-sm font-semibold text-white">Storage Capacity</h4>
-                <span class="text-xs text-[#8E8E93]">{{ formatAppSize(deviceStore.selectedDevice.storageFree) }} free of {{ formatAppSize(deviceStore.selectedDevice.storageTotal) }}</span>
+                <h4 class="text-sm font-semibold text-white">{{ t.apps.details.storageTitle }}</h4>
+                <span class="text-xs text-[#8E8E93]">{{ formatAppSize(deviceStore.selectedDevice.storageFree) }} {{ t.apps.details.storageStatus }} {{ formatAppSize(deviceStore.selectedDevice.storageTotal) }}</span>
               </div>
               <div class="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <div
@@ -419,9 +422,9 @@
             <!-- Battery Info -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <h4 class="text-sm font-semibold text-white">Battery Status</h4>
+                <h4 class="text-sm font-semibold text-white">{{ t.apps.details.batteryTitle }}</h4>
                 <div class="flex items-center space-x-2">
-                  <span v-if="deviceStore.selectedDevice.batteryCharging" class="text-[10px] font-bold text-[#30D158] uppercase">Charging</span>
+                  <span v-if="deviceStore.selectedDevice.batteryCharging" class="text-[10px] font-bold text-[#30D158] uppercase">{{ t.apps.details.batteryStatus }}</span>
                   <span class="text-sm font-bold text-white">{{ deviceStore.selectedDevice.batteryLevel }}%</span>
                 </div>
               </div>
@@ -433,28 +436,28 @@
                 ></div>
               </div>
               <div class="flex justify-between text-[10px] text-[#8E8E93] font-medium px-1 pt-1">
-                <span>Health: <span class="text-white font-bold">{{ deviceStore.selectedDevice.batteryHealth || '--' }}%</span></span>
-                <span>Cycles: <span class="text-white font-bold">{{ deviceStore.selectedDevice.chargeCycles || '--' }}</span></span>
+                <span>{{ t.apps.details.batteryHealth }}: <span class="text-white font-bold">{{ deviceStore.selectedDevice.batteryHealth || '--' }}%</span></span>
+                <span>{{ t.apps.details.batteryCycles }}: <span class="text-white font-bold">{{ deviceStore.selectedDevice.chargeCycles || '--' }}</span></span>
               </div>
             </div>
           </div>
 
           <!-- Connection Details -->
           <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-4">
-            <h4 class="text-sm font-semibold text-white">Connectivity & Security</h4>
+            <h4 class="text-sm font-semibold text-white">{{ t.apps.details.connectivityTitle }}</h4>
             <div class="grid grid-cols-2 gap-y-4">
               <div class="space-y-1">
-                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Wi-Fi Address</div>
+                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">{{ t.apps.details.wifi }}</div>
                 <div class="text-xs text-white font-mono">{{ deviceStore.selectedDevice.wifiAddress || 'N/A' }}</div>
               </div>
               <div class="space-y-1 text-right">
-                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">Jailbreak</div>
+                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">{{ t.apps.details.jailbreak }}</div>
                 <div class="text-xs font-bold" :class="deviceStore.selectedDevice.isJailbroken ? 'text-[#FF453A]' : 'text-[#30D158]'">
                   {{ deviceStore.selectedDevice.isJailbroken ? 'Yes' : 'No' }}
                 </div>
               </div>
               <div class="space-y-1">
-                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">UDID</div>
+                <div class="text-[10px] font-bold text-[#8E8E93] uppercase">{{ t.apps.details.udid }}</div>
                 <div class="text-[10px] text-white font-mono break-all">{{ deviceStore.selectedDevice.udid }}</div>
               </div>
             </div>
@@ -469,9 +472,10 @@
             @click="showDeviceDetails = false"
             class="px-6 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white transition"
           >
-            Done
+            {{ t.apps.details.done }}
           </button>
         </div>
+
       </div>
     </div>
 
@@ -488,9 +492,9 @@
             </svg>
           </div>
           <div class="space-y-1">
-            <h3 class="text-lg font-bold text-white">Uninstall App?</h3>
+            <h3 class="text-lg font-bold text-white">{{ t.apps.uninstallTitle }}</h3>
             <p class="text-sm text-[#8E8E93]">
-              Are you sure you want to remove <span class="text-white font-semibold">"{{ confirmUninstallApp.name }}"</span>? This action cannot be undone.
+              {{ t.apps.uninstallPrompt.replace('{name}', confirmUninstallApp.name) }}
             </p>
           </div>
         </div>
@@ -500,15 +504,16 @@
             @click="confirmUninstall"
             class="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition shadow-lg shadow-red-500/20"
           >
-            Uninstall
+            {{ t.apps.uninstall }}
           </button>
           <button
             @click="confirmUninstallApp = null"
             class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition"
           >
-            Cancel
+            {{ t.common.cancel }}
           </button>
         </div>
+
       </div>
     </div>
   </div>

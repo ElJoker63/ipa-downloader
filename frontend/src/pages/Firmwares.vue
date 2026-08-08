@@ -4,13 +4,13 @@
     <div class="flex items-center justify-between shrink-0">
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-white flex items-center space-x-3">
-          <span>Apple Firmwares</span>
+          <span>{{ t.firmwares.title }}</span>
           <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30 uppercase">
             IPSW.me API
           </span>
         </h1>
         <p class="text-sm text-[#8E8E93] mt-1">
-          Download official IPSW restore images for iPhone, iPad, and Mac
+          {{ t.firmwares.subtitle }}
         </p>
       </div>
 
@@ -22,7 +22,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search device model..."
+            :placeholder="t.firmwares.searchPlaceholder"
             class="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[#0A84FF] transition"
           />
         </div>
@@ -43,7 +43,7 @@
       <!-- Device Sidebar / Categories -->
       <div class="w-72 flex flex-col space-y-4 shrink-0 overflow-y-auto pr-2 scrollbar-hide">
         <div class="space-y-1">
-          <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest px-4 mb-2">Categories</div>
+          <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest px-4 mb-2">{{ t.firmwares.categories }}</div>
           <button
             v-for="cat in categories"
             :key="cat.id"
@@ -60,10 +60,10 @@
         </div>
 
         <div class="flex-1 overflow-y-auto space-y-1">
-           <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest px-4 mb-2 mt-4">Devices</div>
+           <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest px-4 mb-2 mt-4">{{ t.firmwares.devices }}</div>
            <div v-if="loading" class="px-4 py-8 flex flex-col items-center space-y-2">
              <div class="w-5 h-5 border-2 border-[#0A84FF] border-t-transparent rounded-full animate-spin"></div>
-             <span class="text-[10px] text-[#8E8E93]">Loading models...</span>
+             <span class="text-[10px] text-[#8E8E93]">{{ t.firmwares.loadingModels }}</span>
            </div>
            <button
             v-for="dev in filteredDevices"
@@ -87,8 +87,8 @@
              </svg>
            </div>
            <div class="text-center">
-             <div class="text-base font-bold text-white">Select a Device</div>
-             <p class="text-xs text-[#8E8E93]">Choose a model from the left to browse available firmwares</p>
+             <div class="text-base font-bold text-white">{{ t.firmwares.selectDevice }}</div>
+             <p class="text-xs text-[#8E8E93]">{{ t.firmwares.selectDeviceDesc }}</p>
            </div>
         </div>
 
@@ -116,13 +116,13 @@
                 @click="filterType = 'all'"
                 class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition"
                 :class="filterType === 'all' ? 'bg-white/10 text-white' : 'text-[#8E8E93] hover:text-white'"
-               >All</button>
+               >{{ t.firmwares.all }}</button>
                <button
                 @click="filterType = 'signed'"
                 class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition flex items-center space-x-1.5"
                 :class="filterType === 'signed' ? 'bg-[#30D158]/20 text-[#30D158]' : 'text-[#8E8E93] hover:text-[#30D158]'"
                >
-                 <span>Signed</span>
+                 <span>{{ t.firmwares.signed }}</span>
                  <div class="w-1.5 h-1.5 rounded-full bg-[#30D158] animate-pulse"></div>
                </button>
             </div>
@@ -152,7 +152,7 @@
 
                   <div class="min-w-0">
                     <div class="flex items-center space-x-2">
-                      <span class="text-sm font-bold text-white">iOS {{ fw.version }}</span>
+                      <span class="text-sm font-bold text-white">OS {{ fw.version }}</span>
                       <span class="text-[10px] font-mono px-1.5 py-0.5 bg-white/5 rounded text-[#8E8E93]">{{ fw.buildid }}</span>
                     </div>
                     <div class="flex items-center space-x-3 mt-1 text-[10px] text-[#8E8E93]">
@@ -173,9 +173,9 @@
                   class="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-[#0A84FF] text-white text-xs font-bold transition-all shadow-lg hover:shadow-[#0A84FF]/25 flex items-center space-x-2"
                 >
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4 4m4-4V4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  <span>Download</span>
+                  <span>{{ t.firmwares.download }}</span>
                 </button>
               </div>
             </div>
@@ -190,6 +190,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { WailsService } from '../services/wails'
 import { useNotifications } from '../composables/useNotifications'
+import { useI18n } from '../i18n'
 import type { AppleHardware, Firmware } from '../types'
 
 const loading = ref(false)
@@ -200,6 +201,8 @@ const activeCategory = ref('iPhone')
 const filterType = ref<'all' | 'signed'>('all')
 
 const { showToast } = useNotifications()
+const { t } = useI18n()
+
 
 const categories = [
   { id: 'iPhone', name: 'iPhone', icon: '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>' },

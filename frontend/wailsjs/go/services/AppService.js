@@ -42,6 +42,10 @@ export function ClearSearchHistory() {
   return window['go']['services']['AppService']['ClearSearchHistory']();
 }
 
+export function DeleteFile(arg1) {
+  return window['go']['services']['AppService']['DeleteFile'](arg1);
+}
+
 export function DeleteHistoryItem(arg1) {
   return window['go']['services']['AppService']['DeleteHistoryItem'](arg1);
 }

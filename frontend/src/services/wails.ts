@@ -195,6 +195,11 @@ export const WailsService = {
     return await AppService.RevealInExplorer(path)
   },
 
+  async deleteFile(path: string): Promise<void> {
+    return await AppService.DeleteFile(path)
+  },
+
+
   // Settings
   async getSettings(): Promise<AppSettings> {
     try {

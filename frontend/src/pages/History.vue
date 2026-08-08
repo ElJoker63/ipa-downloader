@@ -95,13 +95,25 @@
             <button
               type="button"
               class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
-              :title="t.history.deleteRecord"
-              @click="deleteItem(item.id)"
+              :title="t.history.deleteFile"
+              @click="handleDeleteFile(item.destinationPath)"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
+
+            <button
+              type="button"
+              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
+              :title="t.history.deleteRecord"
+              @click="deleteItem(item.id)"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
           </div>
         </div>
       </div>
@@ -169,8 +181,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useHistoryStore } from '../stores/history'
-
+import { WailsService } from '../services/wails'
 import { useDeviceStore } from '../stores/device'
+
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 import { useRouter } from 'vue-router'
@@ -212,6 +225,18 @@ async function installToDevice(path: string, udid: string) {
 function revealInExplorer(path: string) {
   historyStore.revealInExplorer(path)
 }
+
+async function handleDeleteFile(path: string) {
+  if (confirm(t.value.common.confirm + ': ' + t.value.history.deleteFile + '?')) {
+    try {
+      await WailsService.deleteFile(path)
+      showToast('File Deleted', path, 'success')
+    } catch (err: any) {
+      showToast('Deletion Failed', err.message || err, 'error')
+    }
+  }
+}
+
 
 async function copyPath(path: string) {
   try {

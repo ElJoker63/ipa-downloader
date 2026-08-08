@@ -28,7 +28,9 @@ type LibraryService interface {
 	OpenFolder(path string) error
 	OpenFile(path string) error
 	RevealInExplorer(path string) error
+	DeleteFile(path string) error
 }
+
 
 type libraryService struct {
 	storage storage.Storage
@@ -154,6 +156,24 @@ func (s *libraryService) RevealInExplorer(path string) error {
 		return cmd.Start()
 	}
 }
+
+func (s *libraryService) DeleteFile(path string) error {
+	if path == "" {
+		return fmt.Errorf("path is empty")
+	}
+
+	// Verify file exists
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("file does not exist: %s", path)
+	}
+
+	err := os.Remove(path)
+	if err == nil {
+		s.emitter.EmitLog("INFO", fmt.Sprintf("File deleted from storage: %s", filepath.Base(path)), "LibraryService")
+	}
+	return err
+}
+
 
 func openPathNative(path string) error {
 	switch runtime.GOOS {

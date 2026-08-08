@@ -37,9 +37,27 @@ export interface Translations {
     history: string
     settings: string
     logs: string
+    firmwares: string
     suite: string
   }
+
+  firmwares: {
+    title: string
+    subtitle: string
+    searchPlaceholder: string
+    categories: string
+    devices: string
+    loadingModels: string
+    selectDevice: string
+    selectDeviceDesc: string
+    signed: string
+    all: string
+    download: string
+    downloadQueued: string
+  }
+
   home: {
+
     badge: string
     title: string
     subtitle: string
@@ -107,10 +125,12 @@ export interface Translations {
     noActiveDesc: string
     completedTitle: string
     showInFolder: string
+    deleteFile: string
     copyError: string
     copyErrorTitle: string
     copied: string
   }
+
   favorites: {
     title: string
     subtitle: string
@@ -127,7 +147,9 @@ export interface Translations {
     copyPath: string
     showInFolder: string
     deleteRecord: string
+    deleteFile: string
     emptyTitle: string
+
     emptyDesc: string
     clearedTitle: string
     clearedDesc: string
@@ -201,8 +223,41 @@ export interface Translations {
     systemApps: string
     installIpa: string
     uninstall: string
+    uninstallTitle: string
+    uninstallPrompt: string
     noDeviceTitle: string
     noDeviceDesc: string
     dragDropText: string
+    orClickToSelect: string
+    searchPlaceholder: string
+    connectedCount: string
+    noDevice: string
+    refresh: string
+    install: string
+    trustAndPair: string
+    requirementsTitle: string
+    requirement1: string
+    requirement2: string
+    requirement3: string
+    details: {
+      iosVersion: string
+      serialNumber: string
+      imei: string
+      modelName: string
+      region: string
+      activation: string
+      storageTitle: string
+      storageStatus: string
+      batteryTitle: string
+      batteryStatus: string
+      batteryHealth: string
+      batteryCycles: string
+      connectivityTitle: string
+      wifi: string
+      jailbreak: string
+      udid: string
+      done: string
+    }
   }
 }
+

@@ -23,6 +23,8 @@ export function ClearLogs():Promise<void>;
 
 export function ClearSearchHistory():Promise<void>;
 
+export function DeleteFile(arg1:string):Promise<void>;
+
 export function DeleteHistoryItem(arg1:string):Promise<void>;
 
 export function DownloadFirmware(arg1:string,arg2:models.Firmware):Promise<models.DownloadTask>;

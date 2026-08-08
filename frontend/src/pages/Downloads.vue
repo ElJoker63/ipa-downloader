@@ -190,9 +190,10 @@
         >
           <div class="flex items-center space-x-3.5 min-w-0">
             <img
-              :src="task.artworkUrl || 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'"
+              :src="getArtworkUrl(task)"
               class="w-10 h-10 rounded-[12px] object-cover bg-[#171A21] border border-white/[0.18] shrink-0 shadow-sm"
             />
+
             <div class="min-w-0">
               <div class="flex items-center space-x-2">
                 <h4 class="text-sm font-semibold truncate text-[#FFFFFF]">{{ task.appName }}</h4>
@@ -246,7 +247,18 @@
             >
               {{ t.downloads.showInFolder }}
             </button>
+            <button
+              type="button"
+              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
+              :title="t.downloads.deleteFile"
+              @click="handleDeleteFile(task.destinationPath)"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
+
         </div>
       </div>
     </div>
@@ -302,8 +314,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useDownloadsStore } from '../stores/downloads'
-
+import { WailsService } from '../services/wails'
 import { useSettingsStore } from '../stores/settings'
+
 import { useHistoryStore } from '../stores/history'
 import { useDeviceStore } from '../stores/device'
 import { useI18n } from '../i18n'
@@ -355,6 +368,18 @@ async function browseFolder() {
 function revealInExplorer(path: string) {
   historyStore.revealInExplorer(path)
 }
+
+async function handleDeleteFile(path: string) {
+  if (confirm(t.value.common.confirm + ': ' + t.value.downloads.deleteFile + '?')) {
+    try {
+      await WailsService.deleteFile(path)
+      showToast('File Deleted', path, 'success')
+    } catch (err: any) {
+      showToast('Deletion Failed', err.message || err, 'error')
+    }
+  }
+}
+
 
 async function copyErrorText(errText: string) {
   try {

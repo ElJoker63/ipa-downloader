@@ -296,6 +296,12 @@ func (s *AppService) RevealInExplorer(path string) error {
 	return s.libraryService.RevealInExplorer(path)
 }
 
+func (s *AppService) DeleteFile(path string) error {
+	s.AddLog("INFO", fmt.Sprintf("User requested file deletion: %s", path), "AppService")
+	return s.libraryService.DeleteFile(path)
+}
+
+
 // ----------------- Settings & Logs Bindings -----------------
 
 func (s *AppService) GetSettings() (*models.AppSettings, error) {
