@@ -1,178 +1,165 @@
 <template>
-  <div class="max-w-4xl mx-auto space-y-6 animate-slide-up">
-    <!-- Page Header -->
+  <div class="max-w-4xl mx-auto space-y-6 animate-slide-up font-sans">
+    <!-- Header Section -->
     <div>
-      <h1 class="text-2xl font-bold">Preferences & Settings</h1>
-      <p class="text-xs text-slate-400 mt-0.5">Customize application appearance, network concurrency, and storage locations.</p>
+      <h1 class="text-2xl font-bold tracking-tight text-[#FFFFFF]">
+        Settings & Preferences
+      </h1>
+      <p class="text-xs text-[#B8C0CC] mt-0.5 font-normal">
+        Configure transfer queues, default storage folders, FairPlay DRM automation, and diagnostics.
+      </p>
     </div>
 
-    <!-- Main Settings Form -->
-    <div class="glass-panel p-6 rounded-2xl border border-white/10 space-y-6">
-      <!-- Theme Setting -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-5 border-b border-white/5">
-        <div>
-          <h3 class="text-sm font-bold">Appearance Theme</h3>
-          <p class="text-xs text-slate-400">Choose between dark, light, or automatic system theme.</p>
-        </div>
-        <div class="flex p-1 rounded-xl bg-slate-900/60 border border-white/5 shrink-0">
-          <button
-            type="button"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition"
-            :class="settings.theme === 'dark' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-            @click="setTheme('dark')"
-          >
-            🌙 Dark
-          </button>
-          <button
-            type="button"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition"
-            :class="settings.theme === 'light' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-            @click="setTheme('light')"
-          >
-            ☀️ Light
-          </button>
-          <button
-            type="button"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition"
-            :class="settings.theme === 'system' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
-            @click="setTheme('system')"
-          >
-            💻 System
-          </button>
-        </div>
-      </div>
+    <div class="space-y-5 pb-8">
+      <!-- General & Downloads Preferences -->
+      <div class="glass-card p-6 rounded-[18px] space-y-5">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-[#B8C0CC]">General & Downloads</h2>
 
-      <!-- Default Download Folder -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-5 border-b border-white/5">
-        <div class="space-y-0.5">
-          <h3 class="text-sm font-bold">Default Destination Folder</h3>
-          <p class="text-xs text-slate-400">Directory where downloaded .ipa packages will be saved.</p>
-          <p class="text-xs font-mono text-blue-400 truncate max-w-md pt-1">{{ settings.defaultDownloadFolder || 'Default ~/Downloads' }}</p>
+        <!-- Default Download Folder -->
+        <div class="space-y-2">
+          <label class="text-xs font-medium text-[#FFFFFF]">Default Download Directory</label>
+          <div class="flex items-center space-x-2.5">
+            <input
+              v-model="settingsStore.settings.defaultDownloadFolder"
+              type="text"
+              readonly
+              class="glass-input flex-1 px-3.5 py-2.5 text-xs font-mono select-all"
+            />
+            <button
+              type="button"
+              class="btn-secondary text-xs px-4 py-2.5 shrink-0 flex items-center space-x-1.5"
+              @click="browseFolder"
+            >
+              <svg class="w-3.5 h-3.5 text-[#64D2FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              <span>Browse Folder</span>
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          class="btn-secondary text-xs px-4 py-2 shrink-0 flex items-center space-x-1.5"
-          @click="browseFolder"
-        >
-          <span>📁 Browse Folder</span>
-        </button>
-      </div>
 
-      <!-- Concurrent Downloads Limit -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/5">
-        <div>
-          <h3 class="text-sm font-bold">Concurrent Downloads</h3>
-          <p class="text-xs text-slate-400">Maximum number of parallel downloads active at the same time (1–10).</p>
-        </div>
-        <div class="flex items-center space-x-3">
+        <!-- Max Concurrent Downloads Slider -->
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-medium text-[#FFFFFF]">Concurrent Transfers Limit</label>
+            <span class="text-xs font-mono font-semibold text-[#0A84FF]">
+              {{ settingsStore.settings.maxConcurrentDownloads }} simultaneous jobs
+            </span>
+          </div>
           <input
-            v-model.number="settings.maxConcurrentDownloads"
+            v-model.number="settingsStore.settings.maxConcurrentDownloads"
             type="range"
             min="1"
             max="10"
-            class="w-32 accent-blue-600"
+            class="w-full accent-[#0A84FF] cursor-pointer"
             @change="saveSettings"
           />
-          <span class="text-sm font-mono font-bold w-6 text-center">{{ settings.maxConcurrentDownloads }}</span>
+          <div class="flex justify-between text-[10px] text-[#7D8592] font-mono">
+            <span>1 (Conservative)</span>
+            <span>3 (Recommended)</span>
+            <span>10 (High Speed)</span>
+          </div>
+        </div>
+
+        <!-- Automation Toggles -->
+        <div class="space-y-3 pt-2">
+          <!-- Auto Acquire License -->
+          <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+            <div class="pr-4">
+              <div class="text-xs font-semibold text-[#FFFFFF]">Auto-Acquire Free App Licenses</div>
+              <p class="text-[11px] text-[#B8C0CC] mt-0.5">Automatically trigger iTunes license purchase if your Apple ID has not purchased the app before.</p>
+            </div>
+            <input
+              v-model="settingsStore.settings.autoAcquireLicense"
+              type="checkbox"
+              class="w-5 h-5 rounded-md text-[#0A84FF] bg-white/[0.08] border-white/[0.18] focus:ring-0 cursor-pointer shrink-0"
+              @change="saveSettings"
+            />
+          </div>
+
+          <!-- Remember Credentials -->
+          <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+            <div class="pr-4">
+              <div class="text-xs font-semibold text-[#FFFFFF]">Persist Session in Encrypted Keychain</div>
+              <p class="text-[11px] text-[#B8C0CC] mt-0.5">Store Apple Storefront authentication tokens securely in the local operating system keychain.</p>
+            </div>
+            <input
+              v-model="settingsStore.settings.rememberCredentials"
+              type="checkbox"
+              class="w-5 h-5 rounded-md text-[#0A84FF] bg-white/[0.08] border-white/[0.18] focus:ring-0 cursor-pointer shrink-0"
+              @change="saveSettings"
+            />
+          </div>
         </div>
       </div>
 
-      <!-- Automatic License Acquisition -->
-      <div class="flex items-center justify-between pb-5 border-b border-white/5">
-        <div>
-          <h3 class="text-sm font-bold">Auto-Acquire Free License</h3>
-          <p class="text-xs text-slate-400">Automatically purchase free App Store license if not yet registered to your Apple ID.</p>
-        </div>
-        <input
-          v-model="settings.autoAcquireLicense"
-          type="checkbox"
-          class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-white/20"
-          @change="saveSettings"
-        />
-      </div>
+      <!-- Storage & Diagnostics Glass Card -->
+      <div class="glass-card p-6 rounded-[18px] space-y-5">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-[#B8C0CC]">Storage & Diagnostics</h2>
 
-      <!-- Automatic Updates -->
-      <div class="flex items-center justify-between pb-5 border-b border-white/5">
-        <div>
-          <h3 class="text-sm font-bold">Automatic Update Checks</h3>
-          <p class="text-xs text-slate-400">Check for new IPATool Desktop versions on launch.</p>
+        <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+          <div>
+            <div class="text-xs font-semibold text-[#FFFFFF]">Metadata & Search Cache</div>
+            <p class="text-[11px] text-[#B8C0CC] mt-0.5">Current cached artwork and version history: <span class="font-mono text-[#64D2FF]">{{ settingsStore.cacheSize }}</span></p>
+          </div>
+          <button
+            type="button"
+            class="btn-secondary text-xs px-3.5 py-1.5"
+            @click="clearCache"
+          >
+            Clear Cache
+          </button>
         </div>
-        <input
-          v-model="settings.autoCheckUpdates"
-          type="checkbox"
-          class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-white/20"
-          @change="saveSettings"
-        />
-      </div>
 
-      <!-- Offline Metadata Cache Management -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-5 border-b border-white/5">
-        <div>
-          <h3 class="text-sm font-bold">Local App Cache</h3>
-          <p class="text-xs text-slate-400">Current SQLite database size: <span class="text-slate-200 font-mono">{{ settingsStore.cacheSize }}</span></p>
+        <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+          <div>
+            <div class="text-xs font-semibold text-[#FFFFFF]">Diagnostic Log Export</div>
+            <p class="text-[11px] text-[#B8C0CC] mt-0.5">Export real-time FairPlay SINF DRM logs and network events to a text file.</p>
+          </div>
+          <button
+            type="button"
+            class="btn-primary text-xs px-4 py-1.5 shadow-sm"
+            @click="exportLogs"
+          >
+            Export Logs
+          </button>
         </div>
-        <button
-          type="button"
-          class="btn-secondary text-xs px-4 py-2 text-rose-400 hover:text-rose-300"
-          @click="clearCache"
-        >
-          Clear Cache
-        </button>
-      </div>
-
-      <!-- Export System Diagnostic Logs -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h3 class="text-sm font-bold">Diagnostic Logs</h3>
-          <p class="text-xs text-slate-400">Export internal backend runtime logs to a file for troubleshooting.</p>
-        </div>
-        <button
-          type="button"
-          class="btn-primary text-xs px-4 py-2 flex items-center space-x-1.5"
-          @click="exportLogs"
-        >
-          <span>Export Logs</span>
-        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useSettingsStore } from '../stores/settings'
+import { useLogsStore } from '../stores/logs'
 import { useNotifications } from '../composables/useNotifications'
 
 const settingsStore = useSettingsStore()
+const logsStore = useLogsStore()
 const { showToast } = useNotifications()
 
-const settings = computed(() => settingsStore.settings)
-
-onMounted(() => {
-  settingsStore.fetchSettings()
+onMounted(async () => {
+  await settingsStore.fetchSettings()
 })
-
-function setTheme(theme: 'dark' | 'light' | 'system') {
-  settingsStore.updateSettings({ theme })
-  showToast('Theme Updated', `Switched theme to ${theme}`, 'info')
-}
 
 async function browseFolder() {
   await settingsStore.browseFolder()
-  showToast('Saved', 'Download directory updated', 'success')
+  showToast('Download Folder Updated', settingsStore.settings.defaultDownloadFolder, 'info')
 }
 
 async function saveSettings() {
-  await settingsStore.updateSettings(settings.value)
+  await settingsStore.updateSettings(settingsStore.settings)
+  showToast('Settings Saved', 'Preferences updated successfully', 'info')
 }
 
 async function clearCache() {
   await settingsStore.clearCache()
-  showToast('Cache Emptied', 'App cache has been cleared', 'info')
+  showToast('Cache Cleared', 'Offline app cache purged', 'info')
 }
 
 async function exportLogs() {
-  const path = await settingsStore.exportLogs()
+  const path = await logsStore.exportLogs()
   if (path) {
     showToast('Logs Exported', `Saved to ${path}`, 'success')
   }

@@ -1,29 +1,22 @@
 <template>
-  <div class="max-w-6xl mx-auto space-y-6 animate-slide-up">
-    <!-- Header with Filters & Clear Actions -->
-    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+  <div class="max-w-6xl mx-auto space-y-6 flex flex-col h-full animate-slide-up font-sans">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 shrink-0">
       <div>
-        <h1 class="text-2xl font-bold">Download History</h1>
-        <p class="text-xs text-slate-400 mt-0.5">Complete record of downloaded iOS & tvOS packages with instant directory reveal and retry.</p>
+        <h1 class="text-2xl font-bold tracking-tight text-[#FFFFFF]">
+          Download History
+        </h1>
+        <p class="text-xs text-[#B8C0CC] mt-0.5 font-normal">
+          Complete chronological record of all .ipa packages, signature injections, and file destinations.
+        </p>
       </div>
 
-      <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
-        <!-- Status Filter -->
-        <select
-          v-model="historyStore.filterStatus"
-          class="glass-input px-3 py-2 rounded-xl text-xs font-semibold outline-none"
-        >
-          <option value="all">All Statuses</option>
-          <option value="completed">Completed</option>
-          <option value="downloading">Downloading</option>
-          <option value="failed">Failed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-
+      <!-- Action Controls -->
+      <div class="flex items-center space-x-2.5">
         <button
           v-if="historyStore.history.length > 0"
           type="button"
-          class="btn-secondary text-xs px-3.5 py-2 text-rose-400 hover:text-rose-300"
+          class="btn-secondary text-xs px-3.5 py-2 text-[#FF453A] hover:bg-[#FF453A]/15 hover:border-[#FF453A]/30"
           @click="clearHistory"
         >
           Clear History
@@ -31,154 +24,133 @@
       </div>
     </div>
 
-    <!-- History Table / Cards -->
-    <div v-if="historyStore.filteredHistory.length > 0" class="glass-panel rounded-2xl border border-white/10 overflow-hidden divide-y divide-white/5">
-      <div
-        v-for="item in historyStore.filteredHistory"
-        :key="item.id"
-        class="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:bg-white/5 transition"
-      >
-        <!-- App Details -->
-        <div class="flex items-center space-x-4 min-w-0">
-          <img
-            :src="item.artworkUrl || 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'"
-            :alt="item.appName"
-            class="w-12 h-12 rounded-xl object-cover bg-slate-800 border border-white/10 shrink-0"
-          />
-          <div class="min-w-0">
-            <div class="flex items-center space-x-2">
-              <h3 class="text-sm font-bold truncate">{{ item.appName }}</h3>
-              <span
-                class="px-2 py-0.5 text-[10px] font-semibold rounded uppercase"
-                :class="statusBadgeClass(item.status)"
-              >
-                {{ item.status }}
-              </span>
-            </div>
-            <p class="text-xs text-slate-400 font-mono truncate mt-0.5" :title="item.destinationPath">{{ item.destinationPath }}</p>
-            <div class="flex items-center space-x-3 text-[11px] text-slate-500 mt-1 font-mono">
-              <span>v{{ item.version }}</span>
-              <span>•</span>
-              <span>{{ formatDate(item.createdAt) }}</span>
-              <span v-if="item.error" class="text-rose-400 truncate">• {{ item.error }}</span>
+    <!-- History Table & List (Clean macOS Table) -->
+    <div class="flex-1 min-h-0 overflow-y-auto">
+      <div v-if="historyStore.history.length > 0" class="glass-card rounded-[18px] divide-y divide-white/[0.08] overflow-hidden">
+        <div
+          v-for="item in historyStore.history"
+          :key="item.id"
+          class="p-4 flex items-center justify-between hover:bg-white/[0.04] transition duration-150 gap-4"
+        >
+          <!-- App Info -->
+          <div class="flex items-center space-x-3.5 min-w-0 flex-1">
+            <img
+              :src="item.artworkUrl || 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'"
+              :alt="item.appName"
+              class="w-11 h-11 rounded-[12px] object-cover bg-[#171A21] border border-white/[0.18] shadow-sm shrink-0"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center space-x-2.5">
+                <h3 class="text-sm font-semibold truncate text-[#FFFFFF]">{{ item.appName }}</h3>
+                <span
+                  class="px-2 py-0.5 text-[10px] font-semibold rounded-full uppercase"
+                  :class="statusBadgeClass(item.status)"
+                >
+                  {{ item.status }}
+                </span>
+              </div>
+              <p class="text-xs text-[#B8C0CC] truncate font-mono mt-0.5">{{ item.destinationPath }}</p>
             </div>
           </div>
-        </div>
 
-        <!-- Action Buttons: Retry, Open Folder, Delete, Copy Path -->
-        <div class="flex flex-wrap items-center gap-2 shrink-0">
-          <button
-            v-if="item.status === 'failed' || item.status === 'cancelled'"
-            type="button"
-            class="btn-primary text-xs px-3 py-1.5"
-            @click="retry(item.id)"
-          >
-            Retry
-          </button>
+          <!-- Action Buttons -->
+          <div class="flex items-center space-x-2 shrink-0">
+            <button
+              type="button"
+              class="btn-secondary text-xs px-3 py-1.5 flex items-center space-x-1"
+              title="Copy destination path"
+              @click="copyPath(item.destinationPath)"
+            >
+              <svg class="w-3.5 h-3.5 text-[#B8C0CC]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span>Copy Path</span>
+            </button>
 
-          <button
-            type="button"
-            class="btn-secondary text-xs px-3 py-1.5"
-            title="Reveal in File Explorer"
-            @click="revealInExplorer(item.destinationPath)"
-          >
-            Open Folder
-          </button>
+            <button
+              type="button"
+              class="btn-secondary text-xs px-3 py-1.5 flex items-center space-x-1"
+              @click="revealInExplorer(item.destinationPath)"
+            >
+              <svg class="w-3.5 h-3.5 text-[#64D2FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span>Show in Folder</span>
+            </button>
 
-          <button
-            type="button"
-            class="btn-secondary text-xs px-2.5 py-1.5"
-            title="Copy File Path to Clipboard"
-            @click="copyPath(item.destinationPath)"
-          >
-            📋
-          </button>
-
-          <button
-            type="button"
-            class="btn-secondary text-xs px-2.5 py-1.5 text-rose-400 hover:text-rose-300"
-            title="Delete Record"
-            @click="deleteItem(item.id)"
-          >
-            ✕
-          </button>
+            <button
+              type="button"
+              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
+              title="Delete record"
+              @click="deleteItem(item.id)"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Empty State -->
-    <div v-else class="glass-panel p-12 rounded-2xl border border-white/10 text-center space-y-3">
-      <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-slate-400 text-2xl">
-        📜
+      <!-- Empty State -->
+      <div v-else class="glass-card p-12 rounded-[22px] text-center space-y-3 max-w-lg mx-auto mt-12">
+        <svg class="w-10 h-10 text-[#7D8592] mx-auto opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="text-base font-semibold text-[#FFFFFF]">No download history yet</h3>
+        <p class="text-xs text-[#B8C0CC]">
+          Downloaded packages and completed FairPlay DRM signatures will be logged here automatically.
+        </p>
       </div>
-      <h3 class="text-base font-bold">No Download History Found</h3>
-      <p class="text-xs text-slate-400 max-w-sm mx-auto">
-        Your downloaded packages will appear here with instant file management shortcuts.
-      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useHistoryStore } from '../stores/history'
-import { useDownloadsStore } from '../stores/downloads'
 import { useNotifications } from '../composables/useNotifications'
 
-const router = useRouter()
 const historyStore = useHistoryStore()
-const downloadsStore = useDownloadsStore()
 const { showToast } = useNotifications()
 
-onMounted(() => {
-  historyStore.fetchHistory()
+onMounted(async () => {
+  await historyStore.fetchHistory()
 })
-
-async function retry(id: string) {
-  await downloadsStore.retryDownload(id)
-  showToast('Download Retried', 'Package re-queued', 'info')
-  router.push('/downloads')
-}
 
 function revealInExplorer(path: string) {
   historyStore.revealInExplorer(path)
 }
 
 async function copyPath(path: string) {
-  await historyStore.copyPath(path)
-  showToast('Copied', 'Path copied to clipboard', 'info')
+  try {
+    await navigator.clipboard.writeText(path)
+    showToast('Copied to Clipboard', path, 'info')
+  } catch {
+    showToast('Copy Failed', path, 'error')
+  }
 }
 
 async function deleteItem(id: string) {
   await historyStore.deleteItem(id)
-  showToast('Deleted', 'History item removed', 'info')
+  showToast('Record Removed', 'History item deleted', 'info')
 }
 
 async function clearHistory() {
   await historyStore.clearHistory()
-  showToast('Cleared', 'Download history cleared', 'info')
-}
-
-function formatDate(d: string) {
-  if (!d) return ''
-  try {
-    return new Date(d).toLocaleString()
-  } catch {
-    return d
-  }
+  showToast('History Cleared', 'All download records removed', 'info')
 }
 
 function statusBadgeClass(status: string) {
   switch (status) {
     case 'completed':
-      return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+      return 'bg-[#30D158]/15 text-[#30D158] border border-[#30D158]/30'
     case 'failed':
-      return 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-    case 'downloading':
-      return 'bg-blue-500/20 text-blue-400 animate-pulse'
+      return 'bg-[#FF453A]/15 text-[#FF453A] border border-[#FF453A]/30'
+    case 'cancelled':
+      return 'bg-white/[0.08] text-[#7D8592]'
     default:
-      return 'bg-slate-500/20 text-slate-400'
+      return 'bg-[#0A84FF]/15 text-[#0A84FF] border border-[#0A84FF]/30'
   }
 }
 </script>

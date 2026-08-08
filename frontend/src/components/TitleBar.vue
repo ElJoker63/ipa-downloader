@@ -1,32 +1,32 @@
 <template>
-  <header class="wails-drag h-10 flex items-center justify-between px-3 border-b border-white/5 dark:border-white/5 light:border-black/5 bg-[#080C16]/85 dark:bg-[#080C16]/85 light:bg-white/85 backdrop-blur-xl select-none z-40">
+  <header class="wails-drag h-11 flex items-center justify-between px-4 border-b border-white/[0.08] bg-[#0F1115]/80 backdrop-blur-[30px] select-none z-50">
     <!-- Left: App Icon & Brand -->
-    <div class="flex items-center space-x-2.5">
-      <img src="/logo.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-md shrink-0" />
-      <span class="text-xs font-extrabold tracking-tight text-white dark:text-white light:text-slate-900 font-sans">IPA Downloader</span>
-      <span class="px-1.5 py-0.2 text-[9px] font-mono font-bold rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">v2.0</span>
+    <div class="flex items-center space-x-3">
+      <img src="/logo.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-sm shrink-0" />
+      <span class="text-[13px] font-bold tracking-tight text-white font-sans">IPA Downloader</span>
+      <span class="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-white/[0.08] text-[#B8C0CC] border border-white/[0.12]">v2.0</span>
     </div>
 
-    <!-- Center: Live Connection Status Pill -->
+    <!-- Center: Live Connection Status Pill (macOS Capsule) -->
     <div class="flex items-center space-x-2">
       <div
-        class="wails-no-drag flex items-center space-x-2 px-3 py-0.5 rounded-full text-[11px] font-medium border transition cursor-default shadow-sm"
+        class="wails-no-drag flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium border backdrop-blur-md transition cursor-default shadow-sm"
         :class="statusBadgeClass"
       >
         <span class="w-2 h-2 rounded-full" :class="statusDotClass"></span>
         <span>{{ authStore.status }}</span>
-        <span v-if="authStore.isLoggedIn" class="text-slate-400 dark:text-slate-400 light:text-slate-500 font-medium text-[10px] pl-1">
+        <span v-if="authStore.isLoggedIn" class="text-[#B8C0CC] font-medium text-[11px] pl-1">
           ({{ authStore.account.name || 'Apple ID' }})
         </span>
       </div>
     </div>
 
-    <!-- Right: Window Controls (Frameless Wails Actions) -->
-    <div class="wails-no-drag flex items-center space-x-1">
+    <!-- Right: Window Controls (Minimalist & Smooth) -->
+    <div class="wails-no-drag flex items-center space-x-1.5">
       <button
         type="button"
         title="Minimize"
-        class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-black/5 transition"
+        class="w-7 h-7 flex items-center justify-center rounded-lg text-[#B8C0CC] hover:text-white hover:bg-white/[0.08] transition duration-150"
         @click="minimize"
       >
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,7 +36,7 @@
       <button
         type="button"
         title="Toggle Maximize"
-        class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white dark:hover:text-white light:hover:text-black hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-black/5 transition"
+        class="w-7 h-7 flex items-center justify-center rounded-lg text-[#B8C0CC] hover:text-white hover:bg-white/[0.08] transition duration-150"
         @click="toggleMaximize"
       >
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -46,7 +46,7 @@
       <button
         type="button"
         title="Close"
-        class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-rose-600 transition"
+        class="w-7 h-7 flex items-center justify-center rounded-lg text-[#B8C0CC] hover:text-white hover:bg-[#FF453A] transition duration-150"
         @click="closeApp"
       >
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,22 +66,22 @@ const authStore = useAuthStore()
 
 const statusBadgeClass = computed(() => {
   if (authStore.isLoggedIn) {
-    return 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+    return 'bg-[#30D158]/15 border-[#30D158]/30 text-[#30D158]'
   }
   if (authStore.isLoading) {
-    return 'bg-amber-500/15 border-amber-500/30 text-amber-400 animate-pulse'
+    return 'bg-[#FFD60A]/15 border-[#FFD60A]/30 text-[#FFD60A] animate-pulse'
   }
-  return 'bg-slate-500/15 border-white/10 text-slate-400'
+  return 'bg-white/[0.08] border-white/[0.18] text-[#B8C0CC]'
 })
 
 const statusDotClass = computed(() => {
   if (authStore.isLoggedIn) {
-    return 'bg-emerald-400 shadow-sm shadow-emerald-400/50 animate-pulse-subtle'
+    return 'bg-[#30D158] shadow-[0_0_8px_rgba(48,209,88,0.6)] animate-pulse-subtle'
   }
   if (authStore.isLoading) {
-    return 'bg-amber-400 animate-ping'
+    return 'bg-[#FFD60A] animate-ping'
   }
-  return 'bg-slate-500'
+  return 'bg-[#7D8592]'
 })
 
 function minimize() {

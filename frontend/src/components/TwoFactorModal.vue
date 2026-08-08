@@ -1,131 +1,89 @@
 <template>
-  <div v-if="authStore.is2FAModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-    <div class="glass-panel w-full max-w-md p-6 rounded-2xl shadow-2xl border border-white/10 dark:border-white/10 light:border-black/10 bg-[#131B2E]/95 dark:bg-[#131B2E]/95 light:bg-white/95 text-slate-100 dark:text-slate-100 light:text-slate-900 animate-slide-up">
-      <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
+  <div
+    v-if="authStore.is2FAModalOpen"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-200"
+  >
+    <div class="glass-card w-full max-w-md rounded-[22px] border border-white/[0.18] p-6 shadow-[0_16px_48px_rgba(0,0,0,0.45)] space-y-5 animate-modal font-sans">
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 rounded-[14px] bg-[#0A84FF]/15 border border-[#0A84FF]/30 flex items-center justify-center mx-auto text-xl">
+          🔐
         </div>
-        <div>
-          <h3 class="text-lg font-bold">Two-Factor Authentication</h3>
-          <p class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500">Enter the verification code sent to your Apple device</p>
-        </div>
+        <h2 class="text-lg font-bold text-[#FFFFFF]">Two-Factor Verification</h2>
+        <p class="text-xs text-[#B8C0CC]">
+          Enter the 6-digit security code sent to your trusted Apple device or phone number.
+        </p>
       </div>
 
-      <div class="my-6">
-        <div class="flex justify-between gap-2 mb-4">
+      <form class="space-y-4" @submit.prevent="submit2FA">
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-[#B8C0CC]">6-Digit Apple Verification Code</label>
           <input
-            v-for="(digit, idx) in digits"
-            :key="idx"
-            :id="`2fa-input-${idx}`"
-            v-model="digits[idx]"
+            ref="inputRef"
+            v-model="code"
             type="text"
-            maxlength="1"
-            class="w-12 h-14 text-center text-2xl font-bold font-mono rounded-xl bg-slate-900/50 dark:bg-slate-900/50 light:bg-slate-100 border border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
-            @input="onInput(idx, $event)"
-            @keydown.backspace="onBackspace(idx, $event)"
-            @paste="onPaste"
+            required
+            maxlength="6"
+            placeholder="123456"
+            class="glass-input w-full px-4 py-3 text-center text-xl font-mono tracking-widest"
           />
         </div>
 
-        <p v-if="error" class="text-xs text-rose-400 mt-2 text-center">{{ error }}</p>
-      </div>
-
-      <div class="flex items-center justify-end space-x-3 mt-6">
-        <button
-          type="button"
-          class="btn-secondary text-sm px-4 py-2"
-          :disabled="isSubmitting"
-          @click="cancel"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="btn-primary text-sm px-5 py-2 flex items-center space-x-2"
-          :disabled="isSubmitting || fullCode.length < 6"
-          @click="submit"
-        >
-          <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          <span>Verify & Connect</span>
-        </button>
-      </div>
+        <div class="flex items-center space-x-3 pt-2">
+          <button
+            type="button"
+            class="btn-secondary text-xs px-4 py-2.5 flex-1"
+            @click="authStore.is2FAModalOpen = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn-primary text-xs px-5 py-2.5 flex-1"
+            :disabled="authStore.isLoading"
+          >
+            <span v-if="authStore.isLoading">Verifying...</span>
+            <span v-else>Verify & Sign In</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useNotifications } from '../composables/useNotifications'
 
 const authStore = useAuthStore()
-const digits = ref<string[]>(['', '', '', '', '', ''])
-const isSubmitting = ref(false)
-const error = ref<string | null>(null)
+const { showToast } = useNotifications()
 
-const fullCode = computed(() => digits.value.join(''))
+const code = ref('')
+const inputRef = ref<HTMLInputElement | null>(null)
 
-watch(() => authStore.is2FAModalOpen, (open) => {
-  if (open) {
-    digits.value = ['', '', '', '', '', '']
-    error.value = null
-    nextTick(() => {
-      document.getElementById('2fa-input-0')?.focus()
-    })
+watch(
+  () => authStore.is2FAModalOpen,
+  (open) => {
+    if (open) {
+      code.value = ''
+      nextTick(() => {
+        inputRef.value?.focus()
+      })
+    }
   }
-})
+)
 
-function onInput(idx: number, event: Event) {
-  const val = (event.target as HTMLInputElement).value
-  digits.value[idx] = val.slice(-1)
-
-  if (val && idx < 5) {
-    nextTick(() => {
-      document.getElementById(`2fa-input-${idx + 1}`)?.focus()
-    })
+async function submit2FA() {
+  if (!code.value || code.value.length < 6) {
+    showToast('Invalid Code', 'Please enter a valid 6-digit code', 'error')
+    return
   }
-
-  if (fullCode.value.length === 6) {
-    submit()
-  }
-}
-
-function onBackspace(idx: number, event: KeyboardEvent) {
-  if (!digits.value[idx] && idx > 0) {
-    document.getElementById(`2fa-input-${idx - 1}`)?.focus()
-  }
-}
-
-function onPaste(event: ClipboardEvent) {
-  event.preventDefault()
-  const pasted = event.clipboardData?.getData('text') || ''
-  const clean = pasted.replace(/\D/g, '').slice(0, 6)
-  for (let i = 0; i < 6; i++) {
-    digits.value[i] = clean[i] || ''
-  }
-  if (clean.length >= 6) {
-    submit()
-  } else {
-    document.getElementById(`2fa-input-${Math.min(clean.length, 5)}`)?.focus()
-  }
-}
-
-async function submit() {
-  if (fullCode.value.length < 6) return
-  isSubmitting.value = true
-  error.value = null
 
   try {
-    await authStore.submit2FACode(fullCode.value)
+    await authStore.submit2FACode(code.value)
+    showToast('Verified', 'Signed in successfully with Apple ID', 'success')
   } catch (err: any) {
-    error.value = err?.message || 'Invalid 2FA code. Please try again.'
-  } finally {
-    isSubmitting.value = false
+    showToast('Verification Failed', err?.message || 'Invalid 2FA code', 'error')
   }
-}
-
-function cancel() {
-  authStore.is2FAModalOpen = false
 }
 </script>

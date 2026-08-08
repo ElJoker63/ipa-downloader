@@ -8,27 +8,42 @@ export default {
   theme: {
     extend: {
       colors: {
-        apple: {
-          blue: '#0071E3',
-          'blue-hover': '#0077ED',
-          'blue-dark': '#0A84FF',
-          dark: '#0B0F19',
-          'card-dark': '#131B2E',
-          'card-subtle': '#1A243B',
-          light: '#F5F5F7',
-          'card-light': '#FFFFFF',
-          'border-dark': 'rgba(255, 255, 255, 0.08)',
-          'border-light': 'rgba(0, 0, 0, 0.08)',
+        bg: {
+          primary: '#0F1115',
+          secondary: '#171A21',
+          surface: '#1E222B',
+          card: 'rgba(35, 40, 52, 0.75)',
+        },
+        glass: {
+          DEFAULT: 'rgba(255, 255, 255, 0.08)',
+          hover: 'rgba(255, 255, 255, 0.12)',
+          border: 'rgba(255, 255, 255, 0.18)',
+          separator: 'rgba(255, 255, 255, 0.08)',
+        },
+        text: {
+          primary: '#FFFFFF',
+          secondary: '#B8C0CC',
+          muted: '#7D8592',
+        },
+        brand: {
+          primary: '#0A84FF',
+          hover: '#339CFF',
+        },
+        status: {
+          success: '#30D158',
+          warning: '#FFD60A',
+          error: '#FF453A',
+          info: '#64D2FF',
         },
       },
       fontFamily: {
         sans: [
-          '-apple-system',
-          'BlinkMacSystemFont',
           '"SF Pro Display"',
           '"SF Pro Text"',
+          '-apple-system',
+          'BlinkMacSystemFont',
           '"Segoe UI"',
-          'Roboto',
+          '"Helvetica Neue"',
           'Helvetica',
           'Arial',
           'sans-serif',
@@ -40,35 +55,20 @@ export default {
           'Menlo',
           'Monaco',
           'Consolas',
+          '"Liberation Mono"',
+          '"Courier New"',
           'monospace',
         ],
       },
+      borderRadius: {
+        'glass': '18px',
+        'glass-sm': '12px',
+        'glass-lg': '22px',
+      },
       boxShadow: {
-        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-        'glass-light': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-        'apple-glow': '0 0 20px -3px rgba(10, 132, 255, 0.35)',
-      },
-      backdropBlur: {
-        xs: '2px',
-      },
-      animation: {
-        'fade-in': 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        'pulse-subtle': 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(8px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        pulseSubtle: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.6' },
-        },
+        'glass': '0 12px 40px rgba(0, 0, 0, 0.25)',
+        'glass-hover': '0 16px 48px rgba(0, 0, 0, 0.35)',
+        'glow-primary': '0 0 24px rgba(10, 132, 255, 0.35)',
       },
     },
   },

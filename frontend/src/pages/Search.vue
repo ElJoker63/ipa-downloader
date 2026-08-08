@@ -1,80 +1,79 @@
 <template>
-  <div class="max-w-6xl mx-auto space-y-6 flex flex-col h-full animate-slide-up">
-    <!-- Search Bar & Platform Selector Hero -->
+  <div class="max-w-6xl mx-auto space-y-6 flex flex-col h-full animate-slide-up font-sans">
+    <!-- Search Bar & Platform Selector Hero (8px Grid Spacing) -->
     <div class="space-y-4 shrink-0">
       <div class="flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-extrabold tracking-tight text-white dark:text-white light:text-slate-900">
+          <h1 class="text-2xl font-bold tracking-tight text-[#FFFFFF]">
             App Store Search
           </h1>
-          <p class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 mt-0.5">
+          <p class="text-xs text-[#B8C0CC] mt-0.5 font-normal">
             Query the App Store in real time with high-resolution artwork, screenshots, and version builds.
           </p>
         </div>
 
-        <!-- Platform Segmented Pills -->
-        <div class="flex items-center p-1 rounded-2xl bg-white/5 dark:bg-white/5 light:bg-black/5 border border-white/10 shrink-0">
+        <!-- Platform Segmented Pills (macOS / visionOS Style) -->
+        <div class="flex items-center p-1 rounded-[14px] bg-white/[0.06] border border-white/[0.12] shrink-0 backdrop-blur-md">
           <button
             type="button"
-            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center space-x-1.5"
-            :class="searchStore.platform === 'ios' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30' : 'text-slate-400 hover:text-white'"
+            class="px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 flex items-center space-x-1.5"
+            :class="searchStore.platform === 'ios' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('ios')"
           >
-            <span>📱</span>
             <span>iPhone</span>
           </button>
           <button
             type="button"
-            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center space-x-1.5"
-            :class="searchStore.platform === 'ipados' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30' : 'text-slate-400 hover:text-white'"
+            class="px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 flex items-center space-x-1.5"
+            :class="searchStore.platform === 'ipados' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('ipados')"
           >
-            <span>📱</span>
             <span>iPad</span>
           </button>
           <button
             type="button"
-            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center space-x-1.5"
-            :class="searchStore.platform === 'tvos' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30' : 'text-slate-400 hover:text-white'"
+            class="px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 flex items-center space-x-1.5"
+            :class="searchStore.platform === 'tvos' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('tvos')"
           >
-            <span>📺</span>
             <span>Apple TV</span>
           </button>
         </div>
       </div>
 
-      <!-- Hero Search Input -->
+      <!-- Hero Glass Search Input -->
       <div class="relative">
-        <span class="absolute left-4 top-3.5 text-slate-400 text-lg">🔍</span>
+        <svg class="w-4 h-4 text-[#7D8592] absolute left-4 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
         <input
           v-model="searchTerm"
           type="text"
-          placeholder="Search by app name, developer, or keyword... (e.g. Spotify, Telegram, Minecraft)"
-          class="glass-input w-full pl-12 pr-28 py-3 rounded-2xl text-sm font-medium outline-none shadow-lg"
+          placeholder="Search by app name, developer, or bundle ID... (e.g. Spotify, Telegram, Minecraft)"
+          class="glass-input w-full pl-11 pr-28 py-3 text-sm"
           @input="onSearchInput"
           @keydown.enter="searchStore.search(searchTerm)"
         />
         <div class="absolute right-3.5 top-3 flex items-center space-x-2">
-          <span v-if="searchStore.isLoading" class="text-xs text-blue-400 font-semibold animate-pulse flex items-center space-x-1">
-            <svg class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+          <span v-if="searchStore.isLoading" class="text-xs text-[#0A84FF] font-medium animate-pulse flex items-center space-x-1">
+            <svg class="animate-spin h-3.5 w-3.5 text-[#0A84FF]" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
             <span>Searching...</span>
           </span>
-          <span v-else class="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-mono text-slate-400">Ctrl+K</span>
+          <span v-else class="px-2 py-0.5 rounded-md bg-white/[0.08] text-[10px] font-mono text-[#7D8592] border border-white/[0.12]">Ctrl+K</span>
         </div>
       </div>
 
       <!-- Recent Searches Chips -->
       <div v-if="searchStore.searchHistory.length > 0 && searchStore.results.length === 0 && !searchStore.isLoading" class="flex flex-wrap items-center gap-2 pt-1">
-        <span class="text-xs text-slate-500 font-semibold">Recent searches:</span>
+        <span class="text-xs text-[#7D8592] font-medium">Recent:</span>
         <button
           v-for="item in searchStore.searchHistory.slice(0, 6)"
           :key="item.id"
           type="button"
-          class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-xs text-slate-300 transition"
+          class="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-xs text-[#B8C0CC] hover:text-white transition duration-150"
           @click="selectRecent(item.term)"
         >
           {{ item.term }}
@@ -82,43 +81,48 @@
       </div>
     </div>
 
-    <!-- Search Results Grid -->
+    <!-- Search Results Grid (30px Blur Glass Cards) -->
     <div class="flex-1 min-h-0 overflow-y-auto">
       <div v-if="searchStore.results.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
         <div
           v-for="app in searchStore.results"
           :key="app.id"
-          class="glass-card-interactive p-4 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4"
+          class="glass-card p-5 rounded-[18px] flex flex-col justify-between space-y-4"
         >
           <!-- App Header -->
           <div class="flex items-start space-x-3.5">
             <img
               :src="app.artworkUrl || 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'"
               :alt="app.name"
-              class="w-16 h-16 rounded-2xl object-cover bg-slate-800 border border-white/10 shadow-lg shadow-black/40 shrink-0"
+              class="w-16 h-16 rounded-[16px] object-cover bg-[#171A21] border border-white/[0.18] shadow-md shrink-0"
               loading="lazy"
             />
             <div class="min-w-0 flex-1">
               <div class="flex items-center justify-between gap-1">
-                <h3 class="text-sm font-bold truncate text-white dark:text-white light:text-slate-900" :title="app.name">{{ app.name }}</h3>
+                <h3 class="text-sm font-semibold truncate text-[#FFFFFF]" :title="app.name">{{ app.name }}</h3>
                 <button
                   type="button"
-                  class="text-sm transition-transform hover:scale-125"
+                  class="text-sm text-[#B8C0CC] hover:text-[#FF453A] transition-transform duration-150 hover:scale-110"
                   :title="app.isFavorite ? 'Remove Favorite' : 'Add to Favorites'"
                   @click="toggleFav(app)"
                 >
-                  <span>{{ app.isFavorite ? '❤️' : '🤍' }}</span>
+                  <svg v-if="app.isFavorite" class="w-4 h-4 text-[#FF453A] fill-current" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  <svg v-else class="w-4 h-4 text-[#7D8592] hover:text-[#FF453A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
                 </button>
               </div>
-              <p class="text-xs text-slate-400 truncate mt-0.5">{{ app.developer }}</p>
+              <p class="text-xs text-[#B8C0CC] truncate mt-0.5">{{ app.developer }}</p>
               <div class="flex flex-wrap items-center gap-1.5 mt-2">
-                <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-[#0A84FF]/15 text-[#0A84FF] border border-[#0A84FF]/30">
                   {{ app.formattedPrice || 'Free' }}
                 </span>
-                <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-white/5 text-slate-300 border border-white/5">
+                <span class="px-2 py-0.5 text-[10px] font-mono rounded-md bg-white/[0.06] text-[#B8C0CC] border border-white/[0.08]">
                   v{{ app.version }}
                 </span>
-                <span v-if="app.primaryGenre" class="text-[10px] text-slate-400 truncate max-w-[90px]">
+                <span v-if="app.primaryGenre" class="text-[10px] text-[#7D8592] truncate max-w-[90px]">
                   {{ app.primaryGenre }}
                 </span>
               </div>
@@ -126,7 +130,7 @@
           </div>
 
           <!-- App Actions Footer -->
-          <div class="flex items-center justify-between pt-3 border-t border-white/5 gap-2">
+          <div class="flex items-center justify-between pt-3 border-t border-white/[0.08] gap-2">
             <button
               type="button"
               class="btn-secondary text-xs px-3 py-1.5 flex-1"
@@ -136,22 +140,26 @@
             </button>
             <button
               type="button"
-              class="btn-primary text-xs px-4 py-1.5 flex items-center space-x-1.5 shadow-md"
+              class="btn-primary text-xs px-4 py-1.5 flex items-center space-x-1.5 shadow-sm"
               @click="downloadApp(app)"
             >
-              <span>⬇</span>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
               <span>Download</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div v-else-if="!searchStore.isLoading" class="glass-panel p-12 rounded-3xl border border-white/5 text-center space-y-3 max-w-lg mx-auto mt-12">
-        <div class="text-4xl">🔍</div>
-        <h3 class="text-base font-bold text-white">Search Apple App Store</h3>
-        <p class="text-xs text-slate-400">
-          Type any application name to search across the entire iOS, iPadOS, or tvOS catalog in real time.
+      <!-- Empty State Glass Panel -->
+      <div v-else-if="!searchStore.isLoading" class="glass-card p-12 rounded-[22px] text-center space-y-3 max-w-lg mx-auto mt-12">
+        <svg class="w-12 h-12 text-[#0A84FF] mx-auto opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <h3 class="text-base font-semibold text-[#FFFFFF]">Search Apple App Store</h3>
+        <p class="text-xs text-[#B8C0CC]">
+          Type any application name to query and download iOS, iPadOS, or tvOS packages with FairPlay DRM replication.
         </p>
       </div>
     </div>
