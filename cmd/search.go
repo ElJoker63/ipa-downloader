@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/majd/ipa-downloader/v2/pkg/appstore"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/appstore"
 	"github.com/spf13/cobra"
 )
 

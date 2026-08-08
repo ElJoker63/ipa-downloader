@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/majd/ipa-downloader/v2/backend/apple"
-	"github.com/majd/ipa-downloader/v2/backend/events"
-	"github.com/majd/ipa-downloader/v2/backend/models"
-	"github.com/majd/ipa-downloader/v2/backend/storage"
+	"github.com/ElJoker63/ipatool-1/v2/backend/apple"
+	"github.com/ElJoker63/ipatool-1/v2/backend/events"
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
+	"github.com/ElJoker63/ipatool-1/v2/backend/storage"
 )
 
 // SearchService handles searching for apps, retrieving rich metadata, and managing search history.
@@ -272,32 +272,32 @@ func (s *searchService) enrichMetadata(app models.AppMetadata, platform string) 
 type iTunesLookupResponse struct {
 	ResultCount int `json:"resultCount"`
 	Results     []struct {
-		TrackID                int64    `json:"trackId"`
-		BundleID               string   `json:"bundleId"`
-		TrackName              string   `json:"trackName"`
-		ArtistName             string   `json:"artistName"`
-		ArtistID               int64    `json:"artistId"`
-		Version                string   `json:"version"`
-		Price                  float64  `json:"price"`
-		FormattedPrice         string   `json:"formattedPrice"`
-		Currency               string   `json:"currency"`
-		ArtworkURL60           string   `json:"artworkUrl60"`
-		ArtworkURL100          string   `json:"artworkUrl100"`
-		ArtworkURL512          string   `json:"artworkUrl512"`
-		ScreenshotUrls         []string `json:"screenshotUrls"`
-		IpadScreenshotUrls     []string `json:"ipadScreenshotUrls"`
-		Description            string   `json:"description"`
-		ReleaseNotes           string   `json:"releaseNotes"`
-		ReleaseDate            string   `json:"releaseDate"`
-		CurrentVersionDate     string   `json:"currentVersionReleaseDate"`
-		MinimumOSVersion       string   `json:"minimumOsVersion"`
-		FileSizeBytes          string   `json:"fileSizeBytes"`
-		AverageUserRating      float64  `json:"averageUserRating"`
-		UserRatingCount        int      `json:"userRatingCount"`
-		ContentAdvisoryRating  string   `json:"contentAdvisoryRating"`
-		Genres                 []string `json:"genres"`
-		PrimaryGenreName       string   `json:"primaryGenreName"`
-		SupportedDevices       []string `json:"supportedDevices"`
+		TrackID               int64    `json:"trackId"`
+		BundleID              string   `json:"bundleId"`
+		TrackName             string   `json:"trackName"`
+		ArtistName            string   `json:"artistName"`
+		ArtistID              int64    `json:"artistId"`
+		Version               string   `json:"version"`
+		Price                 float64  `json:"price"`
+		FormattedPrice        string   `json:"formattedPrice"`
+		Currency              string   `json:"currency"`
+		ArtworkURL60          string   `json:"artworkUrl60"`
+		ArtworkURL100         string   `json:"artworkUrl100"`
+		ArtworkURL512         string   `json:"artworkUrl512"`
+		ScreenshotUrls        []string `json:"screenshotUrls"`
+		IpadScreenshotUrls    []string `json:"ipadScreenshotUrls"`
+		Description           string   `json:"description"`
+		ReleaseNotes          string   `json:"releaseNotes"`
+		ReleaseDate           string   `json:"releaseDate"`
+		CurrentVersionDate    string   `json:"currentVersionReleaseDate"`
+		MinimumOSVersion      string   `json:"minimumOsVersion"`
+		FileSizeBytes         string   `json:"fileSizeBytes"`
+		AverageUserRating     float64  `json:"averageUserRating"`
+		UserRatingCount       int      `json:"userRatingCount"`
+		ContentAdvisoryRating string   `json:"contentAdvisoryRating"`
+		Genres                []string `json:"genres"`
+		PrimaryGenreName      string   `json:"primaryGenreName"`
+		SupportedDevices      []string `json:"supportedDevices"`
 	} `json:"results"`
 }
 

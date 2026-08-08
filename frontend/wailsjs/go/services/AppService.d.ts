@@ -7,7 +7,11 @@ export function AddFavorite(arg1:models.FavoriteApp):Promise<void>;
 
 export function AddLog(arg1:string,arg2:string,arg3:string):Promise<models.LogEntry>;
 
+export function ApplyUpdate(arg1:string):Promise<void>;
+
 export function CancelDownload(arg1:string):Promise<void>;
+
+export function CheckForUpdate():Promise<models.UpdateInfo>;
 
 export function ClearAppCache():Promise<void>;
 

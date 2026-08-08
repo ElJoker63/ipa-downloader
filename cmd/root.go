@@ -5,8 +5,8 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/majd/ipa-downloader/v2/pkg/appstore"
-	"github.com/majd/ipa-downloader/v2/pkg/version"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/appstore"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag/v2"
 )

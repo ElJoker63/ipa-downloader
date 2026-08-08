@@ -494,6 +494,28 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class UpdateInfo {
+	    available: boolean;
+	    latestVersion: string;
+	    currentVersion: string;
+	    releaseNotes: string;
+	    downloadUrl: string;
+	    mandatory: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.available = source["available"];
+	        this.latestVersion = source["latestVersion"];
+	        this.currentVersion = source["currentVersion"];
+	        this.releaseNotes = source["releaseNotes"];
+	        this.downloadUrl = source["downloadUrl"];
+	        this.mandatory = source["mandatory"];
+	    }
+	}
 
 }
 

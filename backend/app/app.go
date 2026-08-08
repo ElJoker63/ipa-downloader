@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/majd/ipa-downloader/v2/backend/services"
+	"github.com/ElJoker63/ipatool-1/v2/backend/services"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 

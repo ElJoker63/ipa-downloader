@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/majd/ipa-downloader/v2/backend/models"
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
 )
 
 func TestSQLiteStorage(t *testing.T) {

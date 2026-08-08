@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/appstore"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/keychain"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/util/machine"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/util/operatingsystem"
 	"github.com/byteness/keyring"
 	cookiejar "github.com/juju/persistent-cookiejar"
-	"github.com/majd/ipa-downloader/v2/backend/models"
-	"github.com/majd/ipa-downloader/v2/pkg/appstore"
-	"github.com/majd/ipa-downloader/v2/pkg/keychain"
-	"github.com/majd/ipa-downloader/v2/pkg/util/machine"
-	"github.com/majd/ipa-downloader/v2/pkg/util/operatingsystem"
 )
 
 const (

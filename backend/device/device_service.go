@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ElJoker63/ipatool-1/v2/backend/events"
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
 	giDevice "github.com/electricbubble/gidevice"
-	"github.com/majd/ipa-downloader/v2/backend/events"
-	"github.com/majd/ipa-downloader/v2/backend/models"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"howett.net/plist"
 )
@@ -354,30 +354,30 @@ func (s *deviceService) ListInstalledApps(appType string) ([]models.InstalledApp
 
 	for _, item := range result {
 		if m, ok := item.(map[string]interface{}); ok {
-				app := models.InstalledApp{
-					BundleID:       getStringVal(m, "CFBundleIdentifier"),
-					Version:        getStringVal(m, "CFBundleVersion"),
-					ShortVersion:   getStringVal(m, "CFBundleShortVersionString"),
-					AppType:        getStringVal(m, "ApplicationType"),
-					MinimumOS:      getStringVal(m, "MinimumOSVersion"),
-					SignerIdentity: getStringVal(m, "SignerIdentity"),
-					Size:           getInt64Val(m, "StaticDiskUsage"),
-					DynamicSize:    getInt64Val(m, "DynamicDiskUsage"),
-				}
-
-				appName := getStringVal(m, "CFBundleDisplayName")
-				if appName == "" {
-					appName = getStringVal(m, "CFBundleName")
-				}
-				if appName == "" {
-					appName = app.BundleID
-				}
-				app.Name = appName
-
-				if app.BundleID != "" {
-					installedApps = append(installedApps, app)
-				}
+			app := models.InstalledApp{
+				BundleID:       getStringVal(m, "CFBundleIdentifier"),
+				Version:        getStringVal(m, "CFBundleVersion"),
+				ShortVersion:   getStringVal(m, "CFBundleShortVersionString"),
+				AppType:        getStringVal(m, "ApplicationType"),
+				MinimumOS:      getStringVal(m, "MinimumOSVersion"),
+				SignerIdentity: getStringVal(m, "SignerIdentity"),
+				Size:           getInt64Val(m, "StaticDiskUsage"),
+				DynamicSize:    getInt64Val(m, "DynamicDiskUsage"),
 			}
+
+			appName := getStringVal(m, "CFBundleDisplayName")
+			if appName == "" {
+				appName = getStringVal(m, "CFBundleName")
+			}
+			if appName == "" {
+				appName = app.BundleID
+			}
+			app.Name = appName
+
+			if app.BundleID != "" {
+				installedApps = append(installedApps, app)
+			}
+		}
 	}
 
 	return installedApps, nil

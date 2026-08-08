@@ -4,17 +4,17 @@ import (
 	"context"
 	"sync"
 
-	"github.com/majd/ipa-downloader/v2/backend/apple"
-	"github.com/majd/ipa-downloader/v2/backend/auth"
-	"github.com/majd/ipa-downloader/v2/backend/config"
-	"github.com/majd/ipa-downloader/v2/backend/device"
-	"github.com/majd/ipa-downloader/v2/backend/download"
-	"github.com/majd/ipa-downloader/v2/backend/events"
-	"github.com/majd/ipa-downloader/v2/backend/library"
-	"github.com/majd/ipa-downloader/v2/backend/models"
-	"github.com/majd/ipa-downloader/v2/backend/search"
-	"github.com/majd/ipa-downloader/v2/backend/storage"
-	"github.com/majd/ipa-downloader/v2/backend/update"
+	"github.com/ElJoker63/ipatool-1/v2/backend/apple"
+	"github.com/ElJoker63/ipatool-1/v2/backend/auth"
+	"github.com/ElJoker63/ipatool-1/v2/backend/config"
+	"github.com/ElJoker63/ipatool-1/v2/backend/device"
+	"github.com/ElJoker63/ipatool-1/v2/backend/download"
+	"github.com/ElJoker63/ipatool-1/v2/backend/events"
+	"github.com/ElJoker63/ipatool-1/v2/backend/library"
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
+	"github.com/ElJoker63/ipatool-1/v2/backend/search"
+	"github.com/ElJoker63/ipatool-1/v2/backend/storage"
+	"github.com/ElJoker63/ipatool-1/v2/backend/update"
 )
 
 // AppService aggregates all domain services and is exposed to the Wails frontend.
@@ -328,4 +328,3 @@ func (s *AppService) CheckForUpdate() (*models.UpdateInfo, error) {
 func (s *AppService) ApplyUpdate(downloadURL string) error {
 	return s.updateService.ApplyUpdate(downloadURL)
 }
-

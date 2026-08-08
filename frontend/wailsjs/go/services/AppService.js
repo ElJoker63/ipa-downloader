@@ -10,8 +10,16 @@ export function AddLog(arg1, arg2, arg3) {
   return window['go']['services']['AppService']['AddLog'](arg1, arg2, arg3);
 }
 
+export function ApplyUpdate(arg1) {
+  return window['go']['services']['AppService']['ApplyUpdate'](arg1);
+}
+
 export function CancelDownload(arg1) {
   return window['go']['services']['AppService']['CancelDownload'](arg1);
+}
+
+export function CheckForUpdate() {
+  return window['go']['services']['AppService']['CheckForUpdate']();
 }
 
 export function ClearAppCache() {

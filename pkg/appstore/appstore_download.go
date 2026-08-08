@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/majd/ipa-downloader/v2/pkg/http"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/http"
 	"github.com/schollz/progressbar/v3"
 	"howett.net/plist"
 )

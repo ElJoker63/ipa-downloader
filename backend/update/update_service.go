@@ -9,10 +9,10 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ElJoker63/ipatool-1/v2/backend/events"
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/version"
 	"github.com/inconshreveable/go-update"
-	"github.com/majd/ipa-downloader/v2/backend/events"
-	"github.com/majd/ipa-downloader/v2/backend/models"
-	"github.com/majd/ipa-downloader/v2/pkg/version"
 )
 
 const (

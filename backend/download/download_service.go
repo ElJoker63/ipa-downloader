@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/majd/ipa-downloader/v2/backend/apple"
-	"github.com/majd/ipa-downloader/v2/backend/events"
-	"github.com/majd/ipa-downloader/v2/backend/models"
-	"github.com/majd/ipa-downloader/v2/backend/storage"
-	"github.com/majd/ipa-downloader/v2/pkg/appstore"
+	"github.com/ElJoker63/ipatool-1/v2/backend/apple"
+	"github.com/ElJoker63/ipatool-1/v2/backend/events"
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
+	"github.com/ElJoker63/ipatool-1/v2/backend/storage"
+	"github.com/ElJoker63/ipatool-1/v2/pkg/appstore"
 )
 
 // DownloadManager manages concurrent downloads with live progress, pause, resume, and cancellation.

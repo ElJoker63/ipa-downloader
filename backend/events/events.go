@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/majd/ipa-downloader/v2/backend/models"
-	"github.com/majd/ipa-downloader/v2/backend/storage"
+	"github.com/ElJoker63/ipatool-1/v2/backend/models"
+	"github.com/ElJoker63/ipatool-1/v2/backend/storage"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
