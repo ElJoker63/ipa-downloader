@@ -127,12 +127,17 @@ func (s *authService) SilentRefresh() error {
 	kc := s.appleClient.GetKeychain()
 	emailBytes, err := kc.Get("apple_id_email")
 	if err != nil {
-		return fmt.Errorf("no stored email found")
+		s.emitter.EmitLog("ERROR", "Silent refresh failed: no stored email found. Please login again.", "AuthService")
+		return fmt.Errorf("no stored email")
 	}
 	passBytes, err := kc.Get("apple_id_password")
 	if err != nil {
-		return fmt.Errorf("no stored password found")
+		s.emitter.EmitLog("ERROR", "Silent refresh failed: no stored password found.", "AuthService")
+		return fmt.Errorf("no stored password")
 	}
+
+	// Important: Clear current stale session data before refresh
+	_ = s.appleClient.Revoke()
 
 	_, err = s.Login(string(emailBytes), string(passBytes), "", true)
 	if err != nil {
@@ -140,9 +145,10 @@ func (s *authService) SilentRefresh() error {
 		return err
 	}
 
-	s.emitter.EmitLog("SUCCESS", "Silent re-authentication successful", "AuthService")
+	s.emitter.EmitLog("SUCCESS", "Silent re-authentication successful. Token refreshed.", "AuthService")
 	return nil
 }
+
 
 func (s *authService) Logout() error {
 	s.emitter.EmitLog("INFO", "Revoking App Store session...", "AuthService")

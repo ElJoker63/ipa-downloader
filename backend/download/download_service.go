@@ -40,7 +40,6 @@ type DownloadManager interface {
 	RemoveTask(id string) error
 }
 
-
 type downloadTaskHandle struct {
 	task   models.DownloadTask
 	ctx    context.Context
@@ -82,7 +81,6 @@ func NewDownloadManager(client apple.Client, auth auth.AuthService, store storag
 
 	return dm
 }
-
 
 func (m *downloadManager) Start() {
 	for i := 0; i < m.maxWorkers; i++ {
@@ -186,7 +184,6 @@ func (m *downloadManager) QueueFirmwareDownload(deviceName string, fw models.Fir
 		Checksum:        fw.SHA1,
 		ChecksumType:    "sha1",
 		CreatedAt:       now,
-
 		UpdatedAt:       now,
 	}
 
@@ -228,7 +225,6 @@ func (m *downloadManager) PauseDownload(id string) error {
 
 	return nil
 }
-
 
 func (m *downloadManager) ResumeDownload(id string) error {
 	task, err := m.storage.GetDownload(id)
@@ -316,7 +312,6 @@ func (m *downloadManager) RemoveTask(id string) error {
 	return m.storage.DeleteDownload(id)
 }
 
-
 func (m *downloadManager) worker(workerID int) {
 	for {
 		select {
@@ -378,7 +373,6 @@ func (m *downloadManager) processDownload(taskID string) {
 
 	if err != nil {
 		if errors.Is(ctx.Err(), context.Canceled) {
-
 			m.emitter.EmitLog("INFO", fmt.Sprintf("Download stopped: %s", task.AppName), "DownloadManager")
 			return
 		}
@@ -410,9 +404,12 @@ func (m *downloadManager) processDownload(taskID string) {
 func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.DownloadTask) error {
 	appstoreCore := m.appleClient.GetAppStore()
 
-	accInfo, err := appstoreCore.AccountInfo()
-	if err != nil {
-		return fmt.Errorf("account not authenticated: %w", err)
+	getFreshAccount := func() (appstore.Account, error) {
+		accInfo, err := appstoreCore.AccountInfo()
+		if err != nil {
+			return appstore.Account{}, fmt.Errorf("account not authenticated: %w", err)
+		}
+		return accInfo.Account, nil
 	}
 
 	app := appstore.App{
@@ -427,47 +424,92 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		platform = appstore.PlatformIPhone
 	}
 
-	settings, _ := m.storage.GetSettings()
-	if settings == nil || settings.AutoAcquireLicense {
-		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying/Acquiring free license...", task.AppName), "DownloadManager")
-		err := appstoreCore.Purchase(appstore.PurchaseInput{
-			Account: accInfo.Account,
-			App:     app,
-		})
+	// Helper for purchase with refresh logic
+	doPurchase := func(acc appstore.Account) error {
+		err := appstoreCore.Purchase(appstore.PurchaseInput{Account: acc, App: app})
 		if err != nil {
 			if errors.Is(err, appstore.ErrLicenseAlreadyExists) {
-				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] License already owned", task.AppName), "DownloadManager")
-			} else {
-				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Purchase warning (will attempt download anyway): %v", task.AppName, err), "DownloadManager")
+				return nil
 			}
-		} else {
-			m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] License successfully acquired", task.AppName), "DownloadManager")
+			if errors.Is(err, appstore.ErrPasswordTokenExpired) {
+				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Token expired during purchase. Refreshing...", task.AppName), "DownloadManager")
+				if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
+					if freshAcc, accErr := getFreshAccount(); accErr == nil {
+						return appstoreCore.Purchase(appstore.PurchaseInput{Account: freshAcc, App: app})
+					}
+				}
+			}
 		}
+		return err
 	}
 
+	// 1. Initial License Acquisition
+	account, err := getFreshAccount()
+	if err != nil {
+		return err
+	}
+
+	settings, _ := m.storage.GetSettings()
+	if settings == nil || settings.AutoAcquireLicense {
+		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying license status...", task.AppName), "DownloadManager")
+		_ = doPurchase(account)
+	}
 
 	dir := filepath.Dir(task.DestinationPath)
 	_ = os.MkdirAll(dir, 0755)
 
-	out, err := m.streamAppDownload(ctx, appstoreCore, accInfo.Account, app, task, platform)
-	if err != nil {
+	// 2. Download loop with progressive retries
+	var lastErr error
+	for attempt := 1; attempt <= 3; attempt++ {
+		// Always get latest account and check license for each attempt
+		account, accErr := getFreshAccount()
+		if accErr != nil {
+			return accErr
+		}
+
+		if settings == nil || settings.AutoAcquireLicense {
+			m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying license status (Attempt %d/3)...", task.AppName, attempt), "DownloadManager")
+			if pErr := doPurchase(account); pErr != nil {
+				if errors.Is(pErr, appstore.ErrPasswordTokenExpired) {
+					m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Session expired during license check. Refreshing...", task.AppName), "DownloadManager")
+					if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
+						continue // Token refreshed, retry loop
+					}
+				}
+				// If purchase fails for other reasons, we still attempt download
+			}
+		}
+
+		out, err := m.streamAppDownload(ctx, appstoreCore, account, app, task, platform)
+		if err == nil {
+			// Success! Finalize SINF
+			return m.finalizeAppPackage(task, out, appstoreCore)
+		}
+
+		lastErr = err
 		if errors.Is(err, appstore.ErrLicenseRequired) {
-			m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] License required. Attempting to acquire free license...", task.AppName), "DownloadManager")
-			_ = appstoreCore.Purchase(appstore.PurchaseInput{
-				Account: accInfo.Account,
-				App:     app,
-			})
-			// Wait a moment for Apple servers to propagate
-			time.Sleep(2 * time.Second)
-			// Retry once
-			out, err = m.streamAppDownload(ctx, appstoreCore, accInfo.Account, app, task, platform)
+			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License not detected (Attempt %d/3). Acquiring and waiting...", task.AppName, attempt), "DownloadManager")
+			_ = doPurchase(account)
+			time.Sleep(time.Duration(attempt*2) * time.Second) // Progressive wait: 2s, 4s...
+			continue
 		}
-		if err != nil {
-			return err
+
+		if errors.Is(err, appstore.ErrPasswordTokenExpired) {
+			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Session expired during download (Attempt %d/3). Refreshing...", task.AppName, attempt), "DownloadManager")
+			if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
+				continue
+			}
 		}
+
+		// Other errors are fatal
+		return err
 	}
 
 
+	return fmt.Errorf("failed after 3 attempts: %w", lastErr)
+}
+
+func (m *downloadManager) finalizeAppPackage(task *models.DownloadTask, out appstore.DownloadOutput, store appstore.AppStore) error {
 	task.Status = models.DownloadStatusSigning
 	task.Progress = 100.0
 	task.SpeedBytesPerSec = 0
@@ -475,22 +517,20 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 	task.ETASeconds = 0
 	task.FormattedETA = "Finalizing .ipa..."
 	_ = m.storage.UpdateDownloadProgress(task.ID, models.DownloadStatusSigning, task.TotalBytes, task.TotalBytes, 100.0, 0, 0, "")
-	m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Download stream complete (100%%). Starting FairPlay SINF signing process...", task.AppName), "DownloadManager")
+	m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Download complete. Starting FairPlay SINF signing...", task.AppName), "DownloadManager")
 	m.emitter.EmitDownloadProgress(*task)
 
 	if len(out.Sinfs) > 0 {
-		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Injecting %d FairPlay SINF DRM signature(s) into final .ipa package...", task.AppName, len(out.Sinfs)), "DownloadManager")
-		err = appstoreCore.ReplicateSinf(appstore.ReplicateSinfInput{
+		err := store.ReplicateSinf(appstore.ReplicateSinfInput{
 			Sinfs:       out.Sinfs,
 			PackagePath: task.DestinationPath,
 		})
 		if err != nil {
-			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] FairPlay SINF replication warning: %v", task.AppName, err), "DownloadManager")
+			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] SINF replication warning: %v", task.AppName, err), "DownloadManager")
 		} else {
-			m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] FairPlay SINF signatures successfully injected into %s", task.AppName, filepath.Base(task.DestinationPath)), "DownloadManager")
+			m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] SINF signatures injected", task.AppName), "DownloadManager")
 		}
 	}
-
 	return nil
 }
 
@@ -656,7 +696,15 @@ func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.
 		}
 
 		if elapsed >= 0.2 || downloadedBytes == totalBytes {
+			// Check if we are still supposed to be downloading before emitting status
+			select {
+			case <-ctx.Done():
+				return // Don't emit progress if context was cancelled/paused
+			default:
+			}
+
 			deltaBytes := downloadedBytes - lastBytes
+
 			if elapsed > 0 {
 				instantSpeed := float64(deltaBytes) / elapsed
 				if smoothedSpeed == 0 {
@@ -668,8 +716,8 @@ func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.
 
 			speedBps := int64(smoothedSpeed)
 			var etaSec int64 = 0
-			if speedBps > 0 && totalBytes > downloadedBytes {
-				etaSec = (totalBytes - downloadedBytes) / speedBps
+			if speedBps > 0 && total > downloadedBytes {
+				etaSec = (total - downloadedBytes) / speedBps
 			}
 
 			task.DownloadedBytes = downloadedBytes
@@ -697,7 +745,6 @@ func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.
 		Platform:          platform,
 		ProgressCallback:  progressCallback,
 	})
-
 }
 
 func sanitizeFilename(name string) string {

@@ -599,11 +599,13 @@ function truncateUDID(udid: string) {
 }
 
 function formatAppSize(bytes: number) {
-  if (!bytes) return ''
+  if (bytes === undefined || bytes === null || bytes < 0) return '--'
+  if (bytes === 0) return '0 MB'
   const mb = bytes / (1024 * 1024)
   if (mb >= 1024) {
-    return `${(mb / 1024).toFixed(1)} GB`
+    return `${(mb / 1024).toFixed(2)} GB`
   }
   return `${mb.toFixed(1)} MB`
 }
+
 </script>

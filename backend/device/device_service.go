@@ -572,14 +572,42 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	}
 
 
-	// Fetch Storage Info (Global domain)
+	// Fetch Storage Info (Multi-domain fallback for professional accuracy)
+	// 1. Try global domain
 	if val, err := dev.GetValue("", "TotalDiskCapacity"); err == nil {
 		info.StorageTotal = getInt64FromVal(val)
 	}
 	if val, err := dev.GetValue("", "TotalDataAvailable"); err == nil {
 		info.StorageFree = getInt64FromVal(val)
 	}
+
+	// 2. Try specialized disk_usage domain (often more accurate and required for some iOS versions)
+	if diskUsage, err := dev.GetValue("com.apple.disk_usage", ""); err == nil && diskUsage != nil {
+		if m, ok := diskUsage.(map[string]interface{}); ok {
+			if info.StorageTotal == 0 {
+				if total := getInt64FromVal(m["TotalDiskCapacity"]); total > 0 {
+					info.StorageTotal = total
+				} else if total := getInt64FromVal(m["TotalSystemCapacity"]); total > 0 {
+					info.StorageTotal = total
+				}
+			}
+
+			// Check multiple potential keys for free space in order of reliability
+			if free := getInt64FromVal(m["DataAvailable"]); free > 0 {
+				info.StorageFree = free
+			} else if free := getInt64FromVal(m["AmountDataAvailable"]); free > 0 {
+				info.StorageFree = free
+			} else if free := getInt64FromVal(m["MobileDataFree"]); free > 0 {
+				info.StorageFree = free
+			} else if free := getInt64FromVal(m["TotalDataAvailable"]); free > 0 {
+				info.StorageFree = free
+			}
+		}
+	}
+
+
 	info.StorageUsed = info.StorageTotal - info.StorageFree
+
 
 	// Fetch Battery Info (Requires trusted connection/session)
 	if info.IsPaired {

@@ -286,12 +286,10 @@ const limitOptions = [
   { id: 50, name: '50 results' },
 ]
 
-
-
-const searchTerm = ref('')
 let searchTimeout: any = null
 
 onMounted(async () => {
+
   await searchStore.fetchHistory()
 })
 
