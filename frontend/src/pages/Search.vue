@@ -112,7 +112,7 @@
 
         <!-- Result Limit -->
         <div class="flex items-center space-x-2 text-[10px] font-bold text-[#7D8592] uppercase tracking-wider">
-          <span>Show:</span>
+          <span>{{ t.common.show }}:</span>
           <GlassDropdown
             v-model="searchStore.limit"
             :options="limitOptions"
@@ -244,7 +244,7 @@ const { showToast } = useNotifications()
 
 const searchTerm = ref('')
 
-const countries = [
+const countries = computed(() => [
   { id: 'US', name: 'United States', flag: '🇺🇸' },
   { id: 'ES', name: 'Spain', flag: '🇪🇸' },
   { id: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
@@ -255,36 +255,36 @@ const countries = [
   { id: 'BR', name: 'Brazil', flag: '🇧🇷' },
   { id: 'JP', name: 'Japan', flag: '🇯🇵' },
   { id: 'CN', name: 'China', flag: '🇨🇳' },
-]
+])
 
-const categories = [
-  { id: '0', name: 'All Categories' },
-  { id: '6014', name: 'Games' },
-  { id: '6002', name: 'Utilities' },
-  { id: '6007', name: 'Productivity' },
-  { id: '6017', name: 'Education' },
-  { id: '6016', name: 'Entertainment' },
-  { id: '6005', name: 'Social' },
-  { id: '6015', name: 'Finance' },
-  { id: '6013', name: 'Health' },
-  { id: '6012', name: 'Lifestyle' },
-  { id: '6011', name: 'Music' },
-  { id: '6008', name: 'Photo & Video' },
-  { id: '6000', name: 'Business' },
-]
+const categories = computed(() => [
+  { id: '0', name: t.value.search.allCategories },
+  { id: '6014', name: t.value.search.games },
+  { id: '6002', name: t.value.search.utilities },
+  { id: '6007', name: t.value.search.productivity },
+  { id: '6017', name: t.value.search.education },
+  { id: '6016', name: t.value.search.entertainment },
+  { id: '6005', name: t.value.search.social },
+  { id: '6015', name: t.value.search.finance },
+  { id: '6013', name: t.value.search.health },
+  { id: '6012', name: t.value.search.lifestyle },
+  { id: '6011', name: t.value.search.music },
+  { id: '6008', name: t.value.search.photoVideo },
+  { id: '6000', name: t.value.search.business },
+])
 
-const sortOptions = [
-  { id: 'relevance', name: 'Relevance' },
-  { id: 'popular', name: 'Popularity' },
-  { id: 'rating', name: 'User Rating' },
-  { id: 'recent', name: 'Release Date' },
-]
+const sortOptions = computed(() => [
+  { id: 'relevance', name: t.value.search.relevance },
+  { id: 'popular', name: t.value.search.popularity },
+  { id: 'rating', name: t.value.search.rating },
+  { id: 'recent', name: t.value.search.releaseDate },
+])
 
-const limitOptions = [
-  { id: 15, name: '15 results' },
-  { id: 30, name: '30 results' },
-  { id: 50, name: '50 results' },
-]
+const limitOptions = computed(() => [
+  { id: 15, name: `15 ${t.value.common.results}` },
+  { id: 30, name: `30 ${t.value.common.results}` },
+  { id: 50, name: `50 ${t.value.common.results}` },
+])
 
 let searchTimeout: any = null
 

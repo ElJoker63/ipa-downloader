@@ -55,7 +55,7 @@
                   <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Verified</span>
+                  <span>{{ t.common.verified }}</span>
                 </span>
               </div>
               <p class="text-xs text-[#B8C0CC] truncate font-mono mt-0.5">{{ item.destinationPath }}</p>
@@ -73,7 +73,7 @@
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              <span>Install</span>
+              <span>{{ t.common.install }}</span>
             </button>
 
             <button
@@ -132,8 +132,8 @@
     >
       <div class="w-full max-w-sm bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
         <div class="text-center space-y-2">
-          <h3 class="text-lg font-bold text-white">Select Target Device</h3>
-          <p class="text-xs text-[#8E8E93]">Multiple devices detected. Please choose where to install.</p>
+          <h3 class="text-lg font-bold text-white">{{ t.common.selectTargetDevice }}</h3>
+          <p class="text-xs text-[#8E8E93]">{{ t.common.multipleDevicesDesc }}</p>
         </div>
 
         <div class="space-y-2 max-h-60 overflow-y-auto pr-1">

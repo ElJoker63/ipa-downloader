@@ -25,6 +25,33 @@ export interface Translations {
     dark: string
     light: string
     system: string
+    verified: string
+    install: string
+    clickToEnlarge: string
+    buildId: string
+    updateRequired: string
+    newVersionAvailable: string
+    noResults: string
+    selectTargetDevice: string
+    multipleDevicesDesc: string
+    task: string
+    tasks: string
+    uninstall: string
+    deploymentQueue: string
+    installing: string
+    copying: string
+    preparing: string
+    appleId: string
+    active: string
+    connectedStatus: string
+    saved: string
+    show: string
+    results: string
+    streaming: string
+    queued: string
+    downloading: string
+    failed: string
+    cancelled: string
   }
   nav: {
     menu: string
@@ -40,7 +67,6 @@ export interface Translations {
     firmwares: string
     suite: string
   }
-
   firmwares: {
     title: string
     subtitle: string
@@ -55,7 +81,6 @@ export interface Translations {
     download: string
     downloadQueued: string
   }
-
   home: {
     title: string
     subtitle: string
@@ -76,13 +101,6 @@ export interface Translations {
     bookmarkedApps: string
     searchAppStore: string
     signOut: string
-    signInTitle: string
-    signInSubtitle: string
-    emailLabel: string
-    passwordLabel: string
-    rememberMe: string
-    authenticating: string
-    signInButton: string
     featuresTitle: string
     feat1Title: string
     feat1Desc: string
@@ -93,7 +111,6 @@ export interface Translations {
     feat4Title: string
     feat4Desc: string
   }
-
   search: {
     title: string
     subtitle: string
@@ -109,6 +126,23 @@ export interface Translations {
     downloadError: string
     addedFav: string
     removedFav: string
+    allCategories: string
+    games: string
+    utilities: string
+    productivity: string
+    education: string
+    entertainment: string
+    social: string
+    finance: string
+    health: string
+    lifestyle: string
+    music: string
+    photoVideo: string
+    business: string
+    relevance: string
+    popularity: string
+    rating: string
+    releaseDate: string
   }
   downloads: {
     title: string
@@ -130,7 +164,6 @@ export interface Translations {
     copyErrorTitle: string
     copied: string
   }
-
   favorites: {
     title: string
     subtitle: string
@@ -149,7 +182,6 @@ export interface Translations {
     deleteRecord: string
     deleteFile: string
     emptyTitle: string
-
     emptyDesc: string
     clearedTitle: string
     clearedDesc: string
@@ -190,6 +222,8 @@ export interface Translations {
     copiedToast: string
     clearedToast: string
     exportedToast: string
+    copyFailed: string
+    copyError: string
   }
   twoFactor: {
     title: string
@@ -250,8 +284,6 @@ export interface Translations {
       cpuArch: string
       chipset: string
       storageTitle: string
-
-
       storageStatus: string
       batteryTitle: string
       batteryStatus: string
@@ -264,5 +296,47 @@ export interface Translations {
       done: string
     }
   }
+  auth: {
+    signIn: string
+    signInSubtitle: string
+    emailLabel: string
+    passwordLabel: string
+    rememberMe: string
+    authenticating: string
+    signInButton: string
+    privacyNotice: string
+    backToHome: string
+    signedInSuccess: string
+    welcomeBack: string
+    signInFailed: string
+    invalidCredentials: string
+    signedOut: string
+    sessionRevoked: string
+    twoFactorRequired: string
+  }
+  profile: {
+    title: string
+    activeSession: string
+    subtitle: string
+    signOut: string
+    sessionMetadata: string
+    storefrontId: string
+    region: string
+    dsid: string
+    accountPod: string
+    securityPrivacy: string
+    keychainTitle: string
+    keychainDesc: string
+    activeStatus: string
+  }
+  updates: {
+    latestVersion: string
+    currentVersion: string
+    whatsNew: string
+    downloading: string
+    applying: string
+    doNotClose: string
+    updateAndRestart: string
+    failed: string
+  }
 }
-

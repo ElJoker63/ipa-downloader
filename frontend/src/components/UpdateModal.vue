@@ -9,8 +9,8 @@
           </svg>
         </div>
         <div>
-          <h3 class="text-xl font-bold text-white">Update Required</h3>
-          <p class="text-xs text-[#8E8E93] mt-0.5 font-medium">A new version of IPA Downloader is available.</p>
+          <h3 class="text-xl font-bold text-white">{{ t.common.updateRequired }}</h3>
+          <p class="text-xs text-[#8E8E93] mt-0.5 font-medium">{{ t.common.newVersionAvailable }}</p>
         </div>
       </div>
 
@@ -18,18 +18,18 @@
       <div class="p-6 space-y-6">
         <div class="flex items-center justify-between">
           <div class="space-y-1">
-            <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Latest Version</div>
+            <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.updates.latestVersion }}</div>
             <div class="text-lg font-bold text-[#30D158]">v{{ updateInfo?.latestVersion }}</div>
           </div>
           <div class="h-8 w-px bg-white/10"></div>
           <div class="space-y-1 text-right">
-            <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Current Version</div>
+            <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.updates.currentVersion }}</div>
             <div class="text-lg font-bold text-[#8E8E93]">v{{ updateInfo?.currentVersion }}</div>
           </div>
         </div>
 
         <div v-if="updateInfo?.releaseNotes" class="space-y-2">
-          <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">What's New</div>
+          <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.updates.whatsNew }}</div>
           <div class="max-h-32 overflow-y-auto rounded-xl bg-white/[0.03] border border-white/5 p-3 text-xs text-[#B8C0CC] leading-relaxed whitespace-pre-wrap">
             {{ updateInfo.releaseNotes }}
           </div>
@@ -58,10 +58,10 @@
           @click="startUpdate"
           class="w-full py-3.5 rounded-2xl bg-[#0A84FF] hover:bg-[#0071E3] text-white font-bold text-sm shadow-xl shadow-[#0A84FF]/20 transition-all active:scale-[0.98]"
         >
-          Update and Restart Now
+          {{ t.updates.updateAndRestart }}
         </button>
         <div v-else class="text-center text-[11px] text-[#8E8E93] italic animate-pulse">
-          Please do not close the application while the update is in progress.
+          {{ t.updates.doNotClose }}
         </div>
       </div>
     </div>
@@ -69,18 +69,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { WailsService } from '../services/wails'
 import { useModalStore } from '../stores/modal'
+import { useI18n } from '../i18n'
 import type { UpdateInfo } from '../types'
 
+const { t } = useI18n()
 const visible = ref(false)
 const updating = ref(false)
 const progress = ref(0)
 const updateInfo = ref<UpdateInfo | null>(null)
-const statusMessage = ref('Downloading update...')
+const statusMessage = ref(t.value.updates.downloading)
 const modalStore = useModalStore()
 
+// Keep status message reactive to language changes
+watch(() => t.value.updates.downloading, (newVal) => {
+  if (progress.value < 100) statusMessage.value = newVal
+})
+watch(() => t.value.updates.applying, (newVal) => {
+  if (progress.value >= 100) statusMessage.value = newVal
+})
 
 onMounted(async () => {
   try {
@@ -96,7 +105,7 @@ onMounted(async () => {
   WailsService.onEvent('update:progress', (p: number) => {
     progress.value = p
     if (p >= 100) {
-      statusMessage.value = 'Applying update...'
+      statusMessage.value = t.value.updates.applying
     }
   })
 })
@@ -107,7 +116,7 @@ async function startUpdate() {
   try {
     await WailsService.applyUpdate(updateInfo.value.downloadUrl)
   } catch (err: any) {
-    modalStore.alert('Update Failed', err.message || String(err), 'error')
+    modalStore.alert(t.value.updates.failed, err.message || String(err), 'error')
     updating.value = false
   }
 }

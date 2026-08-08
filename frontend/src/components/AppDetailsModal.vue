@@ -66,7 +66,7 @@
         <div v-if="screenshots.length > 0" class="space-y-2">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.screenshots }}</h3>
-            <span class="text-[11px] text-[#7D8592] font-normal">Click to enlarge</span>
+            <span class="text-[11px] text-[#7D8592] font-normal">{{ t.common.clickToEnlarge }}</span>
           </div>
           <div class="flex space-x-3 overflow-x-auto pb-3 pt-1">
             <div
@@ -168,7 +168,7 @@
                     {{ t.details.latestBadge }}
                   </span>
                 </div>
-                <span class="text-[11px] font-mono text-[#7D8592] truncate">Build ID: {{ v.externalVersionId }}</span>
+                <span class="text-[11px] font-mono text-[#7D8592] truncate">{{ t.common.buildId }}: {{ v.externalVersionId }}</span>
               </div>
 
               <button
@@ -193,7 +193,7 @@
               <span>{{ t.details.signInForFullHistory }}</span>
             </div>
             <router-link to="/" class="btn-primary text-xs px-3 py-1 shrink-0" @click="closeModal">
-              Sign In
+              {{ t.auth.signInButton }}
             </router-link>
           </div>
         </div>
