@@ -35,10 +35,12 @@
           <!-- App Info -->
           <div class="flex items-center space-x-3.5 min-w-0 flex-1">
             <img
-              :src="item.artworkUrl || 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'"
+              :src="getArtworkUrl(item)"
               :alt="item.appName"
               class="w-11 h-11 rounded-[12px] object-cover bg-[#171A21] border border-white/[0.18] shadow-sm shrink-0"
             />
+
+
             <div class="min-w-0 flex-1">
               <div class="flex items-center space-x-2.5">
                 <h3 class="text-sm font-semibold truncate text-[#FFFFFF]">{{ item.appName }}</h3>
@@ -242,4 +244,20 @@ function statusBadgeClass(status: string) {
       return 'bg-[#0A84FF]/15 text-[#0A84FF] border border-[#0A84FF]/30'
   }
 }
+
+function getArtworkUrl(item: any) {
+  // If explicitly firmware or filename/path looks like an IPSW, use firmware icon
+  if (item.type === 'firmware' || item.destinationPath?.toLowerCase().endsWith('.ipsw')) {
+    return '/ipsw.png'
+  }
+  if (!item.artworkUrl || item.artworkUrl.includes('mzstatic.com')) {
+    // If it's a firmware (identified by naming) but has the old Apple URL, override it
+    if (item.appName?.toLowerCase().includes('firmware')) return '/ipsw.png'
+    return 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'
+  }
+  return item.artworkUrl
+}
+
 </script>
+
+

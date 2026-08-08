@@ -64,10 +64,12 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3.5 min-w-0">
               <img
-                :src="task.artworkUrl || 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'"
+                :src="getArtworkUrl(task)"
                 :alt="task.appName"
                 class="w-12 h-12 rounded-[14px] object-cover bg-[#171A21] border border-white/[0.18] shadow-md shrink-0"
               />
+
+
               <div class="min-w-0">
                 <h3 class="text-sm font-semibold truncate text-[#FFFFFF]">{{ task.appName }}</h3>
                 <div class="flex items-center space-x-2 text-xs text-[#B8C0CC] font-mono mt-0.5">
@@ -387,4 +389,18 @@ function statusBadgeClass(status: string) {
       return 'bg-[#0A84FF]/20 text-[#0A84FF]'
   }
 }
+
+function getArtworkUrl(task: any) {
+  if (task.type === 'firmware' || task.destinationPath?.toLowerCase().endsWith('.ipsw')) {
+    return '/ipsw.png'
+  }
+  if (!task.artworkUrl || task.artworkUrl.includes('mzstatic.com')) {
+    if (task.appName?.toLowerCase().includes('firmware')) return '/ipsw.png'
+    return 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'
+  }
+  return task.artworkUrl
+}
+
 </script>
+
+
