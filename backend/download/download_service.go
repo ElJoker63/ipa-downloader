@@ -167,8 +167,9 @@ func (m *downloadManager) QueueFirmwareDownload(deviceName string, fw models.Fir
 		URL:             fw.URL,
 		AppName:         fmt.Sprintf("%s Firmware", deviceName),
 		Version:         fw.Version,
-		ArtworkURL:      "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png",
+		ArtworkURL:      "/ipsw.png",
 		DestinationPath: destPath,
+
 		Status:          models.DownloadStatusQueued,
 		TotalBytes:      fw.Size,
 		DownloadedBytes: 0,
