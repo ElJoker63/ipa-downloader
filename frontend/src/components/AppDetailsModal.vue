@@ -2,7 +2,7 @@
   <div
     v-if="searchStore.isDetailsModalOpen"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-200"
-    @click.self="searchStore.isDetailsModalOpen = false"
+    @click.self="closeModal"
   >
     <div
       v-if="app"
@@ -51,7 +51,7 @@
           <button
             type="button"
             class="p-2 rounded-xl text-[#7D8592] hover:text-white hover:bg-white/[0.08] transition duration-150"
-            @click="searchStore.isDetailsModalOpen = false"
+            @click="closeModal"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -64,15 +64,30 @@
       <div class="p-6 overflow-y-auto space-y-6 flex-1">
         <!-- Screenshots Lightbox Gallery -->
         <div v-if="screenshots.length > 0" class="space-y-2">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.screenshots }}</h3>
-          <div class="flex space-x-3 overflow-x-auto pb-2 pt-1">
-            <img
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.screenshots }}</h3>
+            <span class="text-[11px] text-[#7D8592] font-normal">Click to enlarge</span>
+          </div>
+          <div class="flex space-x-3 overflow-x-auto pb-3 pt-1">
+            <div
               v-for="(img, idx) in screenshots"
               :key="idx"
-              :src="img"
-              class="h-64 rounded-[14px] object-cover bg-[#171A21] border border-white/[0.12] shadow-md hover:scale-[1.02] transition-transform duration-200 cursor-pointer"
-              loading="lazy"
-            />
+              class="group relative rounded-[14px] overflow-hidden border border-white/[0.12] shadow-md hover:border-[#0A84FF]/60 transition-all duration-200 cursor-pointer shrink-0"
+              @click="openLightbox(idx)"
+            >
+              <img
+                :src="img"
+                class="h-64 object-cover bg-[#171A21] group-hover:scale-[1.03] transition-transform duration-200"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-150 backdrop-blur-[2px]">
+                <div class="p-2 rounded-full bg-white/20 text-white border border-white/30 shadow-lg">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -132,11 +147,70 @@
         </div>
       </div>
     </div>
+
+    <!-- Fullscreen HD Screenshot Lightbox Viewer -->
+    <div
+      v-if="isLightboxOpen"
+      class="fixed inset-0 z-60 flex items-center justify-center p-6 bg-black/85 backdrop-blur-[40px] animate-modal"
+      @click.self="closeLightbox"
+    >
+      <!-- Close Button -->
+      <button
+        type="button"
+        class="absolute top-6 right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xl transition duration-150 z-70"
+        title="Close Preview (Esc)"
+        @click="closeLightbox"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Previous Button -->
+      <button
+        v-if="screenshots.length > 1"
+        type="button"
+        class="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/25 text-white border border-white/20 shadow-xl transition duration-150 z-70"
+        title="Previous Screenshot (←)"
+        @click.stop="prevScreenshot"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- Active Screenshot Display -->
+      <div class="relative max-w-5xl max-h-[85vh] flex flex-col items-center justify-center">
+        <img
+          :src="screenshots[activeScreenshotIndex]"
+          :alt="`Screenshot ${activeScreenshotIndex + 1}`"
+          class="max-h-[80vh] max-w-full rounded-[20px] object-contain shadow-[0_24px_64px_rgba(0,0,0,0.6)] border border-white/[0.18]"
+        />
+
+        <!-- Image Counter Capsule -->
+        <div class="mt-4 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-xs font-mono text-white shadow-md">
+          {{ activeScreenshotIndex + 1 }} / {{ screenshots.length }}
+        </div>
+      </div>
+
+      <!-- Next Button -->
+      <button
+        v-if="screenshots.length > 1"
+        type="button"
+        class="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/25 text-white border border-white/20 shadow-xl transition duration-150 z-70"
+        title="Next Screenshot (→)"
+        @click.stop="nextScreenshot"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSearchStore } from '../stores/search'
 import { useDownloadsStore } from '../stores/downloads'
 import { useI18n } from '../i18n'
@@ -147,6 +221,9 @@ const downloadsStore = useDownloadsStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 
+const isLightboxOpen = ref(false)
+const activeScreenshotIndex = ref(0)
+
 const app = computed(() => searchStore.selectedApp?.metadata)
 
 const screenshots = computed(() => {
@@ -155,6 +232,54 @@ const screenshots = computed(() => {
     ? app.value.screenshots
     : app.value.ipadScreenshots || []
 })
+
+function openLightbox(idx: number) {
+  activeScreenshotIndex.value = idx
+  isLightboxOpen.value = true
+}
+
+function closeLightbox() {
+  isLightboxOpen.value = false
+}
+
+function prevScreenshot() {
+  if (screenshots.value.length === 0) return
+  activeScreenshotIndex.value =
+    (activeScreenshotIndex.value - 1 + screenshots.value.length) % screenshots.value.length
+}
+
+function nextScreenshot() {
+  if (screenshots.value.length === 0) return
+  activeScreenshotIndex.value =
+    (activeScreenshotIndex.value + 1) % screenshots.value.length
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (!isLightboxOpen.value) return
+  if (e.key === 'ArrowLeft') {
+    prevScreenshot()
+  } else if (e.key === 'ArrowRight') {
+    nextScreenshot()
+  } else if (e.key === 'Escape') {
+    closeLightbox()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
+
+function closeModal() {
+  if (isLightboxOpen.value) {
+    closeLightbox()
+    return
+  }
+  searchStore.isDetailsModalOpen = false
+}
 
 function formatDate(d: string): string {
   if (!d) return '--'
