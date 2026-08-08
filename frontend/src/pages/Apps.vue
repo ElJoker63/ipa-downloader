@@ -220,23 +220,50 @@
       v-if="deviceStore.isInstalling || deviceStore.installProgress"
       class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
     >
-      <div class="w-full max-w-md p-6 rounded-2xl bg-[#171A21] border border-white/10 shadow-2xl space-y-4">
+      <div class="w-full max-w-md p-6 rounded-2xl bg-[#171A21] border border-white/10 shadow-2xl space-y-4 relative">
+        <!-- Header -->
         <div class="flex items-center justify-between">
           <h3 class="text-base font-semibold text-white flex items-center space-x-2">
-            <svg class="w-5 h-5 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            <svg
+              class="w-5 h-5"
+              :class="deviceStore.installError ? 'text-red-400' : deviceStore.installProgress?.phase === 'Complete' ? 'text-[#30D158]' : 'text-[#0A84FF]'"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path v-if="deviceStore.installError" stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <path v-else-if="deviceStore.installProgress?.phase === 'Complete'" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path v-else stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            <span>Installing Application</span>
+            <span>
+              {{ deviceStore.installError ? 'Installation Failed' : deviceStore.installProgress?.phase === 'Complete' ? 'Installation Complete' : 'Installing Application' }}
+            </span>
           </h3>
-          <span class="text-xs font-mono text-[#0A84FF] font-bold">
-            {{ deviceStore.installProgress?.percent || 0 }}%
-          </span>
+
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono font-bold" :class="deviceStore.installError ? 'text-red-400' : 'text-[#0A84FF]'">
+              {{ deviceStore.installProgress?.percent || 0 }}%
+            </span>
+
+            <!-- Close 'X' Button -->
+            <button
+              @click="deviceStore.closeInstallModal()"
+              class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#8E8E93] hover:text-white transition"
+              title="Close modal"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Progress Bar -->
         <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
           <div
-            class="bg-[#0A84FF] h-full rounded-full transition-all duration-300"
+            class="h-full rounded-full transition-all duration-300"
+            :class="deviceStore.installError ? 'bg-red-500' : deviceStore.installProgress?.phase === 'Complete' ? 'bg-[#30D158]' : 'bg-[#0A84FF]'"
             :style="{ width: `${deviceStore.installProgress?.percent || 0}%` }"
           ></div>
         </div>
@@ -248,8 +275,19 @@
         </div>
 
         <!-- Error Alert if Failed -->
-        <div v-if="deviceStore.installError" class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-300">
-          {{ deviceStore.installError }}
+        <div v-if="deviceStore.installError" class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-300 space-y-1">
+          <div class="font-semibold text-red-400">Error details:</div>
+          <div>{{ deviceStore.installError }}</div>
+        </div>
+
+        <!-- Bottom Actions (Dismiss / Confirm Button) -->
+        <div v-if="deviceStore.installError || deviceStore.installProgress?.phase === 'Complete' || !deviceStore.isInstalling" class="pt-2 flex justify-end">
+          <button
+            @click="deviceStore.closeInstallModal()"
+            class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

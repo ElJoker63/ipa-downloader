@@ -73,15 +73,22 @@ export const useDeviceStore = defineStore('device', () => {
     } catch (err: any) {
       installError.value = err?.message || String(err)
       installProgress.value = { phase: 'Failed', percent: 0, message: installError.value || 'Installation failed' }
+      isInstalling.value = false
       throw err
     } finally {
-      setTimeout(() => {
-        if (!installError.value) {
+      if (!installError.value) {
+        setTimeout(() => {
           isInstalling.value = false
           installProgress.value = null
-        }
-      }, 3000)
+        }, 2000)
+      }
     }
+  }
+
+  function closeInstallModal() {
+    isInstalling.value = false
+    installProgress.value = null
+    installError.value = null
   }
 
   async function uninstallApp(bundleId: string) {
@@ -135,6 +142,7 @@ export const useDeviceStore = defineStore('device', () => {
     pairDevice,
     installIPA,
     uninstallApp,
+    closeInstallModal,
     initListeners,
   }
 })
