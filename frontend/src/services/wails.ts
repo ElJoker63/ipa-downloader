@@ -12,7 +12,10 @@ import type {
   IPAInfo,
   DeviceInstallProgress,
   UpdateInfo,
+  Firmware,
+  AppleHardware,
 } from '../types'
+
 
 import * as AppService from '../../wailsjs/go/services/AppService'
 import * as WailsRuntime from '../../wailsjs/runtime/runtime'
@@ -304,7 +307,29 @@ export const WailsService = {
     return await AppService.SelectIPAFile()
   },
 
+  // Firmware Management
+  async getAppleDevices(): Promise<AppleHardware[]> {
+    try {
+      return (await AppService.GetAppleDevices()) as AppleHardware[]
+    } catch {
+      return []
+    }
+  },
+
+  async getDeviceFirmwares(identifier: string): Promise<AppleHardware | null> {
+    try {
+      return (await AppService.GetDeviceFirmwares(identifier)) as AppleHardware
+    } catch {
+      return null
+    }
+  },
+
+  async downloadFirmware(deviceName: string, fw: Firmware): Promise<DownloadTask> {
+    return (await AppService.DownloadFirmware(deviceName, fw as any)) as DownloadTask
+  },
+
   // Window Controls
+
   minimizeWindow() {
     try {
       WailsRuntime.WindowMinimise()

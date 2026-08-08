@@ -100,6 +100,8 @@ func (s *sqliteStorage) initSchema() error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS downloads (
 		id TEXT PRIMARY KEY,
+		type TEXT DEFAULT 'app',
+		url TEXT,
 		app_id INTEGER NOT NULL,
 		bundle_id TEXT NOT NULL,
 		app_name TEXT NOT NULL,
@@ -168,8 +170,17 @@ func (s *sqliteStorage) initSchema() error {
 	`
 
 	_, err := s.db.Exec(schema)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Migrations for existing tables
+	_, _ = s.db.Exec("ALTER TABLE downloads ADD COLUMN type TEXT DEFAULT 'app'")
+	_, _ = s.db.Exec("ALTER TABLE downloads ADD COLUMN url TEXT")
+
+	return nil
 }
+
 
 // ----------------- Downloads -----------------
 
@@ -179,11 +190,11 @@ func (s *sqliteStorage) SaveDownload(task models.DownloadTask) error {
 
 	query := `
 	INSERT INTO downloads (
-		id, app_id, bundle_id, app_name, developer, version, artwork_url,
+		id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 		destination_path, status, total_bytes, downloaded_bytes, progress,
 		speed_bytes, eta_seconds, external_version_id, platform, error,
 		created_at, updated_at, completed_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	ON CONFLICT(id) DO UPDATE SET
 		status = excluded.status,
 		total_bytes = excluded.total_bytes,
@@ -198,7 +209,7 @@ func (s *sqliteStorage) SaveDownload(task models.DownloadTask) error {
 
 	_, err := s.db.Exec(
 		query,
-		task.ID, task.AppID, task.BundleID, task.AppName, task.Developer, task.Version, task.ArtworkURL,
+		task.ID, task.Type, task.URL, task.AppID, task.BundleID, task.AppName, task.Developer, task.Version, task.ArtworkURL,
 		task.DestinationPath, string(task.Status), task.TotalBytes, task.DownloadedBytes, task.Progress,
 		task.SpeedBytesPerSec, task.ETASeconds, task.ExternalVersionID, task.Platform, task.Error,
 		task.CreatedAt, task.UpdatedAt, task.CompletedAt,
@@ -239,7 +250,7 @@ func (s *sqliteStorage) GetDownload(id string) (*models.DownloadTask, error) {
 	defer s.mu.RUnlock()
 
 	query := `
-	SELECT id, app_id, bundle_id, app_name, developer, version, artwork_url,
+	SELECT id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 	       destination_path, status, total_bytes, downloaded_bytes, progress,
 	       speed_bytes, eta_seconds, external_version_id, platform, error,
 	       created_at, updated_at, completed_at
@@ -255,7 +266,7 @@ func (s *sqliteStorage) GetAllDownloads() ([]models.DownloadTask, error) {
 	defer s.mu.RUnlock()
 
 	query := `
-	SELECT id, app_id, bundle_id, app_name, developer, version, artwork_url,
+	SELECT id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 	       destination_path, status, total_bytes, downloaded_bytes, progress,
 	       speed_bytes, eta_seconds, external_version_id, platform, error,
 	       created_at, updated_at, completed_at
@@ -285,7 +296,7 @@ func (s *sqliteStorage) GetActiveDownloads() ([]models.DownloadTask, error) {
 	defer s.mu.RUnlock()
 
 	query := `
-	SELECT id, app_id, bundle_id, app_name, developer, version, artwork_url,
+	SELECT id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 	       destination_path, status, total_bytes, downloaded_bytes, progress,
 	       speed_bytes, eta_seconds, external_version_id, platform, error,
 	       created_at, updated_at, completed_at
@@ -329,11 +340,11 @@ func (s *sqliteStorage) ClearCompletedDownloads() error {
 func (s *sqliteStorage) scanDownload(row *sql.Row) (*models.DownloadTask, error) {
 	var task models.DownloadTask
 	var status string
-	var externalVersionID, errStr sql.NullString
+	var externalVersionID, errStr, url, dType sql.NullString
 	var completedAt sql.NullTime
 
 	err := row.Scan(
-		&task.ID, &task.AppID, &task.BundleID, &task.AppName, &task.Developer, &task.Version, &task.ArtworkURL,
+		&task.ID, &dType, &url, &task.AppID, &task.BundleID, &task.AppName, &task.Developer, &task.Version, &task.ArtworkURL,
 		&task.DestinationPath, &status, &task.TotalBytes, &task.DownloadedBytes, &task.Progress,
 		&task.SpeedBytesPerSec, &task.ETASeconds, &externalVersionID, &task.Platform, &errStr,
 		&task.CreatedAt, &task.UpdatedAt, &completedAt,
@@ -343,6 +354,12 @@ func (s *sqliteStorage) scanDownload(row *sql.Row) (*models.DownloadTask, error)
 	}
 
 	task.Status = models.DownloadStatus(status)
+	if dType.Valid {
+		task.Type = dType.String
+	}
+	if url.Valid {
+		task.URL = url.String
+	}
 	if externalVersionID.Valid {
 		task.ExternalVersionID = externalVersionID.String
 	}
@@ -359,11 +376,11 @@ func (s *sqliteStorage) scanDownload(row *sql.Row) (*models.DownloadTask, error)
 func (s *sqliteStorage) scanDownloadRows(rows *sql.Rows) (*models.DownloadTask, error) {
 	var task models.DownloadTask
 	var status string
-	var externalVersionID, errStr sql.NullString
+	var externalVersionID, errStr, url, dType sql.NullString
 	var completedAt sql.NullTime
 
 	err := rows.Scan(
-		&task.ID, &task.AppID, &task.BundleID, &task.AppName, &task.Developer, &task.Version, &task.ArtworkURL,
+		&task.ID, &dType, &url, &task.AppID, &task.BundleID, &task.AppName, &task.Developer, &task.Version, &task.ArtworkURL,
 		&task.DestinationPath, &status, &task.TotalBytes, &task.DownloadedBytes, &task.Progress,
 		&task.SpeedBytesPerSec, &task.ETASeconds, &externalVersionID, &task.Platform, &errStr,
 		&task.CreatedAt, &task.UpdatedAt, &completedAt,
@@ -373,6 +390,12 @@ func (s *sqliteStorage) scanDownloadRows(rows *sql.Rows) (*models.DownloadTask, 
 	}
 
 	task.Status = models.DownloadStatus(status)
+	if dType.Valid {
+		task.Type = dType.String
+	}
+	if url.Valid {
+		task.URL = url.String
+	}
 	if externalVersionID.Valid {
 		task.ExternalVersionID = externalVersionID.String
 	}

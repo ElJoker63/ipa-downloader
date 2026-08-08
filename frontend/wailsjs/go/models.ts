@@ -250,6 +250,8 @@ export namespace models {
 	}
 	export class DownloadTask {
 	    id: string;
+	    type: string;
+	    url?: string;
 	    appId: number;
 	    bundleId: string;
 	    appName: string;
@@ -282,6 +284,8 @@ export namespace models {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
+	        this.type = source["type"];
+	        this.url = source["url"];
 	        this.appId = source["appId"];
 	        this.bundleId = source["bundleId"];
 	        this.appName = source["appName"];

@@ -45,8 +45,11 @@ export type DownloadStatus = 'queued' | 'downloading' | 'paused' | 'completed' |
 
 export interface DownloadTask {
   id: string
+  type: 'app' | 'firmware'
+  url?: string
   appId: number
   bundleId: string
+
   appName: string
   developer: string
   version: string
@@ -190,3 +193,24 @@ export interface DeviceInstallProgress {
   percent: number
   message: string
 }
+
+export interface Firmware {
+  version: string
+  buildid: string
+  sha1sum: string
+  md5sum: string
+  size: number
+  releasedate: string
+  uploaddate: string
+  url: string
+  signed: boolean
+  filename: string
+}
+
+export interface AppleHardware {
+  identifier: string
+  name: string
+  platform: string
+  firmwares?: Firmware[]
+}
+

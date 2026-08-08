@@ -72,6 +72,8 @@ const (
 // DownloadTask represents an active or historical download item.
 type DownloadTask struct {
 	ID                string         `json:"id"`
+	Type              string         `json:"type"` // "app", "firmware"
+	URL               string         `json:"url,omitempty"`
 	AppID             int64          `json:"appId"`
 	BundleID          string         `json:"bundleId"`
 	AppName           string         `json:"appName"`
@@ -94,6 +96,7 @@ type DownloadTask struct {
 	UpdatedAt         time.Time      `json:"updatedAt"`
 	CompletedAt       *time.Time     `json:"completedAt,omitempty"`
 }
+
 
 // FavoriteApp represents an app bookmarked by the user.
 type FavoriteApp struct {
@@ -227,4 +230,27 @@ type UpdateInfo struct {
 	DownloadURL    string `json:"downloadUrl"`
 	Mandatory      bool   `json:"mandatory"`
 }
+
+// Firmware represents an Apple device firmware (IPSW).
+type Firmware struct {
+	Version      string `json:"version"`
+	BuildID      string `json:"buildid"`
+	SHA1         string `json:"sha1sum"`
+	MD5          string `json:"md5sum"`
+	Size         int64  `json:"size"`
+	ReleaseDate  string `json:"releasedate"`
+	UploadDate   string `json:"uploaddate"`
+	URL          string `json:"url"`
+	IsSigned     bool   `json:"signed"`
+	Filename     string `json:"filename"`
+}
+
+// AppleHardware represents an Apple hardware model from IPSW.me.
+type AppleHardware struct {
+	Identifier string     `json:"identifier"`
+	Name       string     `json:"name"`
+	Platform   string     `json:"platform"`
+	Firmwares  []Firmware `json:"firmwares,omitempty"`
+}
+
 

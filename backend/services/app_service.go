@@ -11,8 +11,10 @@ import (
 	"github.com/ElJoker63/ipa-downloader/v2/backend/device"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/download"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/events"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/firmware"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/library"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
+
 	"github.com/ElJoker63/ipa-downloader/v2/backend/search"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/storage"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/update"
@@ -31,6 +33,7 @@ type AppService struct {
 	configService   config.ConfigService
 	deviceService   device.DeviceService
 	updateService   update.UpdateService
+	firmwareService firmware.FirmwareService
 }
 
 // NewAppService instantiates all sub-services and builds the service layer.
@@ -61,6 +64,7 @@ func NewAppService(dataDir string) (*AppService, error) {
 	configService := config.NewConfigService(store, emitter)
 	deviceService := device.NewDeviceService(emitter)
 	updateService := update.NewUpdateService(emitter)
+	firmwareService := firmware.NewFirmwareService(emitter)
 
 	return &AppService{
 		storage:         store,
@@ -73,8 +77,10 @@ func NewAppService(dataDir string) (*AppService, error) {
 		configService:   configService,
 		deviceService:   deviceService,
 		updateService:   updateService,
+		firmwareService: firmwareService,
 	}, nil
 }
+
 
 // SetContext is called by the Wails lifecycle upon startup.
 func (s *AppService) SetContext(ctx context.Context) {
@@ -341,3 +347,18 @@ func (s *AppService) CheckForUpdate() (*models.UpdateInfo, error) {
 func (s *AppService) ApplyUpdate(downloadURL string) error {
 	return s.updateService.ApplyUpdate(downloadURL)
 }
+
+// ----------------- Firmware Bindings -----------------
+
+func (s *AppService) GetAppleDevices() ([]models.AppleHardware, error) {
+	return s.firmwareService.GetDevices()
+}
+
+func (s *AppService) GetDeviceFirmwares(identifier string) (*models.AppleHardware, error) {
+	return s.firmwareService.GetDeviceDetails(identifier)
+}
+
+func (s *AppService) DownloadFirmware(deviceName string, fw models.Firmware) (*models.DownloadTask, error) {
+	return s.downloadManager.QueueFirmwareDownload(deviceName, fw)
+}
+

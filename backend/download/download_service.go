@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,6 +24,7 @@ type DownloadManager interface {
 	Start()
 	Stop()
 	QueueDownload(app models.AppMetadata, platform string, externalVersionID string, customOutputPath string) (*models.DownloadTask, error)
+	QueueFirmwareDownload(deviceName string, fw models.Firmware) (*models.DownloadTask, error)
 	PauseDownload(id string) error
 	ResumeDownload(id string) error
 	CancelDownload(id string) error
@@ -62,7 +64,7 @@ func NewDownloadManager(client apple.Client, store storage.Storage, emitter even
 		appleClient: client,
 		storage:     store,
 		emitter:     emitter,
-		httpClient:  &http.Client{Timeout: 0}, // No timeout for large chunked downloads
+		httpClient:  &http.Client{Timeout: 0}, // No timeout for large downloads
 		queueChan:   make(chan string, 100),
 		handles:     make(map[string]*downloadTaskHandle),
 		maxWorkers:  maxWorkers,
@@ -115,6 +117,7 @@ func (m *downloadManager) QueueDownload(app models.AppMetadata, platform string,
 
 	task := models.DownloadTask{
 		ID:                taskID,
+		Type:              "app",
 		AppID:             app.ID,
 		BundleID:          app.BundleID,
 		AppName:           app.Name,
@@ -137,6 +140,48 @@ func (m *downloadManager) QueueDownload(app models.AppMetadata, platform string,
 	}
 
 	m.emitter.EmitLog("INFO", fmt.Sprintf("Queued download for %s (%s)", app.Name, app.BundleID), "DownloadManager")
+	m.emitter.Emit(events.EventDownloadStatus, task)
+
+	m.queueChan <- taskID
+	return &task, nil
+}
+
+func (m *downloadManager) QueueFirmwareDownload(deviceName string, fw models.Firmware) (*models.DownloadTask, error) {
+	settings, err := m.storage.GetSettings()
+	destFolder := ""
+	if err == nil && settings != nil {
+		destFolder = settings.DefaultDownloadFolder
+	}
+	if destFolder == "" {
+		home, _ := os.UserHomeDir()
+		destFolder = filepath.Join(home, "Downloads")
+	}
+
+	destPath := filepath.Join(destFolder, fw.Filename)
+	taskID := fmt.Sprintf("fw-%s-%d", fw.BuildID, time.Now().UnixNano())
+	now := time.Now()
+
+	task := models.DownloadTask{
+		ID:              taskID,
+		Type:            "firmware",
+		URL:             fw.URL,
+		AppName:         fmt.Sprintf("%s Firmware", deviceName),
+		Version:         fw.Version,
+		ArtworkURL:      "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png",
+		DestinationPath: destPath,
+		Status:          models.DownloadStatusQueued,
+		TotalBytes:      fw.Size,
+		DownloadedBytes: 0,
+		Progress:        0.0,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+
+	if err := m.storage.SaveDownload(task); err != nil {
+		return nil, err
+	}
+
+	m.emitter.EmitLog("INFO", fmt.Sprintf("Queued firmware download: %s", fw.Filename), "DownloadManager")
 	m.emitter.Emit(events.EventDownloadStatus, task)
 
 	m.queueChan <- taskID
@@ -284,8 +329,12 @@ func (m *downloadManager) processDownload(taskID string) {
 	m.emitter.EmitLog("INFO", fmt.Sprintf("Starting download for %s...", task.AppName), "DownloadManager")
 	m.emitter.Emit(events.EventDownloadStatus, task)
 
-	// Execute download pipeline with retry & license acquisition
-	err = m.executeDownload(ctx, task)
+	if task.Type == "firmware" {
+		err = m.executeFirmwareDownload(ctx, task)
+	} else {
+		err = m.executeAppDownload(ctx, task)
+	}
+
 	if err != nil {
 		if errors.Is(ctx.Err(), context.Canceled) {
 			m.emitter.EmitLog("INFO", fmt.Sprintf("Download stopped: %s", task.AppName), "DownloadManager")
@@ -316,10 +365,9 @@ func (m *downloadManager) processDownload(taskID string) {
 	m.emitter.EmitNotification("Download Complete", fmt.Sprintf("%s is ready!", task.AppName), "success")
 }
 
-func (m *downloadManager) executeDownload(ctx context.Context, task *models.DownloadTask) error {
+func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.DownloadTask) error {
 	appstoreCore := m.appleClient.GetAppStore()
 
-	// 1. Get Account
 	accInfo, err := appstoreCore.AccountInfo()
 	if err != nil {
 		return fmt.Errorf("account not authenticated: %w", err)
@@ -332,13 +380,11 @@ func (m *downloadManager) executeDownload(ctx context.Context, task *models.Down
 		Version:  task.Version,
 	}
 
-	// 2. Lookup platform
 	platform, err := appstore.ParsePlatform(task.Platform)
 	if err != nil {
 		platform = appstore.PlatformIPhone
 	}
 
-	// 3. Purchase license if needed
 	settings, _ := m.storage.GetSettings()
 	if settings == nil || settings.AutoAcquireLicense {
 		_ = appstoreCore.Purchase(appstore.PurchaseInput{
@@ -347,14 +393,10 @@ func (m *downloadManager) executeDownload(ctx context.Context, task *models.Down
 		})
 	}
 
-	// 4. Ensure destination directory exists
 	dir := filepath.Dir(task.DestinationPath)
 	_ = os.MkdirAll(dir, 0755)
 
-	tmpPath := task.DestinationPath + ".tmp"
-
-	// 5. Download with chunked streaming and live progress
-	out, err := m.streamDownload(ctx, appstoreCore, accInfo.Account, app, task, tmpPath, platform)
+	out, err := m.streamAppDownload(ctx, appstoreCore, accInfo.Account, app, task, platform)
 	if err != nil {
 		if errors.Is(err, appstore.ErrLicenseRequired) {
 			m.emitter.EmitLog("INFO", fmt.Sprintf("Acquiring free license for %s...", task.AppName), "DownloadManager")
@@ -362,15 +404,13 @@ func (m *downloadManager) executeDownload(ctx context.Context, task *models.Down
 				Account: accInfo.Account,
 				App:     app,
 			})
-			// Retry once after acquiring license
-			out, err = m.streamDownload(ctx, appstoreCore, accInfo.Account, app, task, tmpPath, platform)
+			out, err = m.streamAppDownload(ctx, appstoreCore, accInfo.Account, app, task, platform)
 		}
 		if err != nil {
 			return err
 		}
 	}
 
-	// 6. Transition to signing state and show the user what is happening
 	task.Status = models.DownloadStatusSigning
 	task.Progress = 100.0
 	task.SpeedBytesPerSec = 0
@@ -379,10 +419,8 @@ func (m *downloadManager) executeDownload(ctx context.Context, task *models.Down
 	task.FormattedETA = "Finalizing .ipa..."
 	_ = m.storage.UpdateDownloadProgress(task.ID, models.DownloadStatusSigning, task.TotalBytes, task.TotalBytes, 100.0, 0, 0, "")
 	m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Download stream complete (100%%). Starting FairPlay SINF signing process...", task.AppName), "DownloadManager")
-	m.emitter.Emit(events.EventDownloadStatus, task)
 	m.emitter.EmitDownloadProgress(*task)
 
-	// Replicate SINF signatures into package
 	if len(out.Sinfs) > 0 {
 		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Injecting %d FairPlay SINF DRM signature(s) into final .ipa package...", task.AppName, len(out.Sinfs)), "DownloadManager")
 		err = appstoreCore.ReplicateSinf(appstore.ReplicateSinfInput{
@@ -394,19 +432,109 @@ func (m *downloadManager) executeDownload(ctx context.Context, task *models.Down
 		} else {
 			m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] FairPlay SINF signatures successfully injected into %s", task.AppName, filepath.Base(task.DestinationPath)), "DownloadManager")
 		}
-	} else {
-		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Package finalized (no additional SINF required)", task.AppName), "DownloadManager")
 	}
 
 	return nil
 }
 
-func (m *downloadManager) streamDownload(ctx context.Context, store appstore.AppStore, acc appstore.Account, app appstore.App, task *models.DownloadTask, tmpPath string, platform appstore.Platform) (appstore.DownloadOutput, error) {
-	startTime := time.Now()
+func (m *downloadManager) executeFirmwareDownload(ctx context.Context, task *models.DownloadTask) error {
+	dir := filepath.Dir(task.DestinationPath)
+	_ = os.MkdirAll(dir, 0755)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", task.URL, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := m.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("server returned status %d", resp.StatusCode)
+	}
+
+	tmpPath := task.DestinationPath + ".tmp"
+	out, err := os.Create(tmpPath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
 	lastUpdateTime := time.Now()
 	var lastBytes int64 = 0
 	var smoothedSpeed float64 = 0
-	var lastLoggedPercent int = 0
+	var downloaded int64 = 0
+	total := resp.ContentLength
+	if total <= 0 {
+		total = task.TotalBytes
+	}
+
+	buffer := make([]byte, 64*1024)
+	for {
+		n, err := resp.Body.Read(buffer)
+		if n > 0 {
+			_, writeErr := out.Write(buffer[:n])
+			if writeErr != nil {
+				return writeErr
+			}
+			downloaded += int64(n)
+
+			// Progress update
+			now := time.Now()
+			elapsed := now.Sub(lastUpdateTime).Seconds()
+			if elapsed >= 0.2 || downloaded == total {
+				deltaBytes := downloaded - lastBytes
+				if elapsed > 0 {
+					instantSpeed := float64(deltaBytes) / elapsed
+					if smoothedSpeed == 0 {
+						smoothedSpeed = instantSpeed
+					} else {
+						smoothedSpeed = 0.2*instantSpeed + 0.8*smoothedSpeed
+					}
+				}
+
+				speedBps := int64(smoothedSpeed)
+				var etaSec int64 = 0
+				if speedBps > 0 && total > downloaded {
+					etaSec = (total - downloaded) / speedBps
+				}
+
+				percent := (float64(downloaded) / float64(total)) * 100.0
+				task.DownloadedBytes = downloaded
+				task.TotalBytes = total
+				task.Progress = percent
+				task.SpeedBytesPerSec = speedBps
+				task.FormattedSpeed = formatSpeed(speedBps)
+				task.ETASeconds = etaSec
+				task.FormattedETA = formatETA(etaSec)
+
+				_ = m.storage.UpdateDownloadProgress(task.ID, models.DownloadStatusDownloading, downloaded, total, percent, speedBps, etaSec, "")
+				m.emitter.EmitDownloadProgress(*task)
+
+				lastUpdateTime = now
+				lastBytes = downloaded
+			}
+		}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+	}
+
+	out.Close()
+	_ = os.Remove(task.DestinationPath)
+	return os.Rename(tmpPath, task.DestinationPath)
+}
+
+func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.AppStore, acc appstore.Account, app appstore.App, task *models.DownloadTask, platform appstore.Platform) (appstore.DownloadOutput, error) {
+	lastUpdateTime := time.Now()
+	var lastBytes int64 = 0
+	var smoothedSpeed float64 = 0
 
 	progressCallback := func(downloadedBytes int64, totalBytes int64) {
 		now := time.Now()
@@ -415,13 +543,9 @@ func (m *downloadManager) streamDownload(ctx context.Context, store appstore.App
 		var percent float64 = 0
 		if totalBytes > 0 {
 			percent = (float64(downloadedBytes) / float64(totalBytes)) * 100.0
-			if percent > 100.0 {
-				percent = 100.0
-			}
 		}
 
-		// Calculate speed with exponential moving average
-		if elapsed >= 0.15 || downloadedBytes == totalBytes {
+		if elapsed >= 0.2 || downloadedBytes == totalBytes {
 			deltaBytes := downloadedBytes - lastBytes
 			if elapsed > 0 {
 				instantSpeed := float64(deltaBytes) / elapsed
@@ -446,50 +570,22 @@ func (m *downloadManager) streamDownload(ctx context.Context, store appstore.App
 			task.ETASeconds = etaSec
 			task.FormattedETA = formatETA(etaSec)
 
-			// Update in SQLite
 			_ = m.storage.UpdateDownloadProgress(task.ID, models.DownloadStatusDownloading, downloadedBytes, totalBytes, percent, speedBps, etaSec, "")
-
-			// Emit live progress to Wails UI
 			m.emitter.EmitDownloadProgress(*task)
 
 			lastUpdateTime = now
 			lastBytes = downloadedBytes
-
-			// Emit milestone logs (25%, 50%, 75%)
-			intPercent := int(percent)
-			if intPercent >= 25 && lastLoggedPercent < 25 {
-				lastLoggedPercent = 25
-				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] 25%% downloaded (%s)", task.AppName, formatSpeed(speedBps)), "DownloadManager")
-			} else if intPercent >= 50 && lastLoggedPercent < 50 {
-				lastLoggedPercent = 50
-				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] 50%% downloaded (%s)", task.AppName, formatSpeed(speedBps)), "DownloadManager")
-			} else if intPercent >= 75 && lastLoggedPercent < 75 {
-				lastLoggedPercent = 75
-				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] 75%% downloaded (%s)", task.AppName, formatSpeed(speedBps)), "DownloadManager")
-			}
 		}
 	}
 
-	out, err := store.Download(appstore.DownloadInput{
+	return store.Download(appstore.DownloadInput{
 		Account:           acc,
 		App:               app,
 		OutputPath:        task.DestinationPath,
 		ExternalVersionID: task.ExternalVersionID,
 		Platform:          platform,
-		Progress:          nil,
 		ProgressCallback:  progressCallback,
 	})
-	if err != nil {
-		return out, err
-	}
-
-	duration := time.Since(startTime).Seconds()
-	if duration > 0 && task.TotalBytes > 0 {
-		avgSpeed := int64(float64(task.TotalBytes) / duration)
-		m.emitter.EmitLog("INFO", fmt.Sprintf("Download finished for %s (Average speed: %s)", task.AppName, formatSpeed(avgSpeed)), "DownloadManager")
-	}
-
-	return out, nil
 }
 
 func sanitizeFilename(name string) string {
