@@ -67,9 +67,7 @@
         <!-- Logged In Card -->
         <div v-if="authStore.isLoggedIn" class="glass-panel p-6 rounded-2xl border border-white/10 space-y-6">
           <div class="flex items-center space-x-4">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-2xl font-extrabold text-white shadow-xl shadow-blue-500/25 shrink-0">
-              {{ authStore.account.name ? authStore.account.name.charAt(0).toUpperCase() : '' }}
-            </div>
+            <img src="/icon.png" alt="IPA Downloader" class="w-16 h-16 rounded-2xl object-contain bg-slate-900/80 border border-white/10 shadow-xl shadow-blue-500/25 shrink-0 p-1" />
             <div class="min-w-0 flex-1">
               <h2 class="text-xl font-extrabold text-white truncate">{{ authStore.account.name || 'Apple ID User' }}</h2>
               <div class="flex items-center gap-2 mt-1">
@@ -115,11 +113,14 @@
 
         <!-- Login Form Card -->
         <div v-else class="glass-panel p-6 rounded-2xl border border-white/10 space-y-6">
-          <div class="space-y-1">
-            <h2 class="text-lg font-bold text-white">Sign In to Apple ID</h2>
-            <p class="text-xs text-slate-400">
-              Sign in with your Apple ID credentials to download apps, acquire licenses, and replicate FairPlay SINF DRM signatures.
-            </p>
+          <div class="flex items-center space-x-3">
+            <img src="/logo.png" alt="IPA Downloader" class="w-10 h-10 object-contain rounded-xl" />
+            <div>
+              <h2 class="text-lg font-bold text-white">Sign In to Apple ID</h2>
+              <p class="text-xs text-slate-400">
+                Sign in with your Apple ID credentials to acquire licenses and download signed .ipa packages.
+              </p>
+            </div>
           </div>
 
           <form class="space-y-4" @submit.prevent="handleLogin">

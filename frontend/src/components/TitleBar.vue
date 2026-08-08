@@ -2,13 +2,7 @@
   <header class="wails-drag h-10 flex items-center justify-between px-3 border-b border-white/5 dark:border-white/5 light:border-black/5 bg-[#080C16]/85 dark:bg-[#080C16]/85 light:bg-white/85 backdrop-blur-xl select-none z-40">
     <!-- Left: App Icon & Brand -->
     <div class="flex items-center space-x-2.5">
-      <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-      </div>
+      <img src="/icon.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-md shrink-0" />
       <span class="text-xs font-extrabold tracking-tight text-white dark:text-white light:text-slate-900 font-sans">IPA Downloader</span>
       <span class="px-1.5 py-0.2 text-[9px] font-mono font-bold rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">v2.0</span>
     </div>

@@ -94,9 +94,7 @@
         <div class="pt-3 border-t border-white/5 dark:border-white/5 light:border-black/5 space-y-2">
           <!-- Account Mini Card (Clean with Only User Name) -->
           <div v-if="authStore.isLoggedIn" class="p-2.5 rounded-xl bg-white/5 dark:bg-white/5 light:bg-black/5 border border-white/5 flex items-center space-x-2.5">
-            <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
-              {{ authStore.account.name ? authStore.account.name.charAt(0).toUpperCase() : '' }}
-            </div>
+            <img src="/icon.png" alt="User" class="w-7 h-7 rounded-lg object-contain shrink-0" />
             <div class="min-w-0 flex-1">
               <div class="text-xs font-bold truncate text-white dark:text-white light:text-slate-900">{{ authStore.account.name || 'Apple User' }}</div>
               <div class="text-[10px] text-emerald-400 font-medium">● Connected</div>
