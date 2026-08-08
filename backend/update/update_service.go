@@ -69,15 +69,23 @@ func (s *updateService) CheckForUpdate() (*models.UpdateInfo, error) {
 
 	// Find the correct asset for the current platform
 	downloadURL := ""
-	platform := runtime.GOOS
-	arch := runtime.GOARCH
-
-	expectedName := fmt.Sprintf("ipa-downloader-%s-%s", platform, arch)
-	if platform == "windows" {
-		expectedName += ".exe"
+	osName := runtime.GOOS
+	if osName == "darwin" {
+		osName = "macos"
 	}
 
+	// The workflow generates names like:
+	// ipa-downloader-1.0.0-windows.exe
+	// ipa-downloader-1.0.0-macos-universal.zip
+	// ipa-downloader-1.0.0-linux
+
 	for _, asset := range release.Assets {
+		name := strings.ToLower(asset.Name)
+		if strings.Contains(name, "ipa-downloader") && strings.Contains(name, latestVersion) && strings.Contains(name, osName) {
+			downloadURL = asset.BrowserDownloadURL
+			break
+		}
+	}
 		if strings.Contains(asset.Name, expectedName) {
 			downloadURL = asset.BrowserDownloadURL
 			break

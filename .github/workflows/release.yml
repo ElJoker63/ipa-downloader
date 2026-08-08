@@ -21,26 +21,10 @@ jobs:
     outputs:
       version: ${{ steps.set_output.outputs.version }}
 
-  create_release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: get_version
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.get_version.outputs.version }}
-          name: IPA Downloader v${{ needs.get_version.outputs.version }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-
   build:
     name: Build Desktop
     runs-on: ${{ matrix.os }}
-    needs: [get_version, create_release]
+    needs: get_version
     strategy:
       fail-fast: false
       matrix:
@@ -75,31 +59,34 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Build with Wails
+        shell: bash
         run: |
+          VERSION=${{ needs.get_version.outputs.version }}
           wails build -platform ${{ matrix.platform }} \
-          -ldflags "-X github.com/ElJoker63/ipa-downloader/v2/pkg/version.Version=${{ needs.get_version.outputs.version }} -X github.com/ElJoker63/ipa-downloader/v2/pkg/version.Commit=$GITHUB_SHA" \
-          -o ipa-downloader-${{ matrix.label }}${{ matrix.suffix }}
+          -ldflags "-X github.com/ElJoker63/ipa-downloader/v2/pkg/version.Version=$VERSION -X github.com/ElJoker63/ipa-downloader/v2/pkg/version.Commit=$GITHUB_SHA" \
+          -o ipa-downloader-$VERSION-${{ matrix.label }}${{ matrix.suffix }}
 
       - name: Package macOS (if universal)
         if: matrix.platform == 'darwin/universal'
+        shell: bash
         run: |
+          VERSION=${{ needs.get_version.outputs.version }}
           cd build/bin
-          # Wails on macOS creates a .app directory automatically.
-          # The -o flag might behave differently on macOS for bundles.
-          # Let's find what was actually built.
-          ls -R .
-          zip -r ipa-downloader-macos-universal.zip *.app
-
+          zip -r ipa-downloader-$VERSION-macos-universal.zip *.app
+          # Remove the directory so it doesn't get uploaded as-is
+          rm -rf *.app
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.get_version.outputs.version }}
+          name: IPA Downloader v${{ needs.get_version.outputs.version }}
           files: |
             build/bin/ipa-downloader-*
+          generate_release_notes: true
