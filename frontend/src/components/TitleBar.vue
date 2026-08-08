@@ -2,7 +2,7 @@
   <header class="wails-drag h-10 flex items-center justify-between px-3 border-b border-white/5 dark:border-white/5 light:border-black/5 bg-[#080C16]/85 dark:bg-[#080C16]/85 light:bg-white/85 backdrop-blur-xl select-none z-40">
     <!-- Left: App Icon & Brand -->
     <div class="flex items-center space-x-2.5">
-      <img src="/icon.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-md shrink-0" />
+      <img src="/logo.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-md shrink-0" />
       <span class="text-xs font-extrabold tracking-tight text-white dark:text-white light:text-slate-900 font-sans">IPA Downloader</span>
       <span class="px-1.5 py-0.2 text-[9px] font-mono font-bold rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">v2.0</span>
     </div>

@@ -67,7 +67,7 @@
         <!-- Logged In Card -->
         <div v-if="authStore.isLoggedIn" class="glass-panel p-6 rounded-2xl border border-white/10 space-y-6">
           <div class="flex items-center space-x-4">
-            <img src="/icon.png" alt="IPA Downloader" class="w-16 h-16 rounded-2xl object-contain bg-slate-900/80 border border-white/10 shadow-xl shadow-blue-500/25 shrink-0 p-1" />
+            <img src="/logo.png" alt="IPA Downloader" class="w-16 h-16 rounded-2xl object-contain bg-slate-900/80 border border-white/10 shadow-xl shadow-blue-500/25 shrink-0 p-1.5" />
             <div class="min-w-0 flex-1">
               <h2 class="text-xl font-extrabold text-white truncate">{{ authStore.account.name || 'Apple ID User' }}</h2>
               <div class="flex items-center gap-2 mt-1">
