@@ -59,8 +59,9 @@ func NewAppService(dataDir string) (*AppService, error) {
 
 	authService := auth.NewAuthService(appleClient, store, emitter)
 	searchService := search.NewSearchService(appleClient, store, emitter)
-	downloadManager := download.NewDownloadManager(appleClient, store, emitter)
+	downloadManager := download.NewDownloadManager(appleClient, authService, store, emitter)
 	libraryService := library.NewLibraryService(store, emitter)
+
 	configService := config.NewConfigService(store, emitter)
 	deviceService := device.NewDeviceService(emitter)
 	updateService := update.NewUpdateService(emitter)
@@ -277,8 +278,10 @@ func (s *AppService) GetDownloadHistory() ([]models.DownloadTask, error) {
 }
 
 func (s *AppService) DeleteHistoryItem(id string) error {
-	return s.libraryService.DeleteHistoryItem(id)
+	s.AddLog("INFO", fmt.Sprintf("User requested removal of task: %s", id), "AppService")
+	return s.downloadManager.RemoveTask(id)
 }
+
 
 func (s *AppService) ClearDownloadHistory() error {
 	return s.libraryService.ClearHistory()

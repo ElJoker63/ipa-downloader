@@ -90,7 +90,10 @@ type DownloadTask struct {
 	ETASeconds        int64          `json:"etaSeconds"`
 	FormattedETA      string         `json:"formattedETA"`
 	ExternalVersionID string         `json:"externalVersionId,omitempty"`
+	Checksum          string         `json:"checksum,omitempty"`
+	ChecksumType      string         `json:"checksumType,omitempty"`
 	Platform          string         `json:"platform"`
+
 	Error             string         `json:"error,omitempty"`
 	CreatedAt         time.Time      `json:"createdAt"`
 	UpdatedAt         time.Time      `json:"updatedAt"`
@@ -174,7 +177,11 @@ type DeviceInfo struct {
 	ModelNumber     string `json:"modelNumber,omitempty"` // e.g., MT5W2 LL/A
 	RegionInfo      string `json:"regionInfo,omitempty"`
 	ActivationState string `json:"activationState,omitempty"`
+	BoardConfig     string `json:"boardConfig,omitempty"`
+	CPUArchitecture string `json:"cpuArchitecture,omitempty"`
+	HardwareModel   string `json:"hardwareModel,omitempty"`
 	IsJailbroken    bool   `json:"isJailbroken"`
+
 	BatteryLevel    int    `json:"batteryLevel"`
 	BatteryHealth   int    `json:"batteryHealth,omitempty"`
 	ChargeCycles    int    `json:"chargeCycles,omitempty"`

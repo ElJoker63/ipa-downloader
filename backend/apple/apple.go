@@ -32,9 +32,11 @@ type Client interface {
 	Lookup(bundleID string, platform models.Platform) (*models.AppMetadata, error)
 	Purchase(app models.AppMetadata) error
 	ListVersions(app models.AppMetadata) ([]models.VersionInfo, error)
+	GetKeychain() keychain.Keychain
 }
 
 type client struct {
+
 	appstore appstore.AppStore
 	keychain keychain.Keychain
 	machine  machine.Machine
@@ -94,6 +96,11 @@ func NewClient(passphrase string) (Client, error) {
 func (c *client) GetAppStore() appstore.AppStore {
 	return c.appstore
 }
+
+func (c *client) GetKeychain() keychain.Keychain {
+	return c.keychain
+}
+
 
 func (c *client) GetAccount() (*models.AccountProfile, error) {
 	info, err := c.appstore.AccountInfo()
@@ -301,6 +308,14 @@ func convertAppToMetadata(a appstore.App) models.AppMetadata {
 		formattedPrice = fmt.Sprintf("$%.2f", a.Price)
 	}
 
+	artwork := a.ArtworkURL512
+	if artwork == "" {
+		artwork = a.ArtworkURL100
+	}
+	if artwork == "" {
+		artwork = a.ArtworkURL60
+	}
+
 	return models.AppMetadata{
 		ID:             a.ID,
 		BundleID:       a.BundleID,
@@ -308,5 +323,7 @@ func convertAppToMetadata(a appstore.App) models.AppMetadata {
 		Version:        a.Version,
 		Price:          a.Price,
 		FormattedPrice: formattedPrice,
+		ArtworkURL:     artwork,
 	}
 }
+

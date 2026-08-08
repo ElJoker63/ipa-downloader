@@ -246,7 +246,12 @@ export interface Translations {
       modelName: string
       region: string
       activation: string
+      boardConfig: string
+      cpuArch: string
+      chipset: string
       storageTitle: string
+
+
       storageStatus: string
       batteryTitle: string
       batteryStatus: string

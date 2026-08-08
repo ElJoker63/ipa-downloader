@@ -248,7 +248,12 @@ export const es: Translations = {
       modelName: 'Nombre del Modelo',
       region: 'Región de Venta',
       activation: 'Activación',
+      boardConfig: 'Configuración de Placa',
+      cpuArch: 'Arquitectura de CPU',
+      chipset: 'Chipset',
       storageTitle: 'Capacidad de Almacenamiento',
+
+
       storageStatus: 'libre de',
       batteryTitle: 'Estado de la Batería',
       batteryStatus: 'Cargando',

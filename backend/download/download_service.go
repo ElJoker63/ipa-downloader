@@ -2,10 +2,13 @@ package download
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +16,9 @@ import (
 	"time"
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/apple"
+	"github.com/ElJoker63/ipa-downloader/v2/backend/auth"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/events"
+
 	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/storage"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/appstore"
@@ -32,7 +37,9 @@ type DownloadManager interface {
 	GetActiveDownloads() ([]models.DownloadTask, error)
 	GetAllDownloads() ([]models.DownloadTask, error)
 	ClearCompleted() error
+	RemoveTask(id string) error
 }
+
 
 type downloadTaskHandle struct {
 	task   models.DownloadTask
@@ -42,6 +49,7 @@ type downloadTaskHandle struct {
 
 type downloadManager struct {
 	appleClient apple.Client
+	authService auth.AuthService
 	storage     storage.Storage
 	emitter     events.Emitter
 	httpClient  *http.Client
@@ -53,7 +61,7 @@ type downloadManager struct {
 }
 
 // NewDownloadManager initializes the download queue and background workers.
-func NewDownloadManager(client apple.Client, store storage.Storage, emitter events.Emitter) DownloadManager {
+func NewDownloadManager(client apple.Client, auth auth.AuthService, store storage.Storage, emitter events.Emitter) DownloadManager {
 	settings, err := store.GetSettings()
 	maxWorkers := 3
 	if err == nil && settings.MaxConcurrentDownloads >= 1 && settings.MaxConcurrentDownloads <= 10 {
@@ -62,6 +70,7 @@ func NewDownloadManager(client apple.Client, store storage.Storage, emitter even
 
 	dm := &downloadManager{
 		appleClient: client,
+		authService: auth,
 		storage:     store,
 		emitter:     emitter,
 		httpClient:  &http.Client{Timeout: 0}, // No timeout for large downloads
@@ -73,6 +82,7 @@ func NewDownloadManager(client apple.Client, store storage.Storage, emitter even
 
 	return dm
 }
+
 
 func (m *downloadManager) Start() {
 	for i := 0; i < m.maxWorkers; i++ {
@@ -169,12 +179,14 @@ func (m *downloadManager) QueueFirmwareDownload(deviceName string, fw models.Fir
 		Version:         fw.Version,
 		ArtworkURL:      "/ipsw.png",
 		DestinationPath: destPath,
-
 		Status:          models.DownloadStatusQueued,
 		TotalBytes:      fw.Size,
 		DownloadedBytes: 0,
 		Progress:        0.0,
+		Checksum:        fw.SHA1,
+		ChecksumType:    "sha1",
 		CreatedAt:       now,
+
 		UpdatedAt:       now,
 	}
 
@@ -291,6 +303,19 @@ func (m *downloadManager) ClearCompleted() error {
 	return m.storage.ClearCompletedDownloads()
 }
 
+func (m *downloadManager) RemoveTask(id string) error {
+	m.mu.Lock()
+	handle, ok := m.handles[id]
+	if ok && handle.cancel != nil {
+		handle.cancel()
+		delete(m.handles, id)
+	}
+	m.mu.Unlock()
+
+	return m.storage.DeleteDownload(id)
+}
+
+
 func (m *downloadManager) worker(workerID int) {
 	for {
 		select {
@@ -337,7 +362,22 @@ func (m *downloadManager) processDownload(taskID string) {
 	}
 
 	if err != nil {
+		if errors.Is(err, appstore.ErrPasswordTokenExpired) {
+			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Session expired. Attempting silent re-authentication...", task.AppName), "DownloadManager")
+			if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
+				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Re-authenticated. Retrying operation...", task.AppName), "DownloadManager")
+				if task.Type == "firmware" {
+					err = m.executeFirmwareDownload(ctx, task)
+				} else {
+					err = m.executeAppDownload(ctx, task)
+				}
+			}
+		}
+	}
+
+	if err != nil {
 		if errors.Is(ctx.Err(), context.Canceled) {
+
 			m.emitter.EmitLog("INFO", fmt.Sprintf("Download stopped: %s", task.AppName), "DownloadManager")
 			return
 		}
@@ -388,11 +428,22 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 
 	settings, _ := m.storage.GetSettings()
 	if settings == nil || settings.AutoAcquireLicense {
-		_ = appstoreCore.Purchase(appstore.PurchaseInput{
+		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying/Acquiring free license...", task.AppName), "DownloadManager")
+		err := appstoreCore.Purchase(appstore.PurchaseInput{
 			Account: accInfo.Account,
 			App:     app,
 		})
+		if err != nil {
+			if errors.Is(err, appstore.ErrLicenseAlreadyExists) {
+				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] License already owned", task.AppName), "DownloadManager")
+			} else {
+				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Purchase warning (will attempt download anyway): %v", task.AppName, err), "DownloadManager")
+			}
+		} else {
+			m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] License successfully acquired", task.AppName), "DownloadManager")
+		}
 	}
+
 
 	dir := filepath.Dir(task.DestinationPath)
 	_ = os.MkdirAll(dir, 0755)
@@ -400,17 +451,21 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 	out, err := m.streamAppDownload(ctx, appstoreCore, accInfo.Account, app, task, platform)
 	if err != nil {
 		if errors.Is(err, appstore.ErrLicenseRequired) {
-			m.emitter.EmitLog("INFO", fmt.Sprintf("Acquiring free license for %s...", task.AppName), "DownloadManager")
+			m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] License required. Attempting to acquire free license...", task.AppName), "DownloadManager")
 			_ = appstoreCore.Purchase(appstore.PurchaseInput{
 				Account: accInfo.Account,
 				App:     app,
 			})
+			// Wait a moment for Apple servers to propagate
+			time.Sleep(2 * time.Second)
+			// Retry once
 			out, err = m.streamAppDownload(ctx, appstoreCore, accInfo.Account, app, task, platform)
 		}
 		if err != nil {
 			return err
 		}
 	}
+
 
 	task.Status = models.DownloadStatusSigning
 	task.Progress = 100.0
@@ -442,9 +497,20 @@ func (m *downloadManager) executeFirmwareDownload(ctx context.Context, task *mod
 	dir := filepath.Dir(task.DestinationPath)
 	_ = os.MkdirAll(dir, 0755)
 
+	tmpPath := task.DestinationPath + ".tmp"
+	var startByte int64 = 0
+	if fi, err := os.Stat(tmpPath); err == nil {
+		startByte = fi.Size()
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", task.URL, nil)
 	if err != nil {
 		return err
+	}
+
+	if startByte > 0 {
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", startByte))
+		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Resuming firmware download from %s...", task.AppName, formatBytes(startByte)), "DownloadManager")
 	}
 
 	resp, err := m.httpClient.Do(req)
@@ -453,23 +519,39 @@ func (m *downloadManager) executeFirmwareDownload(ctx context.Context, task *mod
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent {
+		if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
+			// File might be already complete or corrupted tmp, restart
+			_ = os.Remove(tmpPath)
+			return m.executeFirmwareDownload(ctx, task)
+		}
 		return fmt.Errorf("server returned status %d", resp.StatusCode)
 	}
 
-	tmpPath := task.DestinationPath + ".tmp"
-	out, err := os.Create(tmpPath)
+	var out *os.File
+	if resp.StatusCode == http.StatusPartialContent {
+		out, err = os.OpenFile(tmpPath, os.O_APPEND|os.O_WRONLY, 0644)
+	} else {
+		out, err = os.Create(tmpPath)
+		startByte = 0
+	}
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
+	// If we are resuming, we can't easily recalculate the hash of the existing part without re-reading it.
+	// For simplicity and speed, we will only verify integrity if we download from scratch OR we re-read the whole file at the end.
+	// I'll choose to re-read at the end for firmware safety.
+
 	lastUpdateTime := time.Now()
-	var lastBytes int64 = 0
+
+	var lastBytes int64 = startByte
+	var downloaded int64 = startByte
 	var smoothedSpeed float64 = 0
-	var downloaded int64 = 0
-	total := resp.ContentLength
-	if total <= 0 {
+
+	total := resp.ContentLength + startByte
+	if resp.ContentLength <= 0 {
 		total = task.TotalBytes
 	}
 
@@ -528,9 +610,35 @@ func (m *downloadManager) executeFirmwareDownload(ctx context.Context, task *mod
 	}
 
 	out.Close()
+
+	// Full Integrity Verification (Re-reading file)
+	if task.Checksum != "" && task.ChecksumType == "sha1" {
+		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying full file integrity (SHA1)...", task.AppName), "DownloadManager")
+
+		f, err := os.Open(tmpPath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		h := sha1.New()
+		if _, err := io.Copy(h, f); err != nil {
+			return err
+		}
+
+		actualHash := hex.EncodeToString(h.Sum(nil))
+		if strings.ToLower(actualHash) != strings.ToLower(task.Checksum) {
+			_ = os.Remove(tmpPath)
+			return fmt.Errorf("integrity verification failed: checksum mismatch (expected %s, got %s)", task.Checksum, actualHash)
+		}
+		m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] Integrity verified successfully", task.AppName), "DownloadManager")
+	}
+
 	_ = os.Remove(task.DestinationPath)
 	return os.Rename(tmpPath, task.DestinationPath)
 }
+
+
 
 func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.AppStore, acc appstore.Account, app appstore.App, task *models.DownloadTask, platform appstore.Platform) (appstore.DownloadOutput, error) {
 	lastUpdateTime := time.Now()
@@ -594,7 +702,21 @@ func sanitizeFilename(name string) string {
 	return replacer.Replace(name)
 }
 
+func formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
 func formatSpeed(bytesPerSec int64) string {
+
 	const unit = 1024
 	if bytesPerSec < unit {
 		return fmt.Sprintf("%d B/s", bytesPerSec)

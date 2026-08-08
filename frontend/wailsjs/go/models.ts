@@ -271,6 +271,9 @@ export namespace models {
 	    modelNumber?: string;
 	    regionInfo?: string;
 	    activationState?: string;
+	    boardConfig?: string;
+	    cpuArchitecture?: string;
+	    hardwareModel?: string;
 	    isJailbroken: boolean;
 	    batteryLevel: number;
 	    batteryHealth?: number;
@@ -302,6 +305,9 @@ export namespace models {
 	        this.modelNumber = source["modelNumber"];
 	        this.regionInfo = source["regionInfo"];
 	        this.activationState = source["activationState"];
+	        this.boardConfig = source["boardConfig"];
+	        this.cpuArchitecture = source["cpuArchitecture"];
+	        this.hardwareModel = source["hardwareModel"];
 	        this.isJailbroken = source["isJailbroken"];
 	        this.batteryLevel = source["batteryLevel"];
 	        this.batteryHealth = source["batteryHealth"];
@@ -334,6 +340,8 @@ export namespace models {
 	    etaSeconds: number;
 	    formattedETA: string;
 	    externalVersionId?: string;
+	    checksum?: string;
+	    checksumType?: string;
 	    platform: string;
 	    error?: string;
 	    // Go type: time
@@ -368,6 +376,8 @@ export namespace models {
 	        this.etaSeconds = source["etaSeconds"];
 	        this.formattedETA = source["formattedETA"];
 	        this.externalVersionId = source["externalVersionId"];
+	        this.checksum = source["checksum"];
+	        this.checksumType = source["checksumType"];
 	        this.platform = source["platform"];
 	        this.error = source["error"];
 	        this.createdAt = this.convertValues(source["createdAt"], null);

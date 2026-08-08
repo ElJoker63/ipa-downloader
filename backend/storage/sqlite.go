@@ -116,8 +116,11 @@ func (s *sqliteStorage) initSchema() error {
 		speed_bytes INTEGER DEFAULT 0,
 		eta_seconds INTEGER DEFAULT 0,
 		external_version_id TEXT,
+		checksum TEXT,
+		checksum_type TEXT,
 		platform TEXT DEFAULT 'ios',
 		error TEXT,
+
 		created_at TIMESTAMP NOT NULL,
 		updated_at TIMESTAMP NOT NULL,
 		completed_at TIMESTAMP
@@ -177,9 +180,12 @@ func (s *sqliteStorage) initSchema() error {
 	// Migrations for existing tables
 	_, _ = s.db.Exec("ALTER TABLE downloads ADD COLUMN type TEXT DEFAULT 'app'")
 	_, _ = s.db.Exec("ALTER TABLE downloads ADD COLUMN url TEXT")
+	_, _ = s.db.Exec("ALTER TABLE downloads ADD COLUMN checksum TEXT")
+	_, _ = s.db.Exec("ALTER TABLE downloads ADD COLUMN checksum_type TEXT")
 
 	return nil
 }
+
 
 
 // ----------------- Downloads -----------------
@@ -192,9 +198,9 @@ func (s *sqliteStorage) SaveDownload(task models.DownloadTask) error {
 	INSERT INTO downloads (
 		id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 		destination_path, status, total_bytes, downloaded_bytes, progress,
-		speed_bytes, eta_seconds, external_version_id, platform, error,
+		speed_bytes, eta_seconds, external_version_id, checksum, checksum_type, platform, error,
 		created_at, updated_at, completed_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	ON CONFLICT(id) DO UPDATE SET
 		status = excluded.status,
 		total_bytes = excluded.total_bytes,
@@ -211,9 +217,10 @@ func (s *sqliteStorage) SaveDownload(task models.DownloadTask) error {
 		query,
 		task.ID, task.Type, task.URL, task.AppID, task.BundleID, task.AppName, task.Developer, task.Version, task.ArtworkURL,
 		task.DestinationPath, string(task.Status), task.TotalBytes, task.DownloadedBytes, task.Progress,
-		task.SpeedBytesPerSec, task.ETASeconds, task.ExternalVersionID, task.Platform, task.Error,
+		task.SpeedBytesPerSec, task.ETASeconds, task.ExternalVersionID, task.Checksum, task.ChecksumType, task.Platform, task.Error,
 		task.CreatedAt, task.UpdatedAt, task.CompletedAt,
 	)
+
 	return err
 }
 
@@ -252,7 +259,7 @@ func (s *sqliteStorage) GetDownload(id string) (*models.DownloadTask, error) {
 	query := `
 	SELECT id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 	       destination_path, status, total_bytes, downloaded_bytes, progress,
-	       speed_bytes, eta_seconds, external_version_id, platform, error,
+	       speed_bytes, eta_seconds, external_version_id, checksum, checksum_type, platform, error,
 	       created_at, updated_at, completed_at
 	FROM downloads WHERE id = ?;
 	`
@@ -268,7 +275,7 @@ func (s *sqliteStorage) GetAllDownloads() ([]models.DownloadTask, error) {
 	query := `
 	SELECT id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 	       destination_path, status, total_bytes, downloaded_bytes, progress,
-	       speed_bytes, eta_seconds, external_version_id, platform, error,
+	       speed_bytes, eta_seconds, external_version_id, checksum, checksum_type, platform, error,
 	       created_at, updated_at, completed_at
 	FROM downloads ORDER BY created_at DESC;
 	`
@@ -298,7 +305,7 @@ func (s *sqliteStorage) GetActiveDownloads() ([]models.DownloadTask, error) {
 	query := `
 	SELECT id, type, url, app_id, bundle_id, app_name, developer, version, artwork_url,
 	       destination_path, status, total_bytes, downloaded_bytes, progress,
-	       speed_bytes, eta_seconds, external_version_id, platform, error,
+	       speed_bytes, eta_seconds, external_version_id, checksum, checksum_type, platform, error,
 	       created_at, updated_at, completed_at
 	FROM downloads WHERE status IN ('queued', 'downloading', 'signing', 'paused') ORDER BY created_at ASC;
 	`
@@ -321,6 +328,7 @@ func (s *sqliteStorage) GetActiveDownloads() ([]models.DownloadTask, error) {
 	return tasks, nil
 }
 
+
 func (s *sqliteStorage) DeleteDownload(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -340,13 +348,13 @@ func (s *sqliteStorage) ClearCompletedDownloads() error {
 func (s *sqliteStorage) scanDownload(row *sql.Row) (*models.DownloadTask, error) {
 	var task models.DownloadTask
 	var status string
-	var externalVersionID, errStr, url, dType sql.NullString
+	var externalVersionID, errStr, url, dType, checksum, checksumType sql.NullString
 	var completedAt sql.NullTime
 
 	err := row.Scan(
 		&task.ID, &dType, &url, &task.AppID, &task.BundleID, &task.AppName, &task.Developer, &task.Version, &task.ArtworkURL,
 		&task.DestinationPath, &status, &task.TotalBytes, &task.DownloadedBytes, &task.Progress,
-		&task.SpeedBytesPerSec, &task.ETASeconds, &externalVersionID, &task.Platform, &errStr,
+		&task.SpeedBytesPerSec, &task.ETASeconds, &externalVersionID, &checksum, &checksumType, &task.Platform, &errStr,
 		&task.CreatedAt, &task.UpdatedAt, &completedAt,
 	)
 	if err != nil {
@@ -362,6 +370,12 @@ func (s *sqliteStorage) scanDownload(row *sql.Row) (*models.DownloadTask, error)
 	}
 	if externalVersionID.Valid {
 		task.ExternalVersionID = externalVersionID.String
+	}
+	if checksum.Valid {
+		task.Checksum = checksum.String
+	}
+	if checksumType.Valid {
+		task.ChecksumType = checksumType.String
 	}
 	if errStr.Valid {
 		task.Error = errStr.String
@@ -376,13 +390,13 @@ func (s *sqliteStorage) scanDownload(row *sql.Row) (*models.DownloadTask, error)
 func (s *sqliteStorage) scanDownloadRows(rows *sql.Rows) (*models.DownloadTask, error) {
 	var task models.DownloadTask
 	var status string
-	var externalVersionID, errStr, url, dType sql.NullString
+	var externalVersionID, errStr, url, dType, checksum, checksumType sql.NullString
 	var completedAt sql.NullTime
 
 	err := rows.Scan(
 		&task.ID, &dType, &url, &task.AppID, &task.BundleID, &task.AppName, &task.Developer, &task.Version, &task.ArtworkURL,
 		&task.DestinationPath, &status, &task.TotalBytes, &task.DownloadedBytes, &task.Progress,
-		&task.SpeedBytesPerSec, &task.ETASeconds, &externalVersionID, &task.Platform, &errStr,
+		&task.SpeedBytesPerSec, &task.ETASeconds, &externalVersionID, &checksum, &checksumType, &task.Platform, &errStr,
 		&task.CreatedAt, &task.UpdatedAt, &completedAt,
 	)
 	if err != nil {
@@ -399,6 +413,12 @@ func (s *sqliteStorage) scanDownloadRows(rows *sql.Rows) (*models.DownloadTask, 
 	if externalVersionID.Valid {
 		task.ExternalVersionID = externalVersionID.String
 	}
+	if checksum.Valid {
+		task.Checksum = checksum.String
+	}
+	if checksumType.Valid {
+		task.ChecksumType = checksumType.String
+	}
 	if errStr.Valid {
 		task.Error = errStr.String
 	}
@@ -408,6 +428,7 @@ func (s *sqliteStorage) scanDownloadRows(rows *sql.Rows) (*models.DownloadTask, 
 
 	return &task, nil
 }
+
 
 // ----------------- Favorites -----------------
 

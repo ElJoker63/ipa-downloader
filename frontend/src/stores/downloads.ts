@@ -86,6 +86,12 @@ export const useDownloadsStore = defineStore('downloads', () => {
     if (task) task.status = 'cancelled'
   }
 
+  async function removeTask(id: string) {
+    await WailsService.deleteHistoryItem(id) // Reuse the same delete logic
+    downloads.value = downloads.value.filter((d) => d.id !== id)
+  }
+
+
   async function retryDownload(id: string) {
     await WailsService.retryDownload(id)
     const task = downloads.value.find((d) => d.id === id)
@@ -157,8 +163,10 @@ export const useDownloadsStore = defineStore('downloads', () => {
     pauseDownload,
     resumeDownload,
     cancelDownload,
+    removeTask,
     retryDownload,
     clearCompleted,
     initListeners,
   }
 })
+

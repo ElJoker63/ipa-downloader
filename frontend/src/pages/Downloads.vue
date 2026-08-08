@@ -203,7 +203,17 @@
                 >
                   {{ task.status }}
                 </span>
+                <span
+                  v-if="task.status === 'completed' && task.checksum"
+                  class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 flex items-center space-x-1"
+                >
+                  <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Verified</span>
+                </span>
               </div>
+
               <p class="text-xs text-[#B8C0CC] truncate font-mono mt-0.5">{{ task.destinationPath }}</p>
               <div v-if="task.error" class="mt-1.5 p-2 rounded-lg bg-[#FF453A]/15 border border-[#FF453A]/30 text-xs text-[#FF453A] font-mono break-all flex items-start justify-between gap-2">
                 <span>{{ task.error }}</span>
@@ -251,8 +261,9 @@
               type="button"
               class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
               :title="t.downloads.deleteFile"
-              @click="handleDeleteFile(task.destinationPath)"
+              @click="handleDeleteFile(task.destinationPath, task.id)"
             >
+
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -371,13 +382,14 @@ function revealInExplorer(path: string) {
   historyStore.revealInExplorer(path)
 }
 
-async function handleDeleteFile(path: string) {
+async function handleDeleteFile(path: string, id: string) {
   modalStore.confirm(
     t.value.common.confirm,
     t.value.downloads.deleteFile + '?',
     async () => {
       try {
         await WailsService.deleteFile(path)
+        await downloadsStore.removeTask(id)
         showToast('File Deleted', path, 'success')
       } catch (err: any) {
         showToast('Deletion Failed', err.message || err, 'error')
@@ -386,6 +398,8 @@ async function handleDeleteFile(path: string) {
     t.value.common.delete
   )
 }
+
+
 
 
 
@@ -427,12 +441,14 @@ function getArtworkUrl(task: any) {
   if (task.type === 'firmware' || task.destinationPath?.toLowerCase().endsWith('.ipsw')) {
     return '/ipsw.png'
   }
-  if (!task.artworkUrl || task.artworkUrl.includes('mzstatic.com')) {
-    if (task.appName?.toLowerCase().includes('firmware')) return '/ipsw.png'
+  // If no artwork URL is present, use generic placeholder
+  if (!task.artworkUrl) {
     return 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'
   }
+  // If it's a valid remote URL (including mzstatic), return it as is
   return task.artworkUrl
 }
+
 
 </script>
 

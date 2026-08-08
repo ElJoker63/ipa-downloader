@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { WailsService } from '../services/wails'
+import { useModalStore } from '../stores/modal'
 import type { UpdateInfo } from '../types'
 
 const visible = ref(false)
@@ -78,6 +79,8 @@ const updating = ref(false)
 const progress = ref(0)
 const updateInfo = ref<UpdateInfo | null>(null)
 const statusMessage = ref('Downloading update...')
+const modalStore = useModalStore()
+
 
 onMounted(async () => {
   try {
@@ -104,8 +107,9 @@ async function startUpdate() {
   try {
     await WailsService.applyUpdate(updateInfo.value.downloadUrl)
   } catch (err: any) {
-    alert('Update failed: ' + (err.message || err))
+    modalStore.alert('Update Failed', err.message || String(err), 'error')
     updating.value = false
   }
 }
+
 </script>

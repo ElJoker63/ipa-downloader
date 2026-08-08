@@ -16,9 +16,11 @@ import (
 type AuthService interface {
 	GetAccount() (*models.AccountProfile, error)
 	Login(email, password, authCode string, remember bool) (*models.AccountProfile, error)
+	SilentRefresh() error
 	Logout() error
 	GetStatus() string // "Connected", "Connecting", "Not Connected"
 }
+
 
 type authService struct {
 	appleClient apple.Client
@@ -104,14 +106,42 @@ func (s *authService) Login(email, password, authCode string, remember bool) (*m
 			settings.RememberCredentials = true
 			_ = s.storage.SaveSettings(*settings)
 		}
+		// Save credentials to secure keychain
+		kc := s.appleClient.GetKeychain()
+		_ = kc.Set("apple_id_email", []byte(email))
+		_ = kc.Set("apple_id_password", []byte(password))
 	}
 
 	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("Successfully connected as %s (%s)", acc.Name, acc.Email), "AuthService")
+
 	s.emitter.Emit(events.EventAuthStatus, map[string]string{"status": "Connected"})
 	s.emitter.Emit(events.EventAuthAccount, acc)
 	s.emitter.EmitNotification("Connected", fmt.Sprintf("Logged in as %s", acc.Email), "success")
 
 	return acc, nil
+}
+
+func (s *authService) SilentRefresh() error {
+	s.emitter.EmitLog("INFO", "Session expired, attempting silent re-authentication...", "AuthService")
+
+	kc := s.appleClient.GetKeychain()
+	emailBytes, err := kc.Get("apple_id_email")
+	if err != nil {
+		return fmt.Errorf("no stored email found")
+	}
+	passBytes, err := kc.Get("apple_id_password")
+	if err != nil {
+		return fmt.Errorf("no stored password found")
+	}
+
+	_, err = s.Login(string(emailBytes), string(passBytes), "", true)
+	if err != nil {
+		s.emitter.EmitLog("ERROR", fmt.Sprintf("Silent re-authentication failed: %v", err), "AuthService")
+		return err
+	}
+
+	s.emitter.EmitLog("SUCCESS", "Silent re-authentication successful", "AuthService")
+	return nil
 }
 
 func (s *authService) Logout() error {
@@ -121,6 +151,11 @@ func (s *authService) Logout() error {
 	if err != nil {
 		s.emitter.EmitLog("WARN", fmt.Sprintf("Revoke warning: %v", err), "AuthService")
 	}
+
+	// Clear keychain
+	kc := s.appleClient.GetKeychain()
+	_ = kc.Remove("apple_id_email")
+	_ = kc.Remove("apple_id_password")
 
 	s.mu.Lock()
 	s.status = "Not Connected"
@@ -133,6 +168,7 @@ func (s *authService) Logout() error {
 
 	return nil
 }
+
 
 func (s *authService) GetStatus() string {
 	s.mu.RLock()

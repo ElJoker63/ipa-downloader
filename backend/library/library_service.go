@@ -159,12 +159,12 @@ func (s *libraryService) RevealInExplorer(path string) error {
 
 func (s *libraryService) DeleteFile(path string) error {
 	if path == "" {
-		return fmt.Errorf("path is empty")
+		return nil
 	}
 
-	// Verify file exists
+	// If file doesn't exist, we consider it "deleted" already
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return fmt.Errorf("file does not exist: %s", path)
+		return nil
 	}
 
 	err := os.Remove(path)
@@ -173,6 +173,7 @@ func (s *libraryService) DeleteFile(path string) error {
 	}
 	return err
 }
+
 
 
 func openPathNative(path string) error {

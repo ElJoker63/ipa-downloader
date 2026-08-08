@@ -187,14 +187,32 @@ func (s *deviceService) processInstallQueue() {
 func (s *deviceService) runActualInstall(dev giDevice.Device, info *models.DeviceInfo, ipaPath string) {
 	s.emitter.EmitLog("INFO", fmt.Sprintf("Starting queued installation on %s: %s", info.Name, filepath.Base(ipaPath)), "DeviceService")
 
-	s.emitInstallProgress("Preparing", 10, fmt.Sprintf("[%s] Validating IPA...", info.Name))
+	s.emitInstallProgress("Preparing", 10, fmt.Sprintf("[%s] Validating IPA and checking safety...", info.Name))
 	ipaInfo, err := s.ValidateIPA(ipaPath)
 	if err != nil {
 		s.emitInstallProgress("Failed", 0, err.Error())
 		return
 	}
 
+	// Technical Safety Checks
+	if info.BatteryLevel < 5 && !info.BatteryCharging {
+		errStr := "Battery too low (< 5%) for safe installation"
+		s.emitInstallProgress("Failed", 0, errStr)
+		s.emitter.EmitLog("ERROR", fmt.Sprintf("[%s] %s", info.Name, errStr), "DeviceService")
+		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": errStr, "ipa": ipaPath, "udid": info.UDID})
+		return
+	}
+
+	if info.StorageFree < ipaInfo.FileSizeBytes+ (100 * 1024 * 1024) { // Buffer of 100MB
+		errStr := fmt.Sprintf("Insufficient space. Required: %s, Available: %s", formatBytes(ipaInfo.FileSizeBytes), formatBytes(info.StorageFree))
+		s.emitInstallProgress("Failed", 0, errStr)
+		s.emitter.EmitLog("ERROR", fmt.Sprintf("[%s] %s", info.Name, errStr), "DeviceService")
+		s.emitter.Emit(events.EventDeviceInstallFailed, map[string]string{"error": errStr, "ipa": ipaPath, "udid": info.UDID})
+		return
+	}
+
 	s.emitInstallProgress("Copying", 30, fmt.Sprintf("[%s] Transferring %s...", info.Name, ipaInfo.BundleName))
+
 
 	err = dev.AppInstall(ipaPath)
 	if err != nil {
@@ -525,7 +543,28 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 			info.ActivationState = str
 		}
 	}
+	if val, err := dev.GetValue("", "HardwareModel"); err == nil {
+		if str, ok := val.(string); ok {
+			info.HardwareModel = str
+		}
+	}
+	if val, err := dev.GetValue("", "CPUArchitecture"); err == nil {
+		if str, ok := val.(string); ok {
+			info.CPUArchitecture = str
+		}
+	}
+	if val, err := dev.GetValue("", "BoardConfig"); err == nil {
+		if str, ok := val.(string); ok {
+			info.BoardConfig = str
+		}
+	}
+
+	// Add Chipset information based on CPU Architecture and Model
+	info.HardwareModel = getChipsetName(info.ProductType, info.CPUArchitecture)
+
 	// Jailbreak detection - primitive check
+
+
 	if val, err := dev.GetValue("", "BrickState"); err == nil {
 		if i, ok := val.(uint64); ok && i > 0 {
 			info.IsJailbroken = true
@@ -573,7 +612,40 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	return info, nil
 }
 
+func getChipsetName(productType, cpuArch string) string {
+	// Simple mapping for common modern devices
+	if strings.HasPrefix(productType, "iPhone10") {
+		return "A11 Bionic"
+	}
+	if strings.HasPrefix(productType, "iPhone11") {
+		return "A12 Bionic"
+	}
+	if strings.HasPrefix(productType, "iPhone12") {
+		return "A13 Bionic"
+	}
+	if strings.HasPrefix(productType, "iPhone13") {
+		return "A14 Bionic"
+	}
+	if strings.HasPrefix(productType, "iPhone14") {
+		if strings.Contains(productType, "2") || strings.Contains(productType, "3") {
+			return "A16 Bionic" // 14 Pro
+		}
+		return "A15 Bionic"
+	}
+	if strings.HasPrefix(productType, "iPhone15") {
+		if strings.Contains(productType, "1") || strings.Contains(productType, "2") {
+			return "A17 Pro" // 15 Pro
+		}
+		return "A16 Bionic" // 15 Regular
+	}
+	if strings.HasPrefix(productType, "iPhone16") {
+		return "A18 Pro"
+	}
+	return cpuArch
+}
+
 func formatProductType(productType string) string {
+
 	modelsMap := map[string]string{
 		"iPhone10,3": "iPhone X",
 		"iPhone10,6": "iPhone X",

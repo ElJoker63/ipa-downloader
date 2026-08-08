@@ -50,7 +50,17 @@
                 >
                   {{ item.status }}
                 </span>
+                <span
+                  v-if="item.status === 'completed' && item.checksum"
+                  class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 flex items-center space-x-1"
+                >
+                  <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Verified</span>
+                </span>
               </div>
+
               <p class="text-xs text-[#B8C0CC] truncate font-mono mt-0.5">{{ item.destinationPath }}</p>
             </div>
           </div>
@@ -96,7 +106,7 @@
               type="button"
               class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
               :title="t.history.deleteFile"
-              @click="handleDeleteFile(item.destinationPath)"
+              @click="handleDeleteFile(item.destinationPath, item.id)"
             >
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -105,14 +115,15 @@
 
             <button
               type="button"
-              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
+              class="p-1.5 rounded-lg text-[#7D8592] hover:text-white hover:bg-white/10 transition duration-150"
               :title="t.history.deleteRecord"
               @click="deleteItem(item.id)"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+
 
           </div>
         </div>
@@ -228,13 +239,14 @@ function revealInExplorer(path: string) {
   historyStore.revealInExplorer(path)
 }
 
-async function handleDeleteFile(path: string) {
+async function handleDeleteFile(path: string, id: string) {
   modalStore.confirm(
     t.value.common.confirm,
     t.value.history.deleteFile + '?',
     async () => {
       try {
         await WailsService.deleteFile(path)
+        await historyStore.deleteItem(id)
         showToast('File Deleted', path, 'success')
       } catch (err: any) {
         showToast('Deletion Failed', err.message || err, 'error')
@@ -243,6 +255,7 @@ async function handleDeleteFile(path: string) {
     t.value.common.delete
   )
 }
+
 
 
 
@@ -287,17 +300,15 @@ function statusBadgeClass(status: string) {
 }
 
 function getArtworkUrl(item: any) {
-  // If explicitly firmware or filename/path looks like an IPSW, use firmware icon
   if (item.type === 'firmware' || item.destinationPath?.toLowerCase().endsWith('.ipsw')) {
     return '/ipsw.png'
   }
-  if (!item.artworkUrl || item.artworkUrl.includes('mzstatic.com')) {
-    // If it's a firmware (identified by naming) but has the old Apple URL, override it
-    if (item.appName?.toLowerCase().includes('firmware')) return '/ipsw.png'
+  if (!item.artworkUrl) {
     return 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'
   }
   return item.artworkUrl
 }
+
 
 </script>
 

@@ -65,8 +65,11 @@ export interface DownloadTask {
   etaSeconds: number
   formattedETA: string
   externalVersionId?: string
+  checksum?: string
+  checksumType?: string
   platform: string
   error?: string
+
   createdAt: string
   updatedAt: string
   completedAt?: string
@@ -141,7 +144,11 @@ export interface DeviceInfo {
   modelNumber?: string
   regionInfo?: string
   activationState?: string
+  boardConfig?: string
+  cpuArchitecture?: string
+  hardwareModel?: string
   isJailbroken: boolean
+
   batteryHealth?: number
   chargeCycles?: number
   storageTotal: number

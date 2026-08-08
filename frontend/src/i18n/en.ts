@@ -248,7 +248,12 @@ export const en: Translations = {
       modelName: 'Model Name',
       region: 'Sales Region',
       activation: 'Activation',
+      boardConfig: 'Board Config',
+      cpuArch: 'CPU Architecture',
+      chipset: 'Chipset',
       storageTitle: 'Storage Capacity',
+
+
       storageStatus: 'free of',
       batteryTitle: 'Battery Status',
       batteryStatus: 'Charging',

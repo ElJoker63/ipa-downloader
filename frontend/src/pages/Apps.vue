@@ -391,7 +391,21 @@
                 {{ deviceStore.selectedDevice.activationState || 'N/A' }}
               </div>
             </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.chipset }}</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.hardwareModel || 'N/A' }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.cpuArch }}</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.cpuArchitecture || 'N/A' }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+              <div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.boardConfig }}</div>
+              <div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.boardConfig || 'N/A' }}</div>
+            </div>
+
           </div>
+
 
           <!-- Storage & Battery Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
