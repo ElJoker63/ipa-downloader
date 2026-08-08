@@ -142,10 +142,12 @@ func (s *AppService) ListInstalledApps(appType string) ([]models.InstalledApp, e
 }
 
 func (s *AppService) InstallIPA(ipaPath string) error {
+	s.AddLog("INFO", fmt.Sprintf("User requested IPA installation: %s", ipaPath), "AppService")
 	return s.deviceService.InstallIPA(ipaPath)
 }
 
 func (s *AppService) UninstallApp(bundleID string) error {
+	s.AddLog("INFO", fmt.Sprintf("User requested uninstallation: %s", bundleID), "AppService")
 	return s.deviceService.UninstallApp(bundleID)
 }
 

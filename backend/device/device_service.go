@@ -477,17 +477,32 @@ func (s *deviceService) UninstallApp(bundleID string) error {
 	s.mu.RUnlock()
 
 	if dev == nil {
+		s.emitter.EmitLog("ERROR", "Uninstall failed: No device connected", "DeviceService")
 		return fmt.Errorf("no iOS device connected")
 	}
 
-	s.emitter.EmitLog("INFO", fmt.Sprintf("Uninstalling app: %s", bundleID), "DeviceService")
+	s.emitter.EmitLog("INFO", fmt.Sprintf("Requesting uninstallation for bundle ID: %s", bundleID), "DeviceService")
 
-	err := dev.AppUninstall(bundleID)
+	// Ensure device is still responding before trying to uninstall
+	_, err := dev.GetValue("", "DeviceName")
 	if err != nil {
+		s.emitter.EmitLog("ERROR", fmt.Sprintf("Device communication error before uninstall: %v", err), "DeviceService")
+		return fmt.Errorf("device communication error: %w", err)
+	}
+
+	err = dev.AppUninstall(bundleID)
+	if err != nil {
+		s.emitter.EmitLog("ERROR", fmt.Sprintf("Failed to uninstall %s: %v", bundleID, err), "DeviceService")
 		return fmt.Errorf("failed to uninstall app %s: %w", bundleID, err)
 	}
 
-	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("Successfully uninstalled %s", bundleID), "DeviceService")
+	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("App %s uninstalled successfully", bundleID), "DeviceService")
+	// Trigger an app list refresh after uninstallation
+	go func() {
+		time.Sleep(1 * time.Second)
+		s.emitter.Emit(events.EventDeviceConnected, s.cachedInfo) // Force frontend refresh via event
+	}()
+
 	return nil
 }
 

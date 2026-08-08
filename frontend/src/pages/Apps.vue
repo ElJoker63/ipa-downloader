@@ -450,17 +450,57 @@
         </div>
       </div>
     </div>
+
+    <!-- Uninstall Confirmation Modal -->
+    <div
+      v-if="confirmUninstallApp"
+      class="fixed inset-0 bg-black/60 backdrop-blur-md z-[70] flex items-center justify-center p-6"
+    >
+      <div class="w-full max-w-sm bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
+        <div class="flex flex-col items-center text-center space-y-4">
+          <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
+            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-lg font-bold text-white">Uninstall App?</h3>
+            <p class="text-sm text-[#8E8E93]">
+              Are you sure you want to remove <span class="text-white font-semibold">"{{ confirmUninstallApp.name }}"</span>? This action cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col space-y-2">
+          <button
+            @click="confirmUninstall"
+            class="w-full py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition shadow-lg shadow-red-500/20"
+          >
+            Uninstall
+          </button>
+          <button
+            @click="confirmUninstallApp = null"
+            class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useDeviceStore } from '../stores/device'
 import { useI18n } from '../i18n'
+import { useNotifications } from '../composables/useNotifications'
 import type { InstalledApp } from '../types'
 
 const deviceStore = useDeviceStore()
 const { t } = useI18n()
+const { showToast } = useNotifications()
 
 const searchQuery = ref('')
 const showDeviceDetails = ref(false)
@@ -485,7 +525,7 @@ function handleRefresh() {
 
 function handlePair() {
   deviceStore.pairDevice().catch((err) => {
-    alert(err.message || 'Pairing failed')
+    showToast('Pairing Failed', err.message || 'Please unlock your device and trust this computer', 'error')
   })
 }
 
@@ -496,12 +536,24 @@ function triggerIPAInstall() {
 }
 
 function handleUninstall(app: InstalledApp) {
-  if (confirm(`Are you sure you want to uninstall "${app.name}" (${app.bundleId}) from your device?`)) {
-    deviceStore.uninstallApp(app.bundleId).catch((err) => {
-      alert(`Failed to uninstall: ${err.message || err}`)
-    })
+  confirmUninstallApp.value = app
+}
+
+async function confirmUninstall() {
+  if (!confirmUninstallApp.value) return
+  const app = confirmUninstallApp.value
+  confirmUninstallApp.value = null
+  try {
+    showToast('Uninstalling', `Removing ${app.name}...`, 'info')
+    await deviceStore.uninstallApp(app.bundleId)
+    showToast('Success', `${app.name} has been uninstalled`, 'success')
+  } catch (err: any) {
+    showToast('Uninstall Failed', err.message || String(err), 'error')
   }
 }
+
+const confirmUninstallApp = ref<InstalledApp | null>(null)
+
 
 function handleFileDrop(e: DragEvent) {
   const files = e.dataTransfer?.files
