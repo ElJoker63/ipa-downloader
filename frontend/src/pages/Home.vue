@@ -49,7 +49,7 @@
               </svg>
             </div>
             <div v-if="downloadsStore.activeCount > 0" class="px-2.5 py-1 rounded-full bg-[#64D2FF]/20 text-[#64D2FF] text-[10px] font-bold animate-pulse">
-              {{ downloadsStore.activeCount }} ACTIVE
+              {{ downloadsStore.activeCount }} {{ t.common.active.toUpperCase() }}
             </div>
           </div>
           <div>
@@ -72,7 +72,7 @@
               </svg>
             </div>
             <div v-if="deviceStore.devices.length > 0" class="px-2.5 py-1 rounded-full bg-[#30D158]/20 text-[#30D158] text-[10px] font-bold">
-              {{ deviceStore.devices.length }} CONNECTED
+              {{ deviceStore.devices.length }} {{ t.common.connectedStatus.toUpperCase() }}
             </div>
           </div>
           <div>
@@ -115,7 +115,7 @@
               </svg>
             </div>
             <div class="text-[10px] font-bold text-[#FFD60A]">
-              {{ favoritesStore.favorites.length }} SAVED
+              {{ favoritesStore.favorites.length }} {{ t.common.saved.toUpperCase() }}
             </div>
           </div>
           <div>

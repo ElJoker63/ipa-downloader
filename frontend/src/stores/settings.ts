@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { AppSettings } from '../types'
 import { WailsService } from '../services/wails'
+import { useI18n } from '../i18n'
 
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<AppSettings>({
@@ -27,6 +28,12 @@ export const useSettingsStore = defineStore('settings', () => {
       }
       cacheSize.value = await WailsService.getCacheSize()
       applyTheme(settings.value.theme)
+
+      // Update i18n if language is set in settings
+      if (settings.value.language) {
+        const { setLanguage } = useI18n()
+        setLanguage(settings.value.language as any)
+      }
     } finally {
       isLoading.value = false
     }

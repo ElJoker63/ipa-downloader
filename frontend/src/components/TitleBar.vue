@@ -3,8 +3,8 @@
     <!-- Left: App Icon & Brand -->
     <div class="flex items-center space-x-3">
       <img src="/logo.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-sm shrink-0" />
-      <span class="text-[13px] font-bold tracking-tight text-white font-sans">IPA Downloader</span>
-      <span class="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-white/[0.08] text-[#B8C0CC] border border-white/[0.12]">v2.0</span>
+      <span class="text-[13px] font-bold tracking-tight text-white font-sans">{{ t.common.appName }}</span>
+      <span class="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-white/[0.08] text-[#B8C0CC] border border-white/[0.12]">{{ t.common.version }}</span>
     </div>
 
     <!-- Center: Live Connection Status Pill (macOS Capsule) -->
@@ -14,9 +14,9 @@
         :class="statusBadgeClass"
       >
         <span class="w-2 h-2 rounded-full" :class="statusDotClass"></span>
-        <span>{{ authStore.status }}</span>
+        <span>{{ translatedStatus }}</span>
         <span v-if="authStore.isLoggedIn" class="text-[#B8C0CC] font-medium text-[11px] pl-1">
-          ({{ authStore.account.name || 'Apple ID' }})
+          ({{ authStore.account.name || t.common.appleId }})
         </span>
       </div>
     </div>
@@ -61,8 +61,17 @@
 import { computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { WailsService } from '../services/wails'
+import { useI18n } from '../i18n'
 
 const authStore = useAuthStore()
+const { t } = useI18n()
+
+const translatedStatus = computed(() => {
+  if (authStore.status === 'Connected') return t.value.common.connected
+  if (authStore.status === 'Not Connected') return t.value.common.notConnected
+  if (authStore.status === 'Connecting...') return t.value.common.connecting
+  return authStore.status
+})
 
 const statusBadgeClass = computed(() => {
   if (authStore.isLoggedIn) {

@@ -5,7 +5,7 @@ import type { Translations } from './types'
 
 export type LanguageCode = 'es' | 'en'
 
-const currentLanguage = ref<LanguageCode>('es') // Default Spanish as requested or loaded from settings
+const currentLanguage = ref<LanguageCode>('en') // Default English, will be updated by init
 
 export function useI18n() {
   const t = computed<Translations>(() => {
@@ -21,15 +21,19 @@ export function useI18n() {
     }
   }
 
+  function getLanguage(): LanguageCode {
+    return currentLanguage.value
+  }
+
   function initLanguage(initial?: string) {
     if (initial === 'es' || initial === 'en') {
-      currentLanguage.value = initial
+      currentLanguage.value = initial as LanguageCode
       return
     }
     try {
       const saved = localStorage.getItem('ipa_downloader_lang')
       if (saved === 'es' || saved === 'en') {
-        currentLanguage.value = saved
+        currentLanguage.value = saved as LanguageCode
       } else {
         const browserLang = navigator.language.toLowerCase()
         if (browserLang.startsWith('es')) {
@@ -39,7 +43,7 @@ export function useI18n() {
         }
       }
     } catch {
-      currentLanguage.value = 'es'
+      currentLanguage.value = 'en'
     }
   }
 
@@ -48,5 +52,6 @@ export function useI18n() {
     currentLanguage,
     setLanguage,
     initLanguage,
+    getLanguage,
   }
 }

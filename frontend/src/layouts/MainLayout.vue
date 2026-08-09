@@ -2,13 +2,12 @@
   <div class="h-screen w-screen flex overflow-hidden bg-[#0F1115] text-[#FFFFFF] select-none font-sans">
     <!-- macOS / visionOS Style Glass Sidebar -->
     <aside class="w-64 bg-[#171A21]/80 backdrop-blur-[30px] border-r border-white/[0.08] flex flex-col justify-between p-3.5 shrink-0 z-30 shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
-      <!-- Top Brand Header in Sidebar -->
-      <div class="px-3 py-2 flex items-center justify-between border-b border-white/[0.08] pb-3 mb-2">
+        <div class="px-3 py-2 flex items-center justify-between border-b border-white/[0.08] pb-3 mb-2">
         <div class="flex items-center space-x-2.5">
           <img src="/logo.png" alt="IPA Downloader" class="w-20 h-20 rounded-lg object-contain shadow-sm shrink-0" />
-          <!--div>
-            <div class="text-[13px] font-bold tracking-tight text-white leading-tight">IPA Downloader</div>
-          </div-->
+          <div>
+            <div class="text-[13px] font-bold tracking-tight text-white leading-tight">{{ t.common.appName }}</div>
+          </div>
         </div>
       </div>
 
@@ -188,7 +187,7 @@
           <div class="w-8 h-8 rounded-[10px] bg-[#0A84FF] flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#0A84FF]/20">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
           </div>
-          <span class="text-xs font-bold">{{ t.home.signInButton }}</span>
+          <span class="text-xs font-bold">{{ t.auth.signInButton }}</span>
         </router-link>
 
 

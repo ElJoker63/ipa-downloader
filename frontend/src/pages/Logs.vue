@@ -157,7 +157,7 @@ async function copyLogs() {
     await navigator.clipboard.writeText(text)
     showToast(t.value.logs.copiedToast, '', 'info')
   } catch {
-    showToast('Copy Failed', 'Could not copy logs to clipboard', 'error')
+    showToast(t.value.logs.copyFailed, t.value.logs.copyError, 'error')
   }
 }
 

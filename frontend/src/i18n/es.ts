@@ -61,7 +61,7 @@ export const es: Translations = {
     home: 'Panel de Control',
     search: 'Buscar en App Store',
     downloads: 'Descargas',
-    apps: 'Dispositivo',
+    apps: 'Dispositivos',
     favorites: 'Favoritos',
     history: 'Historial',
     settings: 'Configuración',
@@ -71,7 +71,7 @@ export const es: Translations = {
   },
   firmwares: {
     title: 'Firmwares de Apple',
-    subtitle: 'Descarga imágenes de restauración IPSW oficiales para iPhone, iPad y Mac',
+    subtitle: '',
     searchPlaceholder: 'Buscar modelo de dispositivo...',
     categories: 'Categorías',
     devices: 'Dispositivos',
@@ -85,7 +85,7 @@ export const es: Translations = {
   },
   home: {
     title: 'Panel de Control',
-    subtitle: 'Suite profesional para la gestión de dispositivos Apple y adquisición de software.',
+    subtitle: '',
     searchWidget: 'Buscador App Store',
     searchWidgetDesc: 'Busca y descarga paquetes .ipa directamente desde Apple.',
     downloadsWidget: 'Transferencias',
@@ -115,7 +115,7 @@ export const es: Translations = {
   },
   search: {
     title: 'Buscar en App Store',
-    subtitle: 'Consulta el catálogo de App Store en tiempo real con ilustraciones en alta resolución, capturas y compilaciones.',
+    subtitle: '',
     iphone: 'iPhone',
     ipad: 'iPad',
     appleTv: 'Apple TV',
@@ -148,7 +148,7 @@ export const es: Translations = {
   },
   downloads: {
     title: 'Gestor de Descargas',
-    subtitle: 'Transferencias concurrentes en streaming con velocidad en tiempo real, pausa/reanudación y firmado FairPlay SINF DRM.',
+    subtitle: '',
     destinationFolder: 'Carpeta de Destino',
     clearCompleted: 'Limpiar Completadas',
     activeTransfers: 'Transferencias Activas',
@@ -168,7 +168,7 @@ export const es: Translations = {
   },
   favorites: {
     title: 'Favoritos Guardados',
-    subtitle: 'Aplicaciones guardadas en la base de datos local SQLite para descargas rápidas con un solo clic.',
+    subtitle: '',
     filterPlaceholder: 'Filtrar favoritos...',
     downloadPackage: 'Descargar Paquete',
     emptyTitle: 'No hay favoritos guardados',
@@ -177,7 +177,7 @@ export const es: Translations = {
   },
   history: {
     title: 'Historial de Descargas',
-    subtitle: 'Registro cronológico completo de todos los paquetes .ipa, inyecciones de firmas y rutas de destino.',
+    subtitle: '',
     clearHistory: 'Limpiar Historial',
     copyPath: 'Copiar Ruta',
     showInFolder: 'Mostrar en Carpeta',
@@ -190,7 +190,7 @@ export const es: Translations = {
   },
   settings: {
     title: 'Configuración y Preferencias',
-    subtitle: 'Configura colas de transferencia, directorios predeterminados, automatización de FairPlay DRM y diagnóstico.',
+    subtitle: '',
     generalSection: 'General y Descargas',
     languageLabel: 'Idioma de la Interfaz',
     defaultFolder: 'Directorio de Descarga Predeterminado',
@@ -215,7 +215,7 @@ export const es: Translations = {
   },
   logs: {
     title: 'Registros de Diagnóstico en Tiempo Real',
-    subtitle: 'Monitorea las peticiones al Storefront de Apple, ciclos de autenticación, transferencia de bytes y firmado FairPlay SINF DRM.',
+    subtitle: '',
     allLevels: 'Todos los Niveles',
     autoScroll: 'Auto-Desplazamiento:',
     on: 'ACTIVADO',
@@ -252,7 +252,7 @@ export const es: Translations = {
   },
   apps: {
     title: 'Dispositivos',
-    subtitle: 'Administra tus dispositivos iOS y despliega aplicaciones .ipa.',
+    subtitle: '',
     connected: 'Conectado',
     disconnected: 'Desconectado',
     userApps: 'Aplicaciones de Usuario',

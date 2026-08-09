@@ -158,9 +158,9 @@
     <!-- Active Installations Queue Section -->
     <div v-if="deviceStore.installTasks.length > 0" class="space-y-3">
       <div class="flex items-center justify-between px-1">
-        <h2 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">Deployment Queue</h2>
-        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">>
-          {{ deviceStore.installTasks.length }} Task(s)
+        <h2 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">{{ t.common.deploymentQueue }}</h2>
+        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">
+          {{ deviceStore.installTasks.length }} {{ deviceStore.installTasks.length === 1 ? t.common.task : t.common.tasks }}
         </span>
       </div>
       <div class="space-y-2">
@@ -175,7 +175,7 @@
                 <div class="flex items-center space-x-2 text-[10px] text-[#8E8E93]">
                   <span class="font-mono">{{ truncateUDID(task.udid) }}</span>
                   <span>•</span>
-                  <span :class="phaseClass(task.phase)">{{ task.phase }}</span>
+                  <span :class="phaseClass(task.phase)">{{ phaseText(task.phase) }}</span>
                 </div>
               </div>
             </div>
@@ -211,7 +211,7 @@
       <div v-if="deviceStore.isLoadingApps" class="py-12 flex justify-center items-center">
         <svg class="w-8 h-8 text-[#0A84FF] animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       </div>
-      <div v-else-if="filteredApps.length === 0" class="py-12 text-center text-[#8E8E93] text-sm">No installed apps match your search filter.</div>
+      <div v-else-if="filteredApps.length === 0" class="py-12 text-center text-[#8E8E93] text-sm">{{ t.common.noResults }}</div>
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <div v-for="app in filteredApps" :key="app.bundleId" class="p-4 rounded-xl bg-[#171A21]/70 border border-white/[0.08] hover:border-white/20 transition flex items-center justify-between group">
           <div class="flex items-center space-x-3 overflow-hidden">
@@ -223,7 +223,7 @@
               <div class="text-[11px] text-[#8E8E93] mt-0.5">v{{ app.version || app.shortVersion || '1.0' }}<span v-if="app.size > 0">• {{ formatAppSize(app.size) }}</span></div>
             </div>
           </div>
-          <button v-if="deviceStore.activeTab === 'user'" @click="handleUninstall(app)" class="px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 transition text-xs font-medium shrink-0 ml-2">Uninstall</button>
+          <button v-if="deviceStore.activeTab === 'user'" @click="handleUninstall(app)" class="px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 transition text-xs font-medium shrink-0 ml-2">{{ t.common.uninstall }}</button>
         </div>
       </div>
     </div>
@@ -383,6 +383,17 @@ function phaseClass(phase: string) {
     case 'Installing':
     case 'Copying': return 'text-[#0A84FF] animate-pulse'
     default: return 'text-[#8E8E93]'
+  }
+}
+
+function phaseText(phase: string) {
+  switch (phase) {
+    case 'Complete': return t.value.common.verified
+    case 'Failed': return 'Failed' // Add to translations if needed
+    case 'Preparing': return t.value.common.preparing
+    case 'Installing': return t.value.common.installing
+    case 'Copying': return t.value.common.copying
+    default: return phase
   }
 }
 

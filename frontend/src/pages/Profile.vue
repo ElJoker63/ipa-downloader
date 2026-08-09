@@ -4,19 +4,19 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold tracking-tight text-white flex items-center space-x-3">
-          <span>Account Profile</span>
+          <span>{{ t.profile.title }}</span>
           <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 uppercase">
-            Active Session
+            {{ t.profile.activeSession }}
           </span>
         </h1>
-        <p class="text-sm text-[#8E8E93] mt-1">Manage your Apple ID session and storefront preferences</p>
+        <p class="text-sm text-[#8E8E93] mt-1">{{ t.profile.subtitle }}</p>
       </div>
 
       <button
         @click="logout"
         class="px-6 py-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 transition-all font-bold text-sm"
       >
-        Sign Out
+        {{ t.profile.signOut }}
       </button>
     </div>
 
@@ -35,29 +35,29 @@
       <!-- Detail Grid -->
       <div class="md:col-span-8 space-y-6">
         <div class="glass-card p-6 rounded-[24px] space-y-6">
-          <h3 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">Session Metadata</h3>
+          <h3 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">{{ t.profile.sessionMetadata }}</h3>
 
           <div class="grid grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <span class="text-[10px] uppercase font-bold text-[#7D8592]">Storefront ID</span>
+              <span class="text-[10px] uppercase font-bold text-[#7D8592]">{{ t.profile.storefrontId }}</span>
               <div class="text-sm text-white font-mono bg-white/[0.04] px-3 py-2 rounded-xl border border-white/[0.08]">
                 {{ authStore.account.storeFront || '--' }}
               </div>
             </div>
             <div class="space-y-1.5">
-              <span class="text-[10px] uppercase font-bold text-[#7D8592]">Region</span>
+              <span class="text-[10px] uppercase font-bold text-[#7D8592]">{{ t.profile.region }}</span>
               <div class="text-sm text-white bg-white/[0.04] px-3 py-2 rounded-xl border border-white/[0.08] flex items-center space-x-2">
                 <span>{{ authStore.account.storeFrontCountry || 'Unknown' }}</span>
               </div>
             </div>
             <div class="space-y-1.5">
-              <span class="text-[10px] uppercase font-bold text-[#7D8592]">Directory Services ID (DSID)</span>
+              <span class="text-[10px] uppercase font-bold text-[#7D8592]">{{ t.profile.dsid }}</span>
               <div class="text-sm text-white font-mono bg-white/[0.04] px-3 py-2 rounded-xl border border-white/[0.08]">
                 {{ authStore.account.directoryServicesId || '--' }}
               </div>
             </div>
             <div class="space-y-1.5">
-              <span class="text-[10px] uppercase font-bold text-[#7D8592]">Account POD</span>
+              <span class="text-[10px] uppercase font-bold text-[#7D8592]">{{ t.profile.accountPod }}</span>
               <div class="text-sm text-white font-mono bg-white/[0.04] px-3 py-2 rounded-xl border border-white/[0.08]">
                 {{ authStore.account.pod || 'N/A' }}
               </div>
@@ -66,18 +66,18 @@
         </div>
 
         <div class="glass-card p-6 rounded-[24px] space-y-4">
-           <h3 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">Security & Privacy</h3>
+           <h3 class="text-xs font-bold uppercase tracking-widest text-[#7D8592]">{{ t.profile.securityPrivacy }}</h3>
            <div class="flex items-center justify-between p-4 rounded-2xl bg-[#30D158]/5 border border-[#30D158]/20">
               <div class="flex items-center space-x-3">
                  <div class="w-10 h-10 rounded-xl bg-[#30D158]/10 flex items-center justify-center text-[#30D158]">
                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                  </div>
                  <div>
-                   <div class="text-sm font-bold text-white">Encrypted Keychain Persistence</div>
-                   <p class="text-[10px] text-[#B8C0CC]">Your password token is stored in the OS secure vault</p>
+                   <div class="text-sm font-bold text-white">{{ t.profile.keychainTitle }}</div>
+                   <p class="text-[11px] text-[#B8C0CC]">{{ t.profile.keychainDesc }}</p>
                  </div>
               </div>
-              <span class="text-[10px] font-bold text-[#30D158] uppercase">Active</span>
+              <span class="text-[10px] font-bold text-[#30D158] uppercase">{{ t.profile.activeStatus }}</span>
            </div>
         </div>
       </div>
@@ -110,13 +110,13 @@ const userInitials = computed(() => {
 async function logout() {
   modalStore.confirm(
     t.value.common.confirm,
-    t.value.home.signOut + '?',
+    t.value.profile.signOut + '?',
     async () => {
       await authStore.logout()
-      showToast('Signed Out', 'Your session has been revoked', 'info')
+      showToast(t.value.auth.signedOut, t.value.auth.sessionRevoked, 'info')
       router.push('/')
     },
-    t.value.home.signOut
+    t.value.profile.signOut
   )
 }
 </script>

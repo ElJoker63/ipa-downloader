@@ -7,9 +7,9 @@
           <img src="/logo.png" alt="IPA Downloader" class="w-14 h-14 object-contain invert brightness-0" />
         </div>
         <div>
-          <h1 class="text-2xl font-bold text-[#FFFFFF]">{{ t.home.signInTitle }}</h1>
+          <h1 class="text-2xl font-bold text-[#FFFFFF]">{{ t.auth.signIn }}</h1>
           <p class="text-sm text-[#B8C0CC] mt-1 font-normal max-w-[280px]">
-            {{ t.home.signInSubtitle }}
+            {{ t.auth.signInSubtitle }}
           </p>
         </div>
       </div>
@@ -17,7 +17,7 @@
       <!-- Login Form -->
       <form class="space-y-5" @submit.prevent="handleLogin">
         <div class="space-y-1.5">
-          <label class="text-xs font-semibold uppercase tracking-wider text-[#7D8592] ml-1">{{ t.home.emailLabel }}</label>
+          <label class="text-xs font-semibold uppercase tracking-wider text-[#7D8592] ml-1">{{ t.auth.emailLabel }}</label>
           <div class="relative">
             <svg class="w-4 h-4 absolute left-3.5 top-3 text-[#7D8592]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             <input
@@ -32,7 +32,7 @@
         </div>
 
         <div class="space-y-1.5">
-          <label class="text-xs font-semibold uppercase tracking-wider text-[#7D8592] ml-1">{{ t.home.passwordLabel }}</label>
+          <label class="text-xs font-semibold uppercase tracking-wider text-[#7D8592] ml-1">{{ t.auth.passwordLabel }}</label>
           <div class="relative">
             <svg class="w-4 h-4 absolute left-3.5 top-3 text-[#7D8592]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             <input
@@ -53,7 +53,7 @@
               type="checkbox"
               class="w-4 h-4 rounded-md bg-white/[0.08] border-white/[0.18] text-[#0A84FF] focus:ring-0"
             />
-            <span>{{ t.home.rememberMe }}</span>
+            <span>{{ t.auth.rememberMe }}</span>
           </label>
         </div>
 
@@ -68,9 +68,9 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span>{{ t.home.authenticating }}</span>
+              <span>{{ t.auth.authenticating }}</span>
             </span>
-            <span v-else>{{ t.home.signInButton }}</span>
+            <span v-else>{{ t.auth.signInButton }}</span>
           </button>
         </div>
       </form>
@@ -78,7 +78,7 @@
       <!-- Footer Info -->
       <div class="pt-2 text-center">
         <p class="text-[10px] text-[#7D8592] px-4">
-          Your credentials are only sent directly to Apple's authentication servers and are never stored on our servers.
+          {{ t.auth.privacyNotice }}
         </p>
       </div>
     </div>
@@ -88,7 +88,7 @@
       class="mt-6 mx-auto flex items-center space-x-2 text-[#7D8592] hover:text-white transition-colors text-sm font-medium"
     >
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-      <span>Back to Home</span>
+      <span>{{ t.auth.backToHome }}</span>
     </button>
   </div>
 </template>
@@ -112,14 +112,14 @@ const rememberMe = ref(true)
 async function handleLogin() {
   try {
     await authStore.login(email.value, password.value, '', rememberMe.value)
-    showToast('Signed In', `Welcome back ${authStore.account.name || 'User'}!`, 'success')
+    showToast(t.value.auth.signedInSuccess, t.value.auth.welcomeBack.replace('{name}', authStore.account.name || 'User'), 'success')
     router.push('/')
   } catch (err: any) {
     if (err?.message?.includes('2FA') || err?.message?.includes('verification')) {
       authStore.is2FAModalOpen = true
       return
     }
-    showToast('Sign In Failed', err?.message || 'Invalid credentials', 'error')
+    showToast(t.value.auth.signInFailed, err?.message || t.value.auth.invalidCredentials, 'error')
   }
 }
 </script>
