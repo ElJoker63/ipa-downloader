@@ -212,7 +212,7 @@ async function installToDevice(path: string, udid: string) {
       deviceStore.installIPA(path, udid)
     }, 300)
   } catch (err: any) {
-    showToast('Installation Failed', err.message || err, 'error')
+    showToast(t.value.downloads.installFailed, err.message || err, 'error')
   }
 }
 
@@ -223,15 +223,15 @@ function revealInExplorer(path: string) {
 
 async function handleDeleteFile(path: string, id: string) {
   modalStore.confirm(
-    t.value.common.confirm,
-    t.value.history.deleteFile + '?',
+    t.value.history.deleteFile,
+    t.value.history.deleteFilePrompt,
     async () => {
       try {
         await WailsService.deleteFile(path)
         await historyStore.deleteItem(id)
-        showToast('File Deleted', path, 'success')
+        showToast(t.value.history.deletedToast, path, 'success')
       } catch (err: any) {
-        showToast('Deletion Failed', err.message || err, 'error')
+        showToast(t.value.history.deleteFailed, err.message || err, 'error')
       }
     },
     t.value.common.delete
@@ -245,8 +245,8 @@ async function deleteItem(id: string) {
 
 async function clearHistory() {
   modalStore.confirm(
-    t.value.common.confirm,
-    t.value.history.clearHistory + '?',
+    t.value.history.clearHistory,
+    t.value.history.clearHistoryPrompt,
     async () => {
       await historyStore.clearHistory()
       showToast(t.value.history.clearedTitle, t.value.history.clearedDesc, 'info')

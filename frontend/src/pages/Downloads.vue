@@ -340,7 +340,7 @@ function revealInExplorer(path: string) {
 
 function handleInstallClick(path: string) {
   if (deviceStore.devices.length === 0) {
-    showToast('No device', 'Connect a device to install', 'error')
+    showToast(t.value.downloads.noDeviceToast, t.value.downloads.noDeviceToastDesc, 'error')
     return
   }
   if (deviceStore.devices.length === 1) {
@@ -353,24 +353,24 @@ function handleInstallClick(path: string) {
 async function installToDevice(path: string, udid: string) {
   ipaToInstall.value = null
   try {
-    showToast('Installation Started', 'Deployment task enqueued', 'info')
+    showToast(t.value.downloads.installStarted, t.value.downloads.installStartedDesc, 'info')
     await deviceStore.installIPA(path, udid)
   } catch (err: any) {
-    showToast('Install Failed', err.message || String(err), 'error')
+    showToast(t.value.downloads.installFailed, err.message || String(err), 'error')
   }
 }
 
 function handleDeleteFile(path: string, id: string) {
   modalStore.confirm(
     t.value.downloads.deleteFile,
-    t.value.history.deleteFile + '?',
+    t.value.downloads.deleteFilePrompt,
     async () => {
       try {
         await WailsService.deleteFile(path)
         downloadsStore.removeTask(id)
-        showToast('Deleted', 'File removed from disk', 'info')
+        showToast(t.value.downloads.deletedToast, t.value.downloads.deletedDesc, 'info')
       } catch (err: any) {
-        showToast('Delete Failed', err.message || String(err), 'error')
+        showToast(t.value.downloads.deleteFailed, err.message || String(err), 'error')
       }
     },
     t.value.common.delete

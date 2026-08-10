@@ -318,13 +318,13 @@ function handleRefresh() {
 
 function handlePair(udid: string) {
   deviceStore.pairDevice(udid).catch((err) => {
-    showToast('Pairing Failed', err.message || 'Please unlock your device and trust this computer', 'error')
+    showToast(t.value.apps.pairingFailed, err.message || t.value.apps.pairingFailedDesc, 'error')
   })
 }
 
 function triggerIPAInstall() {
   deviceStore.installIPA().catch((err) => {
-    showToast('Installation Error', err.message || String(err), 'error')
+    showToast(t.value.apps.installError, err.message || String(err), 'error')
   })
 }
 
@@ -334,11 +334,11 @@ function handleUninstall(app: InstalledApp) {
     t.value.apps.uninstallPrompt.replace('{name}', app.name),
     async () => {
       try {
-        showToast('Uninstalling', `Removing ${app.name}...`, 'info')
+        showToast(t.value.apps.uninstalling, t.value.apps.uninstallingDesc.replace('{name}', app.name), 'info')
         await deviceStore.uninstallApp(app.bundleId)
-        showToast('Success', `${app.name} has been uninstalled`, 'success')
+        showToast(t.value.apps.uninstalledSuccess, app.name, 'success')
       } catch (err: any) {
-        showToast('Uninstall Failed', err.message || String(err), 'error')
+        showToast(t.value.apps.uninstallFailed, err.message || String(err), 'error')
       }
     },
     t.value.apps.uninstall

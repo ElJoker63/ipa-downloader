@@ -160,6 +160,15 @@ export interface Translations {
     completedTitle: string
     showInFolder: string
     deleteFile: string
+    deleteFilePrompt: string
+    deletedToast: string
+    deletedDesc: string
+    deleteFailed: string
+    installStarted: string
+    installStartedDesc: string
+    installFailed: string
+    noDeviceToast: string
+    noDeviceToastDesc: string
     copyError: string
     copyErrorTitle: string
     copied: string
@@ -177,14 +186,19 @@ export interface Translations {
     title: string
     subtitle: string
     clearHistory: string
+    clearHistoryPrompt: string
     copyPath: string
     showInFolder: string
     deleteRecord: string
     deleteFile: string
+    deleteFilePrompt: string
     emptyTitle: string
     emptyDesc: string
     clearedTitle: string
     clearedDesc: string
+    deletedToast: string
+    deletedDesc: string
+    deleteFailed: string
   }
   settings: {
     title: string
@@ -259,6 +273,13 @@ export interface Translations {
     uninstall: string
     uninstallTitle: string
     uninstallPrompt: string
+    uninstalling: string
+    uninstallingDesc: string
+    uninstalledSuccess: string
+    uninstallFailed: string
+    pairingFailed: string
+    pairingFailedDesc: string
+    installError: string
     noDeviceTitle: string
     noDeviceDesc: string
     dragDropText: string
