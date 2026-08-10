@@ -139,6 +139,7 @@ func (m *downloadManager) QueueDownload(app models.AppMetadata, platform string,
 		Progress:          0.0,
 		ExternalVersionID: externalVersionID,
 		Platform:          platform,
+		Country:           app.Country,
 		CreatedAt:         now,
 		UpdatedAt:         now,
 	}
@@ -426,7 +427,14 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 
 	// Helper for purchase with refresh logic
 	doPurchase := func(acc appstore.Account) error {
-		err := appstoreCore.Purchase(appstore.PurchaseInput{Account: acc, App: app})
+		sf := appstore.StoreFrontForCountry(acc.StoreFront, task.Country)
+		input := appstore.PurchaseInput{
+			Account:    acc,
+			App:        app,
+			StoreFront: sf,
+			Country:    task.Country,
+		}
+		err := appstoreCore.Purchase(input)
 		if err != nil {
 			if errors.Is(err, appstore.ErrLicenseAlreadyExists) {
 				return nil
@@ -435,7 +443,9 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Token expired during purchase. Refreshing...", task.AppName), "DownloadManager")
 				if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
 					if freshAcc, accErr := getFreshAccount(); accErr == nil {
-						return appstoreCore.Purchase(appstore.PurchaseInput{Account: freshAcc, App: app})
+						input.Account = freshAcc
+						input.StoreFront = appstore.StoreFrontForCountry(freshAcc.StoreFront, task.Country)
+						return appstoreCore.Purchase(input)
 					}
 				}
 			}
@@ -452,7 +462,9 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 	settings, _ := m.storage.GetSettings()
 	if settings == nil || settings.AutoAcquireLicense {
 		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying license status...", task.AppName), "DownloadManager")
-		_ = doPurchase(account)
+		if pErr := doPurchase(account); pErr != nil {
+			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Initial license acquisition result: %v", task.AppName, pErr), "DownloadManager")
+		}
 	}
 
 	dir := filepath.Dir(task.DestinationPath)
@@ -470,6 +482,7 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		if settings == nil || settings.AutoAcquireLicense {
 			m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying license status (Attempt %d/3)...", task.AppName, attempt), "DownloadManager")
 			if pErr := doPurchase(account); pErr != nil {
+				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License purchase attempt failed: %v", task.AppName, pErr), "DownloadManager")
 				if errors.Is(pErr, appstore.ErrPasswordTokenExpired) {
 					m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Session expired during license check. Refreshing...", task.AppName), "DownloadManager")
 					if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
@@ -489,7 +502,9 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		lastErr = err
 		if errors.Is(err, appstore.ErrLicenseRequired) {
 			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License not detected (Attempt %d/3). Acquiring and waiting...", task.AppName, attempt), "DownloadManager")
-			_ = doPurchase(account)
+			if pErr := doPurchase(account); pErr != nil {
+				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Retry purchase failed: %v", task.AppName, pErr), "DownloadManager")
+			}
 			time.Sleep(time.Duration(attempt*2) * time.Second) // Progressive wait: 2s, 4s...
 			continue
 		}

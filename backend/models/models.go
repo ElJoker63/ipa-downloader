@@ -53,6 +53,7 @@ type AppMetadata struct {
 	Genres                []string `json:"genres"`
 	PrimaryGenre          string   `json:"primaryGenre"`
 	SupportedPlatforms    []string `json:"supportedPlatforms"`
+	Country               string   `json:"country,omitempty"`
 	IsFavorite            bool     `json:"isFavorite"`
 }
 
@@ -93,6 +94,7 @@ type DownloadTask struct {
 	Checksum          string         `json:"checksum,omitempty"`
 	ChecksumType      string         `json:"checksumType,omitempty"`
 	Platform          string         `json:"platform"`
+	Country           string         `json:"country,omitempty"`
 
 	Error             string         `json:"error,omitempty"`
 	CreatedAt         time.Time      `json:"createdAt"`

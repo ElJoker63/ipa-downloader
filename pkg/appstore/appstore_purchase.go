@@ -17,8 +17,10 @@ var (
 )
 
 type PurchaseInput struct {
-	Account Account
-	App     App
+	Account    Account
+	App        App
+	StoreFront string
+	Country    string
 }
 
 func (t *appstore) Purchase(input PurchaseInput) error {
@@ -33,21 +35,35 @@ func (t *appstore) Purchase(input PurchaseInput) error {
 		return errors.New("purchasing paid apps is not supported")
 	}
 
-	err = t.purchaseWithParams(input.Account, input.App, guid, PricingParameterAppStore)
-	if err != nil {
-		if err == ErrTemporarilyUnavailable {
-			err = t.purchaseWithParams(input.Account, input.App, guid, PricingParameterAppleArcade)
-			if err != nil {
-				return fmt.Errorf("failed to purchase item with param '%s': %w", PricingParameterAppleArcade, err)
-			}
-
-			return nil
-		}
-
-		return fmt.Errorf("failed to purchase item with param '%s': %w", PricingParameterAppStore, err)
+	targetStoreFront := input.StoreFront
+	if targetStoreFront == "" && input.Country != "" {
+		targetStoreFront = StoreFrontForCountry(input.Account.StoreFront, input.Country)
+	}
+	if targetStoreFront == "" {
+		targetStoreFront = input.Account.StoreFront
 	}
 
-	return nil
+	err = t.purchaseWithParams(input.Account, input.App, targetStoreFront, guid, PricingParameterAppStore)
+	if err == nil {
+		return nil
+	}
+
+	if targetStoreFront != input.Account.StoreFront && input.Account.StoreFront != "" {
+		if fbErr := t.purchaseWithParams(input.Account, input.App, input.Account.StoreFront, guid, PricingParameterAppStore); fbErr == nil {
+			return nil
+		}
+	}
+
+	if errors.Is(err, ErrTemporarilyUnavailable) {
+		err = t.purchaseWithParams(input.Account, input.App, targetStoreFront, guid, PricingParameterAppleArcade)
+		if err != nil {
+			return fmt.Errorf("failed to purchase item with param '%s': %w", PricingParameterAppleArcade, err)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("failed to purchase item with param '%s': %w", PricingParameterAppStore, err)
 }
 
 type purchaseResult struct {
@@ -57,8 +73,8 @@ type purchaseResult struct {
 	Status          int    `plist:"status,omitempty"`
 }
 
-func (t *appstore) purchaseWithParams(acc Account, app App, guid string, pricingParameters string) error {
-	req := t.purchaseRequest(acc, app, acc.StoreFront, guid, pricingParameters)
+func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, guid string, pricingParameters string) error {
+	req := t.purchaseRequest(acc, app, storeFront, guid, pricingParameters)
 	res, err := t.purchaseClient.Send(req)
 
 	if err != nil {
@@ -85,11 +101,11 @@ func (t *appstore) purchaseWithParams(acc Account, app App, guid string, pricing
 	}
 
 	if res.Data.FailureType != "" && res.Data.CustomerMessage != "" {
-		return NewErrorWithMetadata(errors.New(res.Data.CustomerMessage), res)
+		return NewErrorWithMetadata(fmt.Errorf("apple purchase error (%s): %s", res.Data.FailureType, res.Data.CustomerMessage), res)
 	}
 
 	if res.Data.FailureType != "" {
-		return NewErrorWithMetadata(errors.New("something went wrong"), res)
+		return NewErrorWithMetadata(fmt.Errorf("apple purchase error (%s)", res.Data.FailureType), res)
 	}
 
 	if res.StatusCode == gohttp.StatusInternalServerError {
@@ -97,7 +113,10 @@ func (t *appstore) purchaseWithParams(acc Account, app App, guid string, pricing
 	}
 
 	if res.Data.JingleDocType != "purchaseSuccess" || res.Data.Status != 0 {
-		return NewErrorWithMetadata(errors.New("failed to purchase app"), res)
+		if res.Data.CustomerMessage != "" {
+			return NewErrorWithMetadata(errors.New(res.Data.CustomerMessage), res)
+		}
+		return NewErrorWithMetadata(fmt.Errorf("failed to purchase app (status: %d, docType: %s)", res.Data.Status, res.Data.JingleDocType), res)
 	}
 
 	return nil

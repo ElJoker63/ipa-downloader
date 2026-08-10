@@ -17,6 +17,26 @@ func countryCodeFromStoreFront(storeFront string) (string, error) {
 	return "", fmt.Errorf("country code mapping for store front (%s) was not found", storeFront)
 }
 
+// StoreFrontForCountry computes the X-Apple-Store-Front header for a target country,
+// adapting the suffix/format from the account's storefront if present.
+func StoreFrontForCountry(accStoreFront string, country string) string {
+	if country == "" {
+		return accStoreFront
+	}
+	targetSFID, ok := storeFronts[strings.ToUpper(country)]
+	if !ok {
+		return accStoreFront
+	}
+	if accStoreFront == "" {
+		return fmt.Sprintf("%s-1,32", targetSFID)
+	}
+	parts := strings.SplitN(accStoreFront, "-", 2)
+	if len(parts) == 2 {
+		return fmt.Sprintf("%s-%s", targetSFID, parts[1])
+	}
+	return targetSFID
+}
+
 var storeFronts = map[string]string{
 	"AE": "143481",
 	"AG": "143540",

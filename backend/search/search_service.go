@@ -183,6 +183,7 @@ func (s *searchService) directITunesSearch(term string, platform string, country
 			Genres:                item.Genres,
 			PrimaryGenre:          item.PrimaryGenreName,
 			SupportedPlatforms:    item.SupportedDevices,
+			Country:               country,
 		})
 	}
 
