@@ -27,10 +27,13 @@ export const useModalStore = defineStore('modal', () => {
 
   function show(opts: ModalOptions) {
     options.value = {
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
-      type: 'confirm',
-      ...opts,
+      confirmText: opts.confirmText ?? 'Confirm',
+      cancelText: opts.cancelText ?? 'Cancel',
+      type: opts.type ?? 'confirm',
+      title: opts.title,
+      message: opts.message,
+      onConfirm: opts.onConfirm,
+      onCancel: opts.onCancel,
     }
     isOpen.value = true
   }
@@ -40,7 +43,7 @@ export const useModalStore = defineStore('modal', () => {
       title,
       message,
       onConfirm,
-      confirmText,
+      ...(confirmText ? { confirmText } : {}),
       type: 'confirm'
     })
   }

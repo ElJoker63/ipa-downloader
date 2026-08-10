@@ -363,7 +363,7 @@ async function installToDevice(path: string, udid: string) {
 function handleDeleteFile(path: string, id: string) {
   modalStore.confirm(
     t.value.downloads.deleteFile,
-    'Are you sure you want to permanently delete this file?',
+    t.value.history.deleteFile + '?',
     async () => {
       try {
         await WailsService.deleteFile(path)
@@ -372,7 +372,8 @@ function handleDeleteFile(path: string, id: string) {
       } catch (err: any) {
         showToast('Delete Failed', err.message || String(err), 'error')
       }
-    }
+    },
+    t.value.common.delete
   )
 }
 
