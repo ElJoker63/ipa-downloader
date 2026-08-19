@@ -223,6 +223,22 @@ type IPAInfo struct {
 	Error         string   `json:"error,omitempty"`
 }
 
+// DownloadedIPA represents a scanned .ipa file located in the user's download directory.
+type DownloadedIPA struct {
+	FilePath      string    `json:"filePath"`
+	FileName      string    `json:"fileName"`
+	BundleID      string    `json:"bundleId"`
+	AppName       string    `json:"appName"`
+	Version       string    `json:"version"`
+	ShortVersion  string    `json:"shortVersion"`
+	MinimumOS     string    `json:"minimumOs"`
+	FileSizeBytes int64     `json:"fileSizeBytes"`
+	FormattedSize string    `json:"formattedSize"`
+	ModTime       time.Time `json:"modTime"`
+	ArtworkURL    string    `json:"artworkUrl,omitempty"`
+	AppID         int64     `json:"appId,omitempty"`
+}
+
 // DeviceInstallProgress tracks IPA installation phases.
 type DeviceInstallProgress struct {
 	ID      string `json:"id"`

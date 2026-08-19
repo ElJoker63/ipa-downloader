@@ -102,6 +102,10 @@ export function GetDownloadHistory() {
   return window['go']['services']['AppService']['GetDownloadHistory']();
 }
 
+export function GetDownloadedIPAs(arg1) {
+  return window['go']['services']['AppService']['GetDownloadedIPAs'](arg1);
+}
+
 export function GetFavorites() {
   return window['go']['services']['AppService']['GetFavorites']();
 }

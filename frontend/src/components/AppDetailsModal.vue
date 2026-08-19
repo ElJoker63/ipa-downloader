@@ -36,9 +36,34 @@
           </div>
         </div>
 
-        <!-- Header Actions (Close & Download) -->
+        <!-- Header Actions (Close & Download/Update) -->
         <div class="flex items-center space-x-2 shrink-0">
           <button
+            v-if="app && downloadedAppsStore.isUpdateAvailable(app.bundleId, app.version)"
+            type="button"
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] text-white text-xs font-semibold shadow-md shadow-[#30D158]/20 flex items-center space-x-1.5 transition-all duration-200"
+            @click="downloadCurrent"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>{{ t.downloadedApps?.update || 'Actualizar' }}</span>
+          </button>
+
+          <button
+            v-else-if="app && downloadedAppsStore.getDownloadedByBundleId(app.bundleId)"
+            type="button"
+            class="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-[#30D158] border border-[#30D158]/30 text-xs font-medium flex items-center space-x-1.5 transition"
+            @click="downloadCurrent"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ t.downloadedApps?.downloaded || 'Descargado' }}</span>
+          </button>
+
+          <button
+            v-else
             type="button"
             class="btn-primary text-xs px-4 py-2 flex items-center space-x-1.5 shadow-sm"
             @click="downloadCurrent"
@@ -48,6 +73,7 @@
             </svg>
             <span>{{ t.common.download }}</span>
           </button>
+
           <button
             type="button"
             class="p-2 rounded-xl text-[#7D8592] hover:text-white hover:bg-white/[0.08] transition duration-150"
@@ -266,12 +292,14 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSearchStore } from '../stores/search'
 import { useDownloadsStore } from '../stores/downloads'
 import { useAuthStore } from '../stores/auth'
+import { useDownloadedAppsStore } from '../stores/downloadedApps'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
 const searchStore = useSearchStore()
 const downloadsStore = useDownloadsStore()
 const authStore = useAuthStore()
+const downloadedAppsStore = useDownloadedAppsStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 

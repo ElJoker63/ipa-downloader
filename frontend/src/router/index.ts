@@ -5,6 +5,7 @@ import Profile from '../pages/Profile.vue'
 import Search from '../pages/Search.vue'
 
 import Downloads from '../pages/Downloads.vue'
+import DownloadedApps from '../pages/DownloadedApps.vue'
 import Apps from '../pages/Apps.vue'
 import Firmwares from '../pages/Firmwares.vue'
 import Favorites from '../pages/Favorites.vue'
@@ -20,6 +21,7 @@ const routes = [
   { path: '/search', name: 'Search', component: Search },
 
   { path: '/downloads', name: 'Downloads', component: Downloads },
+  { path: '/downloaded-apps', name: 'DownloadedApps', component: DownloadedApps },
   { path: '/apps', name: 'Apps', component: Apps },
   { path: '/firmwares', name: 'Firmwares', component: Firmwares },
   { path: '/favorites', name: 'Favorites', component: Favorites },

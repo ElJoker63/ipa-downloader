@@ -59,6 +59,7 @@ export interface Translations {
     home: string
     search: string
     downloads: string
+    downloadedApps?: string
     apps: string
     favorites: string
     history: string
@@ -66,6 +67,17 @@ export interface Translations {
     logs: string
     firmwares: string
     suite: string
+  }
+  downloadedApps?: {
+    title: string
+    subtitle: string
+    searchPlaceholder: string
+    emptyTitle: string
+    emptyDesc: string
+    updateAvailable: string
+    update: string
+    downloaded: string
+    localVersion: string
   }
   firmwares: {
     title: string

@@ -53,6 +53,8 @@ export function GetDeviceFirmwares(arg1:string):Promise<models.AppleHardware>;
 
 export function GetDownloadHistory():Promise<Array<models.DownloadTask>>;
 
+export function GetDownloadedIPAs(arg1:string):Promise<Array<models.DownloadedIPA>>;
+
 export function GetFavorites():Promise<Array<models.FavoriteApp>>;
 
 export function GetLogs(arg1:number):Promise<Array<models.LogEntry>>;

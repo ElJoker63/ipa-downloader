@@ -10,13 +10,12 @@ import type {
   DeviceInfo,
   InstalledApp,
   IPAInfo,
+  DownloadedIPA,
   DeviceInstallTask,
   UpdateInfo,
   Firmware,
   AppleHardware,
 } from '../types'
-
-
 
 import * as AppService from '../../wailsjs/go/services/AppService'
 import * as WailsRuntime from '../../wailsjs/runtime/runtime'
@@ -190,6 +189,16 @@ export const WailsService = {
 
   async clearDownloadHistory(): Promise<void> {
     return await AppService.ClearDownloadHistory()
+  },
+
+  async getDownloadedIPAs(downloadDir: string = ''): Promise<DownloadedIPA[]> {
+    try {
+      const list = await (AppService as any).GetDownloadedIPAs(downloadDir)
+      return (list || []) as DownloadedIPA[]
+    } catch (err) {
+      console.error('getDownloadedIPAs error:', err)
+      return []
+    }
   },
 
   async openFolder(path: string): Promise<void> {

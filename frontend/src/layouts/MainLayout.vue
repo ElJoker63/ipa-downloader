@@ -61,6 +61,24 @@
           </span>
         </router-link>
 
+        <!-- IPAs Descargadas (Library) -->
+        <router-link
+          to="/downloaded-apps"
+          class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group"
+          :class="isActive('/downloaded-apps') ? 'nav-item-active' : 'nav-item-inactive'"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v1a2 2 0 01-2 2M5 8v10a2 2 0 002 2h14a2 2 0 002-2V8m-9 4h4" />
+          </svg>
+          <span class="flex-1">{{ t.nav.downloadedApps || 'IPAs Descargadas' }}</span>
+          <span
+            v-if="downloadedAppsStore.downloadedIPAs.length > 0"
+            class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-white/10 text-[#B8C0CC]"
+          >
+            {{ downloadedAppsStore.downloadedIPAs.length }}
+          </span>
+        </router-link>
+
         <!-- Apps (Device Management) -->
         <router-link
           to="/apps"
@@ -245,6 +263,7 @@ import { useAuthStore } from '../stores/auth'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'
 import { useDeviceStore } from '../stores/device'
+import { useDownloadedAppsStore } from '../stores/downloadedApps'
 import { useTheme } from '../composables/useTheme'
 import { useI18n } from '../i18n'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
@@ -256,6 +275,8 @@ const authStore = useAuthStore()
 const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
 const deviceStore = useDeviceStore()
+const downloadedAppsStore = useDownloadedAppsStore()
+downloadedAppsStore.fetchDownloadedIPAs()
 const { isDark, toggleTheme } = useTheme()
 const { t, currentLanguage, setLanguage } = useI18n()
 

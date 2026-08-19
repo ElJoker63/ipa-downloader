@@ -196,6 +196,21 @@ export interface IPAInfo {
   error?: string
 }
 
+export interface DownloadedIPA {
+  filePath: string
+  fileName: string
+  bundleId: string
+  appName: string
+  version: string
+  shortVersion: string
+  minimumOs: string
+  fileSizeBytes: number
+  formattedSize: string
+  modTime: string
+  artworkUrl?: string
+  appId?: number
+}
+
 export interface DeviceInstallTask {
   id: string
   ipaName: string

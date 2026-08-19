@@ -181,6 +181,12 @@
                 <span class="px-2 py-0.5 text-[10px] font-mono rounded-md bg-white/[0.06] text-[#B8C0CC] border border-white/[0.08]">
                   v{{ app.version }}
                 </span>
+                <span
+                  v-if="downloadedAppsStore.isUpdateAvailable(app.bundleId, app.version)"
+                  class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 animate-pulse"
+                >
+                  ↑ {{ t.downloadedApps?.updateAvailable || 'Nueva versión' }}
+                </span>
                 <span v-if="app.primaryGenre" class="text-[10px] text-[#7D8592] truncate max-w-[90px]">
                   {{ app.primaryGenre }}
                 </span>
@@ -197,7 +203,36 @@
             >
               {{ t.common.viewDetails }}
             </button>
+
+            <!-- Action Buttons based on local downloaded state -->
             <button
+              v-if="downloadedAppsStore.isUpdateAvailable(app.bundleId, app.version)"
+              type="button"
+              class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] text-white text-xs font-semibold shadow-md shadow-[#30D158]/20 flex items-center space-x-1.5 transition-all duration-200"
+              @click="downloadApp(app)"
+              :title="`Actualizar a v${app.version}`"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{{ t.downloadedApps?.update || 'Actualizar' }}</span>
+            </button>
+
+            <button
+              v-else-if="downloadedAppsStore.getDownloadedByBundleId(app.bundleId)"
+              type="button"
+              class="px-3.5 py-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-[#30D158] border border-[#30D158]/30 text-xs font-medium flex items-center space-x-1.5 transition"
+              @click="downloadApp(app)"
+              :title="`Ya descargado (v${downloadedAppsStore.getDownloadedByBundleId(app.bundleId)?.version}). Clic para volver a descargar.`"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{{ t.downloadedApps?.downloaded || 'Descargado' }}</span>
+            </button>
+
+            <button
+              v-else
               type="button"
               class="btn-primary text-xs px-4 py-1.5 flex items-center space-x-1.5 shadow-sm"
               @click="downloadApp(app)"
@@ -230,6 +265,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useSearchStore } from '../stores/search'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'
+import { useDownloadedAppsStore } from '../stores/downloadedApps'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 import GlassDropdown from '../components/GlassDropdown.vue'
@@ -239,6 +275,7 @@ import type { AppMetadata } from '../types'
 const searchStore = useSearchStore()
 const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
+const downloadedAppsStore = useDownloadedAppsStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 

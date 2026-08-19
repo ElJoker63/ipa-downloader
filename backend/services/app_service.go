@@ -288,6 +288,10 @@ func (s *AppService) ClearDownloadHistory() error {
 	return s.libraryService.ClearHistory()
 }
 
+func (s *AppService) GetDownloadedIPAs(downloadDir string) ([]models.DownloadedIPA, error) {
+	return s.libraryService.GetDownloadedIPAs(downloadDir)
+}
+
 func (s *AppService) OpenFolder(path string) error {
 	return s.libraryService.OpenFolder(path)
 }
