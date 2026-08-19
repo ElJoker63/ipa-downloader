@@ -21,6 +21,18 @@
       <div class="flex items-center space-x-3">
         <button
           type="button"
+          @click="checkUpdates"
+          :disabled="downloadedAppsStore.isCheckingUpdates"
+          class="px-3.5 py-2 rounded-xl bg-[#0A84FF]/20 hover:bg-[#0A84FF]/30 border border-[#0A84FF]/30 text-xs font-semibold text-[#0A84FF] transition flex items-center space-x-2 disabled:opacity-50"
+        >
+          <svg class="w-4 h-4 text-[#0A84FF]" :class="{ 'animate-spin': downloadedAppsStore.isCheckingUpdates }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>{{ downloadedAppsStore.isCheckingUpdates ? 'Buscando...' : 'Buscar Actualizaciones' }}</span>
+        </button>
+
+        <button
+          type="button"
           @click="refreshIPAs"
           :disabled="downloadedAppsStore.isLoading"
           class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-xs font-medium text-white transition flex items-center space-x-2 disabled:opacity-50"
@@ -28,7 +40,7 @@
           <svg class="w-4 h-4 text-[#8E8E93]" :class="{ 'animate-spin': downloadedAppsStore.isLoading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>{{ t.apps?.refresh || 'Actualizar' }}</span>
+          <span>{{ t.apps?.refresh || 'Refrescar' }}</span>
         </button>
       </div>
     </div>
@@ -81,6 +93,12 @@
                 <span class="px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30">
                   v{{ ipa.version || ipa.shortVersion || '1.0' }}
                 </span>
+                <span
+                  v-if="downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)"
+                  class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 animate-pulse"
+                >
+                  ↑ v{{ downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.latestVersion }} disponible
+                </span>
                 <span class="px-2 py-0.5 text-[10px] font-mono rounded-md bg-white/[0.06] text-[#B8C0CC] border border-white/[0.08]">
                   {{ ipa.formattedSize }}
                 </span>
@@ -103,6 +121,19 @@
 
           <!-- Action Buttons Footer -->
           <div class="flex items-center justify-between pt-2 border-t border-white/[0.08] gap-2">
+            <button
+              v-if="downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)"
+              type="button"
+              class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] text-white text-xs font-semibold shadow-md shadow-[#30D158]/20 flex items-center space-x-1.5 transition-all duration-200"
+              @click="updateApp(downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.appMetadata)"
+              :title="`Actualizar a v${downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.latestVersion}`"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{{ t.downloadedApps?.update || 'Actualizar' }}</span>
+            </button>
+
             <button
               v-if="deviceStore.isConnected"
               type="button"
@@ -175,17 +206,21 @@ import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 import { WailsService } from '../services/wails'
 
+import { useDownloadsStore } from '../stores/downloads'
+
 const downloadedAppsStore = useDownloadedAppsStore()
 const settingsStore = useSettingsStore()
 const deviceStore = useDeviceStore()
+const downloadsStore = useDownloadsStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
 
 const searchQuery = ref('')
 const defaultAppIcon = 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'
 
-onMounted(() => {
-  downloadedAppsStore.fetchDownloadedIPAs()
+onMounted(async () => {
+  await downloadedAppsStore.fetchDownloadedIPAs()
+  await downloadedAppsStore.checkUpdatesForDownloaded()
 })
 
 const filteredIPAs = computed(() => {
@@ -215,6 +250,27 @@ const totalStorageSizeFormatted = computed(() => {
 
 function refreshIPAs() {
   downloadedAppsStore.fetchDownloadedIPAs()
+  downloadedAppsStore.checkUpdatesForDownloaded()
+}
+
+async function checkUpdates() {
+  await downloadedAppsStore.checkUpdatesForDownloaded()
+  const updatesCount = downloadedAppsStore.downloadedIPAs.filter(ipa => downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)).length
+  if (updatesCount > 0) {
+    showToast('Actualizaciones encontradas', `Se encontraron ${updatesCount} actualizaciones disponibles.`, 'info')
+  } else {
+    showToast('Todo actualizado', 'Todas tus apps descargadas tienen la versión más reciente.', 'success')
+  }
+}
+
+async function updateApp(appMeta: any) {
+  if (!appMeta) return
+  try {
+    await downloadsStore.queueDownload(appMeta, 'ios')
+    showToast(t.value.search.downloadQueued, `Actualización a v${appMeta.version} para ${appMeta.name}`, 'info')
+  } catch (err: any) {
+    showToast(t.value.search.downloadError, err?.message || 'Error al iniciar actualización', 'error')
+  }
 }
 
 function openDownloadFolder() {

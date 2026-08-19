@@ -139,21 +139,23 @@ func (t *appstore) login(email, password, authCode, guid, endpoint string) (Acco
 }
 
 func shouldRetryWithLegacyAuthenticate(endpoint string, err error) bool {
-	if !strings.Contains(endpoint, "/native/") {
+	if endpoint == legacyAuthenticateEndpoint {
 		return false
 	}
 
 	var responseErr *http.UnexpectedResponseError
-	if !errors.As(err, &responseErr) {
-		return false
+	if errors.As(err, &responseErr) {
+		switch responseErr.StatusCode {
+		case gohttp.StatusNoContent, gohttp.StatusForbidden, gohttp.StatusNotFound, gohttp.StatusServiceUnavailable:
+			return true
+		}
 	}
 
-	switch responseErr.StatusCode {
-	case gohttp.StatusNoContent, gohttp.StatusForbidden, gohttp.StatusNotFound, gohttp.StatusServiceUnavailable:
+	if err != nil && (strings.Contains(err.Error(), "HTTP 204") || strings.Contains(err.Error(), "empty or non-plist body")) {
 		return true
-	default:
-		return false
 	}
+
+	return false
 }
 
 func (t *appstore) parseLoginResponse(res *http.Result[loginResult], attempt int, authCode string) (bool, string, error) {

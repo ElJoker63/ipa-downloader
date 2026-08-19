@@ -408,6 +408,11 @@ func (m *downloadManager) processDownload(taskID string) {
 	task.DownloadedBytes = task.TotalBytes
 
 	_ = m.storage.UpdateDownloadProgress(taskID, models.DownloadStatusCompleted, task.TotalBytes, task.TotalBytes, 100.0, 0, 0, "")
+
+	if task.Type == "app" && task.BundleID != "" {
+		m.cleanupOlderAppVersions(task)
+	}
+
 	m.emitter.EmitLog("SUCCESS", fmt.Sprintf("Successfully downloaded %s to %s", task.AppName, task.DestinationPath), "DownloadManager")
 	m.emitter.Emit(events.EventDownloadCompleted, task)
 	m.emitter.EmitNotification("Download Complete", fmt.Sprintf("%s is ready!", task.AppName), "success")
@@ -824,4 +829,52 @@ func formatETA(seconds int64) string {
 		return fmt.Sprintf("%dm %ds", seconds/60, seconds%60)
 	}
 	return fmt.Sprintf("%dh %dm", seconds/3600, (seconds%3600)/60)
+}
+
+func (m *downloadManager) cleanupOlderAppVersions(task *models.DownloadTask) {
+	if task.BundleID == "" || task.DestinationPath == "" {
+		return
+	}
+
+	dir := filepath.Dir(task.DestinationPath)
+	dirsToCheck := []string{dir}
+	parentDir := filepath.Dir(dir)
+	if parentDir != "" && parentDir != dir {
+		dirsToCheck = append(dirsToCheck, parentDir)
+	}
+
+	sanitizedBundleID := sanitizeFilename(task.BundleID)
+	prefixWithID := fmt.Sprintf("%s_%d_", sanitizedBundleID, task.AppID)
+	prefixJustBundle := fmt.Sprintf("%s_", sanitizedBundleID)
+
+	absDest, _ := filepath.Abs(task.DestinationPath)
+
+	for _, d := range dirsToCheck {
+		entries, err := os.ReadDir(d)
+		if err != nil {
+			continue
+		}
+
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".ipa") {
+				continue
+			}
+
+			fullPath := filepath.Join(d, entry.Name())
+			absPath, _ := filepath.Abs(fullPath)
+			if strings.EqualFold(absPath, absDest) {
+				continue
+			}
+
+			name := entry.Name()
+			if strings.HasPrefix(name, prefixWithID) || strings.HasPrefix(name, prefixJustBundle) {
+				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Removing previous version file: %s", task.AppName, name), "DownloadManager")
+				if removeErr := os.Remove(fullPath); removeErr != nil {
+					m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Could not remove old version %s: %v", task.AppName, name, removeErr), "DownloadManager")
+				} else {
+					m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] Removed old version file: %s", task.AppName, name), "DownloadManager")
+				}
+			}
+		}
+	}
 }

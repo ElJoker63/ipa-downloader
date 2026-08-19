@@ -136,9 +136,6 @@ func (s *authService) SilentRefresh() error {
 		return fmt.Errorf("no stored password")
 	}
 
-	// Important: Clear current stale session data before refresh
-	_ = s.appleClient.Revoke()
-
 	_, err = s.Login(string(emailBytes), string(passBytes), "", true)
 	if err != nil {
 		s.emitter.EmitLog("ERROR", fmt.Sprintf("Silent re-authentication failed: %v", err), "AuthService")

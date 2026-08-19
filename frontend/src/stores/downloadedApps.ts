@@ -7,6 +7,9 @@ export const useDownloadedAppsStore = defineStore('downloadedApps', () => {
   const downloadedIPAs = ref<DownloadedIPA[]>([])
   const isLoading = ref(false)
 
+  const isCheckingUpdates = ref(false)
+  const storeMetadata = ref<Record<string, { latestVersion: string; appMetadata: any }>>({})
+
   async function fetchDownloadedIPAs(downloadDir: string = '') {
     isLoading.value = true
     try {
@@ -16,6 +19,30 @@ export const useDownloadedAppsStore = defineStore('downloadedApps', () => {
       console.error('Failed to fetch downloaded IPAs:', err)
     } finally {
       isLoading.value = false
+    }
+  }
+
+  async function checkUpdatesForDownloaded() {
+    if (downloadedIPAs.value.length === 0) return
+    isCheckingUpdates.value = true
+    try {
+      const promises = downloadedIPAs.value.map(async (ipa) => {
+        if (!ipa.bundleId) return
+        try {
+          const appMeta = await WailsService.lookupApp(ipa.bundleId, 'ios')
+          if (appMeta && appMeta.version) {
+            storeMetadata.value[ipa.bundleId.toLowerCase()] = {
+              latestVersion: appMeta.version,
+              appMetadata: appMeta,
+            }
+          }
+        } catch {
+          // Ignore individual lookup errors
+        }
+      })
+      await Promise.all(promises)
+    } finally {
+      isCheckingUpdates.value = false
     }
   }
 
@@ -47,12 +74,26 @@ export const useDownloadedAppsStore = defineStore('downloadedApps', () => {
     return compareVersions(storeVersion, localIPA.version) > 0
   }
 
+  function getUpdateInfo(bundleId: string, localVersion: string) {
+    if (!bundleId) return null
+    const data = storeMetadata.value[bundleId.toLowerCase()]
+    if (!data || !data.latestVersion) return null
+    if (compareVersions(data.latestVersion, localVersion) > 0) {
+      return data
+    }
+    return null
+  }
+
   return {
     downloadedIPAs,
     isLoading,
+    isCheckingUpdates,
+    storeMetadata,
     fetchDownloadedIPAs,
+    checkUpdatesForDownloaded,
     getDownloadedByBundleId,
     isUpdateAvailable,
+    getUpdateInfo,
     compareVersions,
   }
 })
