@@ -89,6 +89,7 @@ export namespace models {
 	    genres: string[];
 	    primaryGenre: string;
 	    supportedPlatforms: string[];
+	    country?: string;
 	    isFavorite: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -124,6 +125,7 @@ export namespace models {
 	        this.genres = source["genres"];
 	        this.primaryGenre = source["primaryGenre"];
 	        this.supportedPlatforms = source["supportedPlatforms"];
+	        this.country = source["country"];
 	        this.isFavorite = source["isFavorite"];
 	    }
 	}
@@ -365,6 +367,7 @@ export namespace models {
 	    checksum?: string;
 	    checksumType?: string;
 	    platform: string;
+	    country?: string;
 	    error?: string;
 	    // Go type: time
 	    createdAt: any;
@@ -401,6 +404,7 @@ export namespace models {
 	        this.checksum = source["checksum"];
 	        this.checksumType = source["checksumType"];
 	        this.platform = source["platform"];
+	        this.country = source["country"];
 	        this.error = source["error"];
 	        this.createdAt = this.convertValues(source["createdAt"], null);
 	        this.updatedAt = this.convertValues(source["updatedAt"], null);
