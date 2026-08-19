@@ -41,8 +41,20 @@
         </div>
 
         <!-- Default Download Folder -->
-        <div class="space-y-2">
-          <label class="text-xs font-medium text-[#FFFFFF]">{{ t.settings.defaultFolder }}</label>
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-medium text-[#FFFFFF]">{{ t.settings.defaultFolder }}</label>
+            <button
+              type="button"
+              class="text-xs text-[#0A84FF] hover:underline font-medium flex items-center space-x-1"
+              @click="openFolder"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span>{{ t.history?.showInFolder || 'Abrir Carpeta' }}</span>
+            </button>
+          </div>
           <div class="flex items-center space-x-2.5">
             <input
               v-model="settingsStore.settings.defaultDownloadFolder"
@@ -60,6 +72,20 @@
               </svg>
               <span>{{ t.settings.browseFolder }}</span>
             </button>
+          </div>
+
+          <!-- Informative Subdirectory Structure Banner -->
+          <div class="p-3.5 rounded-[12px] bg-white/[0.03] border border-white/[0.06] space-y-1 text-[#B8C0CC]">
+            <div class="font-semibold text-white flex items-center space-x-1.5 text-[11px] uppercase tracking-wider">
+              <svg class="w-3.5 h-3.5 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Organización de Archivos Descargados</span>
+            </div>
+            <ul class="list-disc list-inside space-y-0.5 text-[11px] font-mono text-[#7D8592] pl-1">
+              <li><strong class="text-[#B8C0CC]">Aplicaciones (.ipa):</strong> se descargarán en <span class="text-[#64D2FF]">.../ipa/</span></li>
+              <li><strong class="text-[#B8C0CC]">Firmwares (.ipsw):</strong> se descargarán en <span class="text-[#64D2FF]">.../ipsw/</span></li>
+            </ul>
           </div>
         </div>
 
@@ -160,6 +186,7 @@ import { useSettingsStore } from '../stores/settings'
 import { useLogsStore } from '../stores/logs'
 import { useI18n, type LanguageCode } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
+import { WailsService } from '../services/wails'
 
 const settingsStore = useSettingsStore()
 const logsStore = useLogsStore()
@@ -174,6 +201,11 @@ function changeLang(lang: LanguageCode) {
   setLanguage(lang)
   settingsStore.settings.language = lang
   settingsStore.updateSettings({ language: lang })
+}
+
+function openFolder() {
+  const folder = settingsStore.settings.defaultDownloadFolder
+  WailsService.openFolder(folder)
 }
 
 async function browseFolder() {

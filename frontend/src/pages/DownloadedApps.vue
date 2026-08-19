@@ -19,28 +19,6 @@
 
       <!-- Action Buttons -->
       <div class="flex items-center space-x-3">
-        <!-- Destination Folder Badge -->
-        <div class="hidden lg:flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-          <svg class="w-4 h-4 text-[#64D2FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-          <div class="flex flex-col">
-            <span class="text-[9px] uppercase font-bold text-[#7D8592] leading-none">{{ t.downloads?.destinationFolder || 'Carpeta de Descargas' }}</span>
-            <span class="text-[11px] text-[#B8C0CC] font-mono truncate max-w-[200px]">{{ settingsStore.settings.defaultDownloadFolder || 'Downloads' }}</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          @click="openDownloadFolder"
-          class="btn-secondary text-xs px-3.5 py-2 flex items-center space-x-1.5"
-        >
-          <svg class="w-4 h-4 text-[#64D2FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
-          </svg>
-          <span>{{ t.history?.showInFolder || 'Abrir Carpeta' }}</span>
-        </button>
-
         <button
           type="button"
           @click="refreshIPAs"

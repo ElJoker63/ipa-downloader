@@ -221,9 +221,9 @@
             <button
               v-else-if="downloadedAppsStore.getDownloadedByBundleId(app.bundleId)"
               type="button"
-              class="px-3.5 py-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-[#30D158] border border-[#30D158]/30 text-xs font-medium flex items-center space-x-1.5 transition"
-              @click="downloadApp(app)"
-              :title="`Ya descargado (v${downloadedAppsStore.getDownloadedByBundleId(app.bundleId)?.version}). Clic para volver a descargar.`"
+              disabled
+              class="px-3.5 py-1.5 rounded-xl bg-white/[0.08] text-[#30D158] border border-[#30D158]/30 text-xs font-medium flex items-center space-x-1.5 cursor-default opacity-80 select-none"
+              :title="`Aplicación ya descargada en tu biblioteca (v${downloadedAppsStore.getDownloadedByBundleId(app.bundleId)?.version})`"
             >
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />

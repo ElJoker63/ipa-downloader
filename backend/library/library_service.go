@@ -138,9 +138,9 @@ func (s *libraryService) GetDownloadedIPAs(downloadDir string) ([]models.Downloa
 		}
 	}
 
-	entries, err := os.ReadDir(downloadDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read download folder: %w", err)
+	dirsToScan := []string{
+		filepath.Join(downloadDir, "ipa"),
+		downloadDir,
 	}
 
 	// Fetch history & favorites for artwork lookup cache
@@ -172,21 +172,34 @@ func (s *libraryService) GetDownloadedIPAs(downloadDir string) ([]models.Downloa
 	}
 
 	var results []models.DownloadedIPA
+	seenPaths := make(map[string]bool)
 
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".ipa") {
-			continue
-		}
-
-		fullPath := filepath.Join(downloadDir, entry.Name())
-		fileInfo, err := entry.Info()
+	for _, dir := range dirsToScan {
+		entries, err := os.ReadDir(dir)
 		if err != nil {
 			continue
 		}
 
-		ipaItem := parseIPAFile(fullPath, fileInfo, artworkMap, appIDMap)
-		if ipaItem != nil {
-			results = append(results, *ipaItem)
+		for _, entry := range entries {
+			if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".ipa") {
+				continue
+			}
+
+			fullPath := filepath.Join(dir, entry.Name())
+			if seenPaths[fullPath] {
+				continue
+			}
+			seenPaths[fullPath] = true
+
+			fileInfo, err := entry.Info()
+			if err != nil {
+				continue
+			}
+
+			ipaItem := parseIPAFile(fullPath, fileInfo, artworkMap, appIDMap)
+			if ipaItem != nil {
+				results = append(results, *ipaItem)
+			}
 		}
 	}
 

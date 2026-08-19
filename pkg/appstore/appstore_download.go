@@ -302,6 +302,7 @@ func (*appstore) downloadRequest(acc Account, app App, guid string, externalVers
 	}
 
 	if externalVersionID != "" {
+		payload["appExtVrsId"] = externalVersionID
 		payload["externalVersionId"] = externalVersionID
 	}
 

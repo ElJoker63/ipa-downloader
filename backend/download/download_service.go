@@ -115,9 +115,17 @@ func (m *downloadManager) QueueDownload(app models.AppMetadata, platform string,
 
 	if customOutputPath != "" {
 		destFolder = customOutputPath
+	} else {
+		destFolder = filepath.Join(destFolder, "ipa")
+	}
+	_ = os.MkdirAll(destFolder, 0755)
+
+	versionStr := app.Version
+	if externalVersionID != "" {
+		versionStr = fmt.Sprintf("build_%s", externalVersionID)
 	}
 
-	fileName := fmt.Sprintf("%s_%d_%s.ipa", sanitizeFilename(app.BundleID), app.ID, sanitizeFilename(app.Version))
+	fileName := fmt.Sprintf("%s_%d_%s.ipa", sanitizeFilename(app.BundleID), app.ID, sanitizeFilename(versionStr))
 	destPath := filepath.Join(destFolder, fileName)
 
 	taskID := fmt.Sprintf("%d-%d", app.ID, time.Now().UnixNano())
@@ -130,7 +138,7 @@ func (m *downloadManager) QueueDownload(app models.AppMetadata, platform string,
 		BundleID:          app.BundleID,
 		AppName:           app.Name,
 		Developer:         app.Developer,
-		Version:           app.Version,
+		Version:           versionStr,
 		ArtworkURL:        app.ArtworkURL,
 		DestinationPath:   destPath,
 		Status:            models.DownloadStatusQueued,
@@ -165,6 +173,9 @@ func (m *downloadManager) QueueFirmwareDownload(deviceName string, fw models.Fir
 		home, _ := os.UserHomeDir()
 		destFolder = filepath.Join(home, "Downloads")
 	}
+
+	destFolder = filepath.Join(destFolder, "ipsw")
+	_ = os.MkdirAll(destFolder, 0755)
 
 	destPath := filepath.Join(destFolder, fw.Filename)
 	taskID := fmt.Sprintf("fw-%s-%d", fw.BuildID, time.Now().UnixNano())
@@ -671,21 +682,28 @@ func (m *downloadManager) executeFirmwareDownload(ctx context.Context, task *mod
 	if task.Checksum != "" && task.ChecksumType == "sha1" {
 		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying full file integrity (SHA1)...", task.AppName), "DownloadManager")
 
-		f, err := os.Open(tmpPath)
+		err := func() error {
+			f, err := os.Open(tmpPath)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			h := sha1.New()
+			if _, err := io.Copy(h, f); err != nil {
+				return err
+			}
+
+			actualHash := hex.EncodeToString(h.Sum(nil))
+			if strings.ToLower(actualHash) != strings.ToLower(task.Checksum) {
+				return fmt.Errorf("integrity verification failed: checksum mismatch (expected %s, got %s)", task.Checksum, actualHash)
+			}
+			return nil
+		}()
+
 		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		h := sha1.New()
-		if _, err := io.Copy(h, f); err != nil {
-			return err
-		}
-
-		actualHash := hex.EncodeToString(h.Sum(nil))
-		if strings.ToLower(actualHash) != strings.ToLower(task.Checksum) {
 			_ = os.Remove(tmpPath)
-			return fmt.Errorf("integrity verification failed: checksum mismatch (expected %s, got %s)", task.Checksum, actualHash)
+			return err
 		}
 		m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] Integrity verified successfully", task.AppName), "DownloadManager")
 	}
