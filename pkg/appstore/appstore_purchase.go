@@ -78,7 +78,6 @@ type purchaseResult struct {
 func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, guid string, pricingParameters string) error {
 	req := t.purchaseRequest(acc, app, storeFront, guid, pricingParameters)
 	res, err := t.purchaseClient.Send(req)
-
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
@@ -99,9 +98,6 @@ func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, g
 	}
 
 	if res.Data.FailureType == FailureTypeLicenseAlreadyExists {
-		if res.Data.MAllowed != nil && !*res.Data.MAllowed {
-			return NewErrorWithMetadata(errors.New("this app cannot be acquired from a computer; Apple requires obtaining it on a physical iOS device first"), res)
-		}
 		return ErrLicenseAlreadyExists
 	}
 

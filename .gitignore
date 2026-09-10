@@ -9,6 +9,7 @@ exp/
 *.dll
 *.so
 *.dylib
+*.syso
 ipa-downloader-desktop.exe
 build/bin/
 *.tsbuildinfo

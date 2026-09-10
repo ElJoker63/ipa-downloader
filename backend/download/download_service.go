@@ -465,7 +465,11 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 					if freshAcc, accErr := getFreshAccount(); accErr == nil {
 						input.Account = freshAcc
 						input.StoreFront = appstore.StoreFrontForCountry(freshAcc.StoreFront, task.Country)
-						return appstoreCore.Purchase(input)
+						pErr := appstoreCore.Purchase(input)
+						if errors.Is(pErr, appstore.ErrLicenseAlreadyExists) {
+							return nil
+						}
+						return pErr
 					}
 				}
 			}
