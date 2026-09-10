@@ -42,7 +42,6 @@ type installTask struct {
 	ipaPath string
 }
 
-
 type deviceService struct {
 	emitter events.Emitter
 	ctx     context.Context
@@ -209,7 +208,7 @@ func (s *deviceService) runActualInstall(id string, dev giDevice.Device, info *m
 		return
 	}
 
-	if info.StorageFree > 0 && info.StorageFree < ipaInfo.FileSizeBytes+ (100 * 1024 * 1024) { // Buffer of 100MB
+	if info.StorageFree > 0 && info.StorageFree < ipaInfo.FileSizeBytes+(100*1024*1024) { // Buffer of 100MB
 		errStr := fmt.Sprintf("Insufficient space. Required: %s, Available: %s", formatBytes(ipaInfo.FileSizeBytes), formatBytes(info.StorageFree))
 		s.emitInstallProgress(id, ipaName, info.UDID, "Failed", 0, errStr)
 		s.emitter.EmitLog("ERROR", fmt.Sprintf("[%s] %s", info.Name, errStr), "DeviceService")
@@ -217,9 +216,7 @@ func (s *deviceService) runActualInstall(id string, dev giDevice.Device, info *m
 		return
 	}
 
-
 	s.emitInstallProgress(id, ipaName, info.UDID, "Copying", 30, fmt.Sprintf("[%s] Transferring %s...", info.Name, ipaInfo.BundleName))
-
 
 	err = dev.AppInstall(ipaPath)
 	if err != nil {
@@ -233,7 +230,6 @@ func (s *deviceService) runActualInstall(id string, dev giDevice.Device, info *m
 	s.emitter.EmitLog("SUCCESS", fmt.Sprintf("App %s installed on %s", ipaInfo.BundleName, info.Name), "DeviceService")
 	s.emitter.Emit(events.EventDeviceInstallComplete, map[string]interface{}{"id": id, "info": ipaInfo, "udid": info.UDID})
 }
-
 
 func (s *deviceService) GetConnectedDevices() ([]models.DeviceInfo, error) {
 	s.mu.RLock()
@@ -361,7 +357,6 @@ func (s *deviceService) QueueInstall(udid string, ipaPath string) error {
 	s.emitter.EmitLog("INFO", fmt.Sprintf("Added to installation queue: %s", filepath.Base(ipaPath)), "DeviceService")
 	return nil
 }
-
 
 func (s *deviceService) UninstallApp(udid string, bundleID string) error {
 	s.mu.RLock()
@@ -578,13 +573,11 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 
 	// Jailbreak detection - primitive check
 
-
 	if val, err := dev.GetValue("", "BrickState"); err == nil {
 		if i, ok := val.(uint64); ok && i > 0 {
 			info.IsJailbroken = true
 		}
 	}
-
 
 	// Fetch Storage Info (Strict Technical Discovery)
 	// Objective: Retrieve actual raw bytes from the hardware
@@ -626,13 +619,6 @@ func (s *deviceService) fetchDeviceInfo(dev giDevice.Device) (*models.DeviceInfo
 	if info.StorageUsed < 0 {
 		info.StorageUsed = 0
 	}
-
-
-
-
-
-
-
 
 	// Fetch Battery Info (Requires trusted connection/session)
 	if info.IsPaired {
@@ -747,7 +733,6 @@ func (s *deviceService) emitInstallProgress(id, ipaName, udid, phase string, per
 	s.emitter.Emit(events.EventDeviceInstallProgress, prog)
 }
 
-
 // Utility helper functions
 func getStringVal(m map[string]interface{}, key string) string {
 	if val, ok := m[key]; ok && val != nil {
@@ -794,8 +779,6 @@ func getInt64FromVal(val interface{}) int64 {
 	}
 	return 0
 }
-
-
 
 func formatBytes(bytes int64) string {
 	const unit = 1024

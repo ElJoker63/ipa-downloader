@@ -21,7 +21,6 @@ type AuthService interface {
 	GetStatus() string // "Connected", "Connecting", "Not Connected"
 }
 
-
 type authService struct {
 	appleClient apple.Client
 	storage     storage.Storage
@@ -146,7 +145,6 @@ func (s *authService) SilentRefresh() error {
 	return nil
 }
 
-
 func (s *authService) Logout() error {
 	s.emitter.EmitLog("INFO", "Revoking App Store session...", "AuthService")
 
@@ -171,7 +169,6 @@ func (s *authService) Logout() error {
 
 	return nil
 }
-
 
 func (s *authService) GetStatus() string {
 	s.mu.RLock()

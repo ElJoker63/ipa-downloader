@@ -18,7 +18,6 @@ type App struct {
 	PurchaseDate  time.Time `json:"purchaseDate,omitzero"`
 }
 
-
 type VersionHistoryInfo struct {
 	App                App
 	LatestVersion      string

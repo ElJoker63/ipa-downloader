@@ -82,7 +82,6 @@ func NewAppService(dataDir string) (*AppService, error) {
 	}, nil
 }
 
-
 // SetContext is called by the Wails lifecycle upon startup.
 func (s *AppService) SetContext(ctx context.Context) {
 	s.ctx = ctx
@@ -176,7 +175,6 @@ func (s *AppService) SelectMultipleIPAs() ([]string, error) {
 	return s.deviceService.SelectMultipleIPAFiles()
 }
 
-
 // ----------------- Auth Bindings -----------------
 
 func (s *AppService) GetAccount() (*models.AccountProfile, error) {
@@ -200,7 +198,6 @@ func (s *AppService) GetAuthStatus() string {
 func (s *AppService) SearchApps(term string, platform string, country string, category string, sortBy string, limit int) ([]models.AppMetadata, error) {
 	return s.searchService.Search(term, platform, country, category, sortBy, limit)
 }
-
 
 func (s *AppService) LookupApp(bundleID string, platform string) (*models.AppMetadata, error) {
 	return s.searchService.Lookup(bundleID, platform)
@@ -283,7 +280,6 @@ func (s *AppService) DeleteHistoryItem(id string) error {
 	return s.downloadManager.RemoveTask(id)
 }
 
-
 func (s *AppService) ClearDownloadHistory() error {
 	return s.libraryService.ClearHistory()
 }
@@ -308,7 +304,6 @@ func (s *AppService) DeleteFile(path string) error {
 	s.AddLog("INFO", fmt.Sprintf("User requested file deletion: %s", path), "AppService")
 	return s.libraryService.DeleteFile(path)
 }
-
 
 // ----------------- Settings & Logs Bindings -----------------
 
@@ -379,5 +374,3 @@ func (s *AppService) DownloadFirmware(deviceName string, fw models.Firmware) (*m
 func (s *AppService) DummyProgress() models.DeviceInstallProgress {
 	return models.DeviceInstallProgress{}
 }
-
-

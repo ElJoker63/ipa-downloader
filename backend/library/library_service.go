@@ -39,7 +39,6 @@ type LibraryService interface {
 	DeleteFile(path string) error
 }
 
-
 type libraryService struct {
 	storage storage.Storage
 	emitter events.Emitter
@@ -405,4 +404,3 @@ func openPathNative(path string) error {
 		return cmd.Start()
 	}
 }
-

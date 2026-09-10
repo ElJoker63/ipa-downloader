@@ -142,6 +142,8 @@ func infoCmd() *cobra.Command {
 			dependencies.Logger.Log().
 				Str("name", output.Account.Name).
 				Str("email", output.Account.Email).
+				Str("storeFront", output.Account.StoreFront).
+				Str("pod", output.Account.Pod).
 				Bool("success", true).
 				Send()
 

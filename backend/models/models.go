@@ -96,12 +96,11 @@ type DownloadTask struct {
 	Platform          string         `json:"platform"`
 	Country           string         `json:"country,omitempty"`
 
-	Error             string         `json:"error,omitempty"`
-	CreatedAt         time.Time      `json:"createdAt"`
-	UpdatedAt         time.Time      `json:"updatedAt"`
-	CompletedAt       *time.Time     `json:"completedAt,omitempty"`
+	Error       string     `json:"error,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
+	CompletedAt *time.Time `json:"completedAt,omitempty"`
 }
-
 
 // FavoriteApp represents an app bookmarked by the user.
 type FavoriteApp struct {
@@ -184,15 +183,15 @@ type DeviceInfo struct {
 	HardwareModel   string `json:"hardwareModel,omitempty"`
 	IsJailbroken    bool   `json:"isJailbroken"`
 
-	BatteryLevel    int    `json:"batteryLevel"`
-	BatteryHealth   int    `json:"batteryHealth,omitempty"`
-	ChargeCycles    int    `json:"chargeCycles,omitempty"`
-	BatteryCharging bool   `json:"batteryCharging"`
-	StorageTotal    int64  `json:"storageTotal"`
-	StorageUsed     int64  `json:"storageUsed"`
-	StorageFree     int64  `json:"storageFree"`
-	IsPaired        bool   `json:"isPaired"`
-	IsConnected     bool   `json:"isConnected"`
+	BatteryLevel    int   `json:"batteryLevel"`
+	BatteryHealth   int   `json:"batteryHealth,omitempty"`
+	ChargeCycles    int   `json:"chargeCycles,omitempty"`
+	BatteryCharging bool  `json:"batteryCharging"`
+	StorageTotal    int64 `json:"storageTotal"`
+	StorageUsed     int64 `json:"storageUsed"`
+	StorageFree     int64 `json:"storageFree"`
+	IsPaired        bool  `json:"isPaired"`
+	IsConnected     bool  `json:"isConnected"`
 }
 
 // InstalledApp represents an application installed on the device.
@@ -249,7 +248,6 @@ type DeviceInstallProgress struct {
 	Message string `json:"message"`
 }
 
-
 // UpdateInfo holds information about an available application update.
 type UpdateInfo struct {
 	Available      bool   `json:"available"`
@@ -262,16 +260,16 @@ type UpdateInfo struct {
 
 // Firmware represents an Apple device firmware (IPSW).
 type Firmware struct {
-	Version      string `json:"version"`
-	BuildID      string `json:"buildid"`
-	SHA1         string `json:"sha1sum"`
-	MD5          string `json:"md5sum"`
-	Size         int64  `json:"size"`
-	ReleaseDate  string `json:"releasedate"`
-	UploadDate   string `json:"uploaddate"`
-	URL          string `json:"url"`
-	IsSigned     bool   `json:"signed"`
-	Filename     string `json:"filename"`
+	Version     string `json:"version"`
+	BuildID     string `json:"buildid"`
+	SHA1        string `json:"sha1sum"`
+	MD5         string `json:"md5sum"`
+	Size        int64  `json:"size"`
+	ReleaseDate string `json:"releasedate"`
+	UploadDate  string `json:"uploaddate"`
+	URL         string `json:"url"`
+	IsSigned    bool   `json:"signed"`
+	Filename    string `json:"filename"`
 }
 
 // AppleHardware represents an Apple hardware model from IPSW.me.
@@ -281,5 +279,3 @@ type AppleHardware struct {
 	Platform   string     `json:"platform"`
 	Firmwares  []Firmware `json:"firmwares,omitempty"`
 }
-
-

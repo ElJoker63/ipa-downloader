@@ -67,7 +67,6 @@ func (s *updateService) CheckForUpdate() (*models.UpdateInfo, error) {
 		return &models.UpdateInfo{Available: false, CurrentVersion: currentVersion}, nil
 	}
 
-
 	// Find the correct asset for the current platform
 	downloadURL := ""
 	osName := runtime.GOOS
@@ -173,4 +172,3 @@ func isNewer(latest, current string) bool {
 
 	return len(lParts) > len(cParts)
 }
-

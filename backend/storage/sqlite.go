@@ -186,8 +186,6 @@ func (s *sqliteStorage) initSchema() error {
 	return nil
 }
 
-
-
 // ----------------- Downloads -----------------
 
 func (s *sqliteStorage) SaveDownload(task models.DownloadTask) error {
@@ -328,7 +326,6 @@ func (s *sqliteStorage) GetActiveDownloads() ([]models.DownloadTask, error) {
 	return tasks, nil
 }
 
-
 func (s *sqliteStorage) DeleteDownload(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -428,7 +425,6 @@ func (s *sqliteStorage) scanDownloadRows(rows *sql.Rows) (*models.DownloadTask, 
 
 	return &task, nil
 }
-
 
 // ----------------- Favorites -----------------
 

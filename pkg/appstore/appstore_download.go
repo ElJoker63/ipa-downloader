@@ -24,9 +24,9 @@ var (
 type ProgressCallback func(downloadedBytes int64, totalBytes int64)
 
 type DownloadInput struct {
-	Context           context.Context
-	Account           Account
-	App               App
+	Context context.Context
+	Account Account
+	App     App
 
 	OutputPath        string
 	Progress          *progressbar.ProgressBar
@@ -78,7 +78,7 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 		return DownloadOutput{}, ErrPasswordTokenExpired
 	}
 
-	if res.Data.FailureType == FailureTypeLicenseNotFound {
+	if res.Data.FailureType == FailureTypeLicenseNotFound || (res.Data.Authorized != nil && !*res.Data.Authorized) {
 		return DownloadOutput{}, ErrLicenseRequired
 	}
 
@@ -91,7 +91,7 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 	}
 
 	if len(res.Data.Items) == 0 {
-		return DownloadOutput{}, NewErrorWithMetadata(errors.New("invalid response"), res)
+		return DownloadOutput{}, NewErrorWithMetadata(errors.New("no download items returned by Apple; verify that this app is licensed and available on your account"), res)
 	}
 
 	item := res.Data.Items[0]
@@ -220,6 +220,7 @@ type downloadResult struct {
 	FailureType     string               `plist:"failureType,omitempty"`
 	CustomerMessage string               `plist:"customerMessage,omitempty"`
 	Items           []downloadItemResult `plist:"songList,omitempty"`
+	Authorized      *bool                `plist:"authorized,omitempty"`
 }
 
 func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *progressbar.ProgressBar, callback ProgressCallback) error {
@@ -328,15 +329,13 @@ func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *
 
 func (*appstore) downloadRequest(acc Account, app App, guid string, externalVersionID string) http.Request {
 	payload := map[string]interface{}{
-		"creditDisplay":            "",
-		"guid":                     guid,
-		"salableAdamId":            app.ID,
-		"serialNumber":             "0",
-		"buyWithoutAuthorization":  "true",
+		"creditDisplay": "",
+		"guid":          guid,
+		"salableAdamId": app.ID,
+		"serialNumber":  "0",
 	}
 
 	if externalVersionID != "" {
-		payload["appExtVrsId"] = externalVersionID
 		payload["externalVersionId"] = externalVersionID
 	}
 
@@ -345,23 +344,15 @@ func (*appstore) downloadRequest(acc Account, app App, guid string, externalVers
 		podPrefix = "p" + acc.Pod + "-"
 	}
 
-	headers := map[string]string{
-		"Content-Type": "application/x-apple-plist",
-		"iCloud-DSID":  acc.DirectoryServicesID,
-		"X-Dsid":       acc.DirectoryServicesID,
-	}
-	if acc.StoreFront != "" {
-		headers["X-Apple-Store-Front"] = acc.StoreFront
-	}
-	if acc.PasswordToken != "" {
-		headers["X-Token"] = acc.PasswordToken
-	}
-
 	return http.Request{
 		URL:            fmt.Sprintf("https://%s%s%s?guid=%s", podPrefix, PrivateAppStoreAPIDomain, PrivateAppStoreAPIPathDownload, guid),
 		Method:         http.MethodPOST,
 		ResponseFormat: http.ResponseFormatXML,
-		Headers:        headers,
+		Headers: map[string]string{
+			"Content-Type": "application/x-apple-plist",
+			"iCloud-DSID":  acc.DirectoryServicesID,
+			"X-Dsid":       acc.DirectoryServicesID,
+		},
 		Payload: &http.XMLPayload{
 			Content: payload,
 		},

@@ -72,6 +72,7 @@ type purchaseResult struct {
 	CustomerMessage string `plist:"customerMessage,omitempty"`
 	JingleDocType   string `plist:"jingleDocType,omitempty"`
 	Status          int    `plist:"status,omitempty"`
+	MAllowed        *bool  `plist:"m-allowed,omitempty"`
 }
 
 func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, guid string, pricingParameters string) error {
@@ -98,6 +99,9 @@ func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, g
 	}
 
 	if res.Data.FailureType == FailureTypeLicenseAlreadyExists {
+		if res.Data.MAllowed != nil && !*res.Data.MAllowed {
+			return NewErrorWithMetadata(errors.New("this app cannot be acquired from a computer; Apple requires obtaining it on a physical iOS device first"), res)
+		}
 		return ErrLicenseAlreadyExists
 	}
 
@@ -154,6 +158,7 @@ func (t *appstore) purchaseRequest(acc Account, app App, storeFront, guid string
 				"pricingParameters":         pricingParameters,
 				"productType":               "C",
 				"salableAdamId":             app.ID,
+				"serialNumber":              "0",
 			},
 		},
 	}

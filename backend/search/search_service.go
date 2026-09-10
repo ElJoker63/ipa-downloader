@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-
 	"github.com/ElJoker63/ipa-downloader/v2/backend/apple"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/events"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
@@ -25,7 +24,6 @@ type SearchService interface {
 	GetSearchHistory(limit int) ([]models.SearchHistoryItem, error)
 	ClearSearchHistory() error
 }
-
 
 type searchService struct {
 	appleClient apple.Client
@@ -189,7 +187,6 @@ func (s *searchService) directITunesSearch(term string, platform string, country
 
 	return results, nil
 }
-
 
 func (s *searchService) Lookup(bundleID string, platform string) (*models.AppMetadata, error) {
 	s.emitter.EmitLog("INFO", fmt.Sprintf("Looking up bundle ID '%s'...", bundleID), "SearchService")

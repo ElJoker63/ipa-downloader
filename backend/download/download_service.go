@@ -441,6 +441,9 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		platform = appstore.PlatformIPhone
 	}
 
+	dir := filepath.Dir(task.DestinationPath)
+	_ = os.MkdirAll(dir, 0755)
+
 	// Helper for purchase with refresh logic
 	doPurchase := func(acc appstore.Account) error {
 		sf := appstore.StoreFrontForCountry(acc.StoreFront, task.Country)
@@ -449,6 +452,7 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 			App:        app,
 			StoreFront: sf,
 			Country:    task.Country,
+			Platform:   platform,
 		}
 		err := appstoreCore.Purchase(input)
 		if err != nil {
@@ -469,44 +473,15 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		return err
 	}
 
-	// 1. Initial License Acquisition
-	account, err := getFreshAccount()
-	if err != nil {
-		return err
-	}
-
 	settings, _ := m.storage.GetSettings()
-	if settings == nil || settings.AutoAcquireLicense {
-		m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying license status...", task.AppName), "DownloadManager")
-		if pErr := doPurchase(account); pErr != nil {
-			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Initial license acquisition result: %v", task.AppName, pErr), "DownloadManager")
-		}
-	}
+	autoAcquire := settings == nil || settings.AutoAcquireLicense
 
-	dir := filepath.Dir(task.DestinationPath)
-	_ = os.MkdirAll(dir, 0755)
-
-	// 2. Download loop with progressive retries
+	// Download loop with progressive retries
 	var lastErr error
 	for attempt := 1; attempt <= 3; attempt++ {
-		// Always get latest account and check license for each attempt
 		account, accErr := getFreshAccount()
 		if accErr != nil {
 			return accErr
-		}
-
-		if settings == nil || settings.AutoAcquireLicense {
-			m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] Verifying license status (Attempt %d/3)...", task.AppName, attempt), "DownloadManager")
-			if pErr := doPurchase(account); pErr != nil {
-				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License purchase attempt failed: %v", task.AppName, pErr), "DownloadManager")
-				if errors.Is(pErr, appstore.ErrPasswordTokenExpired) {
-					m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Session expired during license check. Refreshing...", task.AppName), "DownloadManager")
-					if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
-						continue // Token refreshed, retry loop
-					}
-				}
-				// If purchase fails for other reasons, we still attempt download
-			}
 		}
 
 		out, err := m.streamAppDownload(ctx, appstoreCore, account, app, task, platform)
@@ -516,12 +491,22 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		}
 
 		lastErr = err
+
 		if errors.Is(err, appstore.ErrLicenseRequired) {
-			m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License not detected (Attempt %d/3). Acquiring and waiting...", task.AppName, attempt), "DownloadManager")
-			if pErr := doPurchase(account); pErr != nil {
-				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Retry purchase failed: %v", task.AppName, pErr), "DownloadManager")
+			if !autoAcquire {
+				return fmt.Errorf("a license is required for this app (auto-acquire is disabled)")
 			}
-			time.Sleep(time.Duration(attempt*2) * time.Second) // Progressive wait: 2s, 4s...
+
+			m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] License required (Attempt %d/3). Acquiring free license...", task.AppName, attempt), "DownloadManager")
+			if pErr := doPurchase(account); pErr != nil {
+				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License acquisition failed: %v", task.AppName, pErr), "DownloadManager")
+				if attempt == 3 {
+					return fmt.Errorf("failed to acquire license: %w", pErr)
+				}
+			} else {
+				m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] License acquired. Resuming download...", task.AppName), "DownloadManager")
+			}
+			time.Sleep(time.Duration(attempt) * time.Second)
 			continue
 		}
 
@@ -536,8 +521,8 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		return err
 	}
 
-
 	return fmt.Errorf("failed after 3 attempts: %w", lastErr)
+
 }
 
 func (m *downloadManager) finalizeAppPackage(task *models.DownloadTask, out appstore.DownloadOutput, store appstore.AppStore) error {
@@ -717,8 +702,6 @@ func (m *downloadManager) executeFirmwareDownload(ctx context.Context, task *mod
 	return os.Rename(tmpPath, task.DestinationPath)
 }
 
-
-
 func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.AppStore, acc appstore.Account, app appstore.App, task *models.DownloadTask, platform appstore.Platform) (appstore.DownloadOutput, error) {
 	lastUpdateTime := time.Now()
 	var lastBytes int64 = 0
@@ -757,7 +740,6 @@ func (m *downloadManager) streamAppDownload(ctx context.Context, store appstore.
 			if speedBps > 0 && totalBytes > downloadedBytes {
 				etaSec = (totalBytes - downloadedBytes) / speedBps
 			}
-
 
 			task.DownloadedBytes = downloadedBytes
 			task.TotalBytes = totalBytes

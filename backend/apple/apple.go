@@ -36,7 +36,6 @@ type Client interface {
 }
 
 type client struct {
-
 	appstore appstore.AppStore
 	keychain keychain.Keychain
 	machine  machine.Machine
@@ -100,7 +99,6 @@ func (c *client) GetAppStore() appstore.AppStore {
 func (c *client) GetKeychain() keychain.Keychain {
 	return c.keychain
 }
-
 
 func (c *client) GetAccount() (*models.AccountProfile, error) {
 	info, err := c.appstore.AccountInfo()
@@ -326,4 +324,3 @@ func convertAppToMetadata(a appstore.App) models.AppMetadata {
 		ArtworkURL:     artwork,
 	}
 }
-
