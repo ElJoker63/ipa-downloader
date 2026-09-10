@@ -8,6 +8,7 @@ import (
 
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -47,8 +48,16 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 
 	guid := strings.ReplaceAll(strings.ToUpper(macAddr), ":", "")
 
+	var machineGUID []byte
+	if input.Platform == PlatformMacOS {
+		guid, machineGUID, err = machineIdentity(macAddr)
+		if err != nil {
+			return DownloadOutput{}, fmt.Errorf("failed to resolve machine identity: %w", err)
+		}
+	}
+
 	externalVersionID := input.ExternalVersionID
-	if externalVersionID == "" && input.Platform == PlatformAppleTV {
+	if externalVersionID == "" && (input.Platform == PlatformAppleTV || input.Platform == PlatformVisionOS) {
 		externalVersionID, err = t.lookupLatestExternalVersionID(input.Account, input.App, input.Platform)
 		if err != nil {
 			return DownloadOutput{}, fmt.Errorf("failed to resolve platform version: %w", err)
@@ -94,9 +103,18 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 		version = fmt.Sprintf("%v", itemVersion)
 	}
 
-	destination, err := t.resolveDestinationPath(input.App, version, input.OutputPath)
+	packagePlatform, err := downloadPackagePlatform(input.Platform, item)
+	if err != nil {
+		return DownloadOutput{}, err
+	}
+
+	destination, err := t.resolveDestinationPath(input.App, version, input.OutputPath, packagePlatform)
 	if err != nil {
 		return DownloadOutput{}, fmt.Errorf("failed to resolve destination path: %w", err)
+	}
+
+	if packagePlatform == PlatformMacOS {
+		return t.downloadMacPackage(input.Context, item, destination, machineGUID, input.Progress)
 	}
 
 	tmpPath := fmt.Sprintf("%s.tmp", destination)
@@ -106,19 +124,16 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 		return DownloadOutput{}, fmt.Errorf("failed to download file: %w", err)
 	}
 
-
 	err = t.applyPatches(item, input.Account, tmpPath, destination)
 	if err != nil {
 		return DownloadOutput{}, fmt.Errorf("failed to apply patches: %w", err)
 	}
 
-	err = t.validatePackagePlatform(destination, input.Platform)
-	if err != nil {
+	if err := t.validatePackagePlatform(destination, input.Platform); err != nil {
 		return DownloadOutput{}, fmt.Errorf("failed to validate package platform: %w", err)
 	}
 
-	err = t.os.Remove(fmt.Sprintf("%s.tmp", destination))
-	if err != nil {
+	if err := t.os.Remove(tmpPath); err != nil {
 		return DownloadOutput{}, fmt.Errorf("failed to remove file: %w", err)
 	}
 
@@ -133,7 +148,14 @@ type platformPackageInfo struct {
 }
 
 func (*appstore) validatePackagePlatform(path string, platform Platform) error {
-	if platform != PlatformAppleTV {
+	var expectedPlatform string
+
+	switch platform {
+	case PlatformAppleTV:
+		expectedPlatform = "AppleTVOS"
+	case PlatformVisionOS:
+		expectedPlatform = "XROS"
+	default:
 		return nil
 	}
 
@@ -144,7 +166,7 @@ func (*appstore) validatePackagePlatform(path string, platform Platform) error {
 	defer reader.Close()
 
 	for _, file := range reader.File {
-		if !strings.HasPrefix(file.Name, "Payload/") || !strings.HasSuffix(file.Name, ".app/Info.plist") {
+		if !isTopLevelAppInfoPlist(file.Name) {
 			continue
 		}
 
@@ -172,13 +194,19 @@ func (*appstore) validatePackagePlatform(path string, platform Platform) error {
 		}
 
 		for _, supportedPlatform := range info.SupportedPlatforms {
-			if supportedPlatform == "AppleTVOS" {
+			if supportedPlatform == expectedPlatform {
 				return nil
 			}
 		}
 	}
 
-	return errors.New("downloaded package does not declare AppleTVOS support")
+	return fmt.Errorf("downloaded package does not declare %s support", expectedPlatform)
+}
+
+func isTopLevelAppInfoPlist(path string) bool {
+	parts := strings.Split(path, "/")
+
+	return len(parts) == 3 && parts[0] == "Payload" && strings.HasSuffix(parts[1], ".app") && parts[2] == "Info.plist"
 }
 
 type downloadItemResult struct {
@@ -200,7 +228,11 @@ func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	if ctx != nil {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	if req != nil {
 		req = req.WithContext(ctx)
 	}
 
@@ -296,9 +328,11 @@ func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *
 
 func (*appstore) downloadRequest(acc Account, app App, guid string, externalVersionID string) http.Request {
 	payload := map[string]interface{}{
-		"creditDisplay": "",
-		"guid":          guid,
-		"salableAdamId": app.ID,
+		"creditDisplay":            "",
+		"guid":                     guid,
+		"salableAdamId":            app.ID,
+		"serialNumber":             "0",
+		"buyWithoutAuthorization":  "true",
 	}
 
 	if externalVersionID != "" {
@@ -311,15 +345,23 @@ func (*appstore) downloadRequest(acc Account, app App, guid string, externalVers
 		podPrefix = "p" + acc.Pod + "-"
 	}
 
+	headers := map[string]string{
+		"Content-Type": "application/x-apple-plist",
+		"iCloud-DSID":  acc.DirectoryServicesID,
+		"X-Dsid":       acc.DirectoryServicesID,
+	}
+	if acc.StoreFront != "" {
+		headers["X-Apple-Store-Front"] = acc.StoreFront
+	}
+	if acc.PasswordToken != "" {
+		headers["X-Token"] = acc.PasswordToken
+	}
+
 	return http.Request{
 		URL:            fmt.Sprintf("https://%s%s%s?guid=%s", podPrefix, PrivateAppStoreAPIDomain, PrivateAppStoreAPIPathDownload, guid),
 		Method:         http.MethodPOST,
 		ResponseFormat: http.ResponseFormatXML,
-		Headers: map[string]string{
-			"Content-Type": "application/x-apple-plist",
-			"iCloud-DSID":  acc.DirectoryServicesID,
-			"X-Dsid":       acc.DirectoryServicesID,
-		},
+		Headers:        headers,
 		Payload: &http.XMLPayload{
 			Content: payload,
 		},
@@ -327,6 +369,10 @@ func (*appstore) downloadRequest(acc Account, app App, guid string, externalVers
 }
 
 func fileName(app App, version string) string {
+	return packageFileName(app, version, "")
+}
+
+func packageFileName(app App, version string, platform Platform) string {
 	var parts []string
 
 	if app.BundleID != "" {
@@ -341,11 +387,16 @@ func fileName(app App, version string) string {
 		parts = append(parts, version)
 	}
 
-	return fmt.Sprintf("%s.ipa", strings.Join(parts, "_"))
+	extension := "ipa"
+	if platform == PlatformMacOS {
+		extension = "pkg"
+	}
+
+	return fmt.Sprintf("%s.%s", strings.Join(parts, "_"), extension)
 }
 
-func (t *appstore) resolveDestinationPath(app App, version string, path string) (string, error) {
-	file := fileName(app, version)
+func (t *appstore) resolveDestinationPath(app App, version string, path string, platform Platform) (string, error) {
+	file := packageFileName(app, version, platform)
 
 	if path == "" {
 		workdir, err := t.os.Getwd()
@@ -362,7 +413,7 @@ func (t *appstore) resolveDestinationPath(app App, version string, path string) 
 	}
 
 	if isDir {
-		return fmt.Sprintf("%s/%s", path, file), nil
+		return filepath.Join(path, file), nil
 	}
 
 	return path, nil

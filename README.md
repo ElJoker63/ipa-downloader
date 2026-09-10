@@ -4,14 +4,17 @@ IPA Downloader is a cross-platform desktop application and command-line suite de
 
 ## Overview
 
-The project provides both a modern desktop graphical user interface and a full-featured CLI tool sharing a unified backend engine written in Go.
+The project provides both a modern desktop graphical user interface and a full-featured CLI tool sharing a unified backend engine written in Go. Supports iOS, iPadOS, tvOS, visionOS, and macOS apps on the [App Store](https://apps.apple.com).
 
 ### Core Capabilities
 
 - **Direct App Store Integration**: Authenticate with Apple ID (including 2FA verification) to acquire free licenses and download original encrypted `.ipa` binaries.
+- **SAP Authentication**: Modern SAP-based signing for App Store authentication.
 - **FairPlay DRM SINF Replication**: Automatically replicates and injects FairPlay DRM signatures into downloaded packages for sideloading and analysis.
-- **Search and Version Inspection**: Real-time App Store search across iOS, iPadOS, and tvOS with high-resolution artwork, screenshot lightboxes, and historical build listings.
+- **Multi-Platform Search**: Real-time App Store search across iOS, iPadOS, tvOS, visionOS, and macOS with high-resolution artwork, screenshot lightboxes, and historical build listings.
+- **macOS App Downloads**: Download `.pkg` macOS app packages from the App Store.
 - **Concurrent Transfer Queue**: Chunked streaming downloads with live speed tracking, ETA calculations, pause/resume controls, and retry handling.
+- **List Purchases**: View and manage apps owned by the authenticated account.
 - **Multi-Language Support**: Complete interface localization in English and Spanish (Español).
 - **Offline Persistence**: Embedded pure-Go SQLite storage for favorites, transfer queues, search history, and settings without external database dependencies.
 - **Diagnostic Logging**: Live streaming logs with severity filtering (INFO, SUCCESS, WARN, ERROR) and one-click file export.
@@ -23,7 +26,7 @@ The project provides both a modern desktop graphical user interface and a full-f
 
 ### Backend (Go)
 - **Framework**: Wails v2 for native desktop window management and Go-to-TypeScript runtime bindings.
-- **App Store Engine**: Custom iTunes Storefront and GrandSlam protocol implementations.
+- **App Store Engine**: Custom iTunes Storefront and GrandSlam protocol implementations with SAP signing.
 - **Storage**: Zero-CGO SQLite driver (`modernc.org/sqlite`) for local persistence.
 - **Security**: OS Keychain integration via `github.com/byteness/keyring` with persistent cookie jar.
 
@@ -97,7 +100,7 @@ ipa-downloader auth revoke
 ### Search
 
 ```shell
-# Search for apps by name or bundle ID
+# Search for apps by name or bundle ID (supports: iphone, ipad, appletv, visionos, macos)
 ipa-downloader search "Telegram" --limit 10 --platform iphone
 ```
 
@@ -106,6 +109,13 @@ ipa-downloader search "Telegram" --limit 10 --platform iphone
 ```shell
 # Acquire a license for a free application
 ipa-downloader purchase --bundle-identifier "ph.telegra.Telegraph"
+```
+
+### List Purchases
+
+```shell
+# List apps owned by the authenticated account
+ipa-downloader list-purchases --max-results 10 --page 1
 ```
 
 ### Version Listing
@@ -123,6 +133,9 @@ ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --output "./T
 
 # Download a specific historical build
 ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --external-version-id "854000123" --output "./Telegram_v10.ipa"
+
+# Download macOS app
+ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --platform macos --output "./Telegram.pkg"
 ```
 
 ---
@@ -133,7 +146,8 @@ Run unit tests and verification across packages:
 
 ```shell
 # Run Go unit tests
-go test ./...
+go generate ./...
+go test -v ./...
 
 # Verify frontend types and production bundle
 cd frontend

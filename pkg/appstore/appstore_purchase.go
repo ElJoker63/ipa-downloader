@@ -21,6 +21,7 @@ type PurchaseInput struct {
 	App        App
 	StoreFront string
 	Country    string
+	Platform   Platform
 }
 
 func (t *appstore) Purchase(input PurchaseInput) error {
@@ -54,7 +55,7 @@ func (t *appstore) Purchase(input PurchaseInput) error {
 		}
 	}
 
-	if errors.Is(err, ErrTemporarilyUnavailable) {
+	if input.Platform != PlatformMacOS && errors.Is(err, ErrTemporarilyUnavailable) {
 		err = t.purchaseWithParams(input.Account, input.App, targetStoreFront, guid, PricingParameterAppleArcade)
 		if err != nil {
 			return fmt.Errorf("failed to purchase item with param '%s': %w", PricingParameterAppleArcade, err)

@@ -1,6 +1,8 @@
 package appstore
 
 import (
+	"time"
+
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/http"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/keychain"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/util/machine"
@@ -18,10 +20,12 @@ type AppStore interface {
 	Lookup(input LookupInput) (LookupOutput, error)
 	// Search searches the App Store for apps matching the specified term.
 	Search(input SearchInput) (SearchOutput, error)
+	// OwnedApps lists apps owned by the authenticated account.
+	OwnedApps(input OwnedAppsInput) (OwnedAppsOutput, error)
 	// Purchase acquires a license for the desired app.
 	// Note: only free apps are supported.
 	Purchase(input PurchaseInput) error
-	// Download downloads the IPA package from the App Store to the desired location.
+	// Download downloads the app package from the App Store to the desired location.
 	Download(input DownloadInput) (DownloadOutput, error)
 	// ReplicateSinf replicates the sinf for the IPA package.
 	ReplicateSinf(input ReplicateSinfInput) error
@@ -34,23 +38,29 @@ type AppStore interface {
 }
 
 type appstore struct {
-	keychain       keychain.Keychain
-	loginClient    http.Client[loginResult]
-	searchClient   http.Client[searchResult]
-	purchaseClient http.Client[purchaseResult]
-	downloadClient http.Client[downloadResult]
-	platformClient http.Client[platformVersionLookupResult]
-	bagClient      http.Client[bagResult]
-	httpClient     http.Client[interface{}]
-	machine        machine.Machine
-	os             operatingsystem.OperatingSystem
+	keychain            keychain.Keychain
+	loginClient         http.Client[loginResult]
+	searchClient        http.Client[searchResult]
+	purchaseClient      http.Client[purchaseResult]
+	downloadClient      http.Client[downloadResult]
+	platformClient      http.Client[platformVersionLookupResult]
+	storefrontClient    http.Client[[]byte]
+	bagClient           http.Client[bagResult]
+	ownedAppsClient     http.Client[[]byte]
+	httpClient          http.Client[interface{}]
+	macDecrypterFactory macPackageDecrypterFactory
+	actionSignerFactory ActionSignerFactory
+	authRetrySleep      func(time.Duration)
+	machine             machine.Machine
+	os                  operatingsystem.OperatingSystem
 }
 
 type Args struct {
-	Keychain        keychain.Keychain
-	CookieJar       http.CookieJar
-	OperatingSystem operatingsystem.OperatingSystem
-	Machine         machine.Machine
+	Keychain            keychain.Keychain
+	CookieJar           http.CookieJar
+	OperatingSystem     operatingsystem.OperatingSystem
+	Machine             machine.Machine
+	ActionSignerFactory ActionSignerFactory
 }
 
 func NewAppStore(args Args) AppStore {
@@ -58,16 +68,26 @@ func NewAppStore(args Args) AppStore {
 		CookieJar: args.CookieJar,
 	}
 
+	actionSignerFactory := args.ActionSignerFactory
+	if actionSignerFactory == nil {
+		actionSignerFactory = defaultActionSignerFactory
+	}
+
 	return &appstore{
-		keychain:       args.Keychain,
-		loginClient:    http.NewClient[loginResult](clientArgs),
-		searchClient:   http.NewClient[searchResult](clientArgs),
-		purchaseClient: http.NewClient[purchaseResult](clientArgs),
-		downloadClient: http.NewClient[downloadResult](clientArgs),
-		platformClient: http.NewClient[platformVersionLookupResult](clientArgs),
-		bagClient:      http.NewClient[bagResult](clientArgs),
-		httpClient:     http.NewClient[interface{}](clientArgs),
-		machine:        args.Machine,
-		os:             args.OperatingSystem,
+		keychain:            args.Keychain,
+		loginClient:         http.NewClient[loginResult](clientArgs),
+		searchClient:        http.NewClient[searchResult](clientArgs),
+		purchaseClient:      http.NewClient[purchaseResult](clientArgs),
+		downloadClient:      http.NewClient[downloadResult](clientArgs),
+		platformClient:      http.NewClient[platformVersionLookupResult](clientArgs),
+		storefrontClient:    http.NewClient[[]byte](clientArgs),
+		bagClient:           http.NewClient[bagResult](clientArgs),
+		ownedAppsClient:     http.NewClient[[]byte](clientArgs),
+		httpClient:          http.NewClient[interface{}](clientArgs),
+		macDecrypterFactory: defaultMacPackageDecrypterFactory,
+		actionSignerFactory: actionSignerFactory,
+		authRetrySleep:      time.Sleep,
+		machine:             args.Machine,
+		os:                  args.OperatingSystem,
 	}
 }

@@ -2,7 +2,9 @@ package http
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,9 +14,7 @@ import (
 	"howett.net/plist"
 )
 
-const (
-	appStoreAuthURL = "https://buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/authenticate"
-)
+const appStoreAuthPath = "/WebObjects/MZFinance.woa/wa/authenticate"
 
 var (
 	documentXMLPattern = regexp.MustCompile(`(?is)<Document\b[^>]*>(.*)</Document>`)
@@ -77,7 +77,7 @@ func NewClient[R interface{}](args Args) Client[R] {
 			Timeout: 0,
 			Jar:     args.CookieJar,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				if req.Referer() == appStoreAuthURL {
+				if len(via) > 0 && via[len(via)-1].URL.Path == appStoreAuthPath {
 					return http.ErrUseLastResponse
 				}
 
@@ -111,6 +111,15 @@ func (c *client[R]) Send(req Request) (Result[R], error) {
 		request.Header.Set(key, val)
 	}
 
+	if req.ActionSigner != nil {
+		signature, err := req.ActionSigner.Sign(data)
+		if err != nil {
+			return Result[R]{}, fmt.Errorf("failed to sign Apple action: %w", err)
+		}
+
+		request.Header.Set(HeaderAppleActionSignature, base64.StdEncoding.EncodeToString(signature))
+	}
+
 	res, err := c.internalClient.Do(request)
 	if err != nil {
 		return Result[R]{}, fmt.Errorf("request failed: %w", err)
@@ -126,11 +135,33 @@ func (c *client[R]) Send(req Request) (Result[R], error) {
 		return c.handleJSONResponse(res)
 	}
 
+	if req.ResponseFormat == ResponseFormatRaw {
+		return c.handleRawResponse(res)
+	}
+
 	if req.ResponseFormat == ResponseFormatXML {
 		return c.handleXMLResponse(res)
 	}
 
 	return Result[R]{}, fmt.Errorf("content type is not supported (%s)", req.ResponseFormat)
+}
+
+func (c *client[R]) handleRawResponse(res *http.Response) (Result[R], error) {
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return Result[R]{}, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	data, ok := any(body).(R)
+	if !ok {
+		return Result[R]{}, errors.New("raw response format requires a []byte result type")
+	}
+
+	return Result[R]{
+		StatusCode: res.StatusCode,
+		Headers:    responseHeaders(res),
+		Data:       data,
+	}, nil
 }
 
 func (c *client[R]) Do(req *http.Request) (*http.Response, error) {
