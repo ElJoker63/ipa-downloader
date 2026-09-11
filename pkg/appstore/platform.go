@@ -74,7 +74,7 @@ func (p Platform) searchEntity() (string, error) {
 
 func (p Platform) metadataPlatform() (string, error) {
 	switch p {
-	case PlatformIPhone, PlatformIPad:
+	case PlatformIPhone, PlatformIPad, "":
 		return "enterprisestore", nil
 	case PlatformAppleTV:
 		return "atv9", nil

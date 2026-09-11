@@ -11,6 +11,7 @@ export interface Translations {
     close: string
     save: string
     retry: string
+    refresh: string
     delete: string
     clear: string
     copy: string
@@ -60,6 +61,7 @@ export interface Translations {
     search: string
     downloads: string
     downloadedApps?: string
+    purchases?: string
     apps: string
     favorites: string
     history: string
@@ -67,6 +69,21 @@ export interface Translations {
     logs: string
     firmwares: string
     suite: string
+  }
+  purchases?: {
+    title: string
+    subtitle: string
+    filterPlaceholder: string
+    totalCountLabel: string
+    emptyTitle: string
+    emptyDesc: string
+    licensed: string
+    loading: string
+    refreshed: string
+    showing: string
+    of: string
+    prev: string
+    next: string
   }
   downloadedApps?: {
     title: string

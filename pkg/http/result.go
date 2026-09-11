@@ -13,6 +13,7 @@ type Result[R interface{}] struct {
 	StatusCode int
 	Headers    map[string]string
 	Data       R
+	Raw        []byte
 }
 
 func (c *Result[R]) GetHeader(key string) (string, error) {

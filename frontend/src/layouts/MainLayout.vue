@@ -79,6 +79,24 @@
           </span>
         </router-link>
 
+        <!-- Apps Compradas (Apple Account Library) -->
+        <router-link
+          to="/purchases"
+          class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group"
+          :class="isActive('/purchases') ? 'nav-item-active' : 'nav-item-inactive'"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <span class="flex-1">{{ t.nav.purchases || 'Compradas' }}</span>
+          <span
+            v-if="purchasesStore.totalCount > 0"
+            class="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-[#0A84FF]/20 text-[#0A84FF] border border-[#0A84FF]/30"
+          >
+            {{ purchasesStore.totalCount }}
+          </span>
+        </router-link>
+
         <!-- Apps (Device Management) -->
         <router-link
           to="/apps"
@@ -262,6 +280,7 @@ import GlobalModal from '../components/GlobalModal.vue'
 import { useAuthStore } from '../stores/auth'
 import { useDownloadsStore } from '../stores/downloads'
 import { useFavoritesStore } from '../stores/favorites'
+import { usePurchasesStore } from '../stores/purchases'
 import { useDeviceStore } from '../stores/device'
 import { useDownloadedAppsStore } from '../stores/downloadedApps'
 import { useTheme } from '../composables/useTheme'
@@ -274,9 +293,13 @@ const router = useRouter()
 const authStore = useAuthStore()
 const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
+const purchasesStore = usePurchasesStore()
 const deviceStore = useDeviceStore()
 const downloadedAppsStore = useDownloadedAppsStore()
 downloadedAppsStore.fetchDownloadedIPAs()
+if (authStore.isLoggedIn) {
+  purchasesStore.fetchPurchases(1)
+}
 const { isDark, toggleTheme } = useTheme()
 const { t, currentLanguage, setLanguage } = useI18n()
 

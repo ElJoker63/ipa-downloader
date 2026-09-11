@@ -24,9 +24,24 @@ func (t *appstore) ListVersions(input ListVersionsInput) (ListVersionsOutput, er
 		return ListVersionsOutput{}, fmt.Errorf("failed to get mac address: %w", err)
 	}
 
-	guid := strings.ReplaceAll(strings.ToUpper(macAddr), ":", "")
+	guid, machineID, err := machineIdentity(macAddr)
+	if err != nil {
+		guid = strings.ReplaceAll(strings.ToUpper(macAddr), ":", "")
+	}
 
-	req := t.listVersionsRequest(input.Account, input.App, guid)
+	var signer ActionSigner
+	if t.actionSignerFactory != nil {
+		bag, bagErr := t.bag(guid)
+		if bagErr == nil {
+			s, sErr := t.actionSignerFactory(bag.SAPConfig, machineID)
+			if sErr == nil && s != nil {
+				signer = s
+				defer signer.Close()
+			}
+		}
+	}
+
+	req := t.listVersionsRequest(input.Account, input.App, guid, signer)
 	res, err := t.downloadClient.Send(req)
 
 	if err != nil {
@@ -76,12 +91,13 @@ func (t *appstore) ListVersions(input ListVersionsInput) (ListVersionsOutput, er
 	}, nil
 }
 
-func (t *appstore) listVersionsRequest(acc Account, app App, guid string) http.Request {
+func (t *appstore) listVersionsRequest(acc Account, app App, guid string, signer ActionSigner) http.Request {
 	payload := map[string]interface{}{
-		"creditDisplay": "",
-		"guid":          guid,
-		"salableAdamId": app.ID,
-		"serialNumber":  "0",
+		"creditDisplay":     "",
+		"guid":              guid,
+		"salableAdamId":     app.ID,
+		"serialNumber":      "0",
+		"pricingParameters": "STDQ",
 	}
 
 	podPrefix := ""
@@ -89,15 +105,24 @@ func (t *appstore) listVersionsRequest(acc Account, app App, guid string) http.R
 		podPrefix = "p" + acc.Pod + "-"
 	}
 
+	headers := map[string]string{
+		"Content-Type": "application/x-apple-plist",
+		"iCloud-DSID":  acc.DirectoryServicesID,
+		"X-Dsid":       acc.DirectoryServicesID,
+	}
+	if acc.StoreFront != "" {
+		headers["X-Apple-Store-Front"] = acc.StoreFront
+	}
+	if acc.PasswordToken != "" {
+		headers["X-Token"] = acc.PasswordToken
+	}
+
 	return http.Request{
 		URL:            fmt.Sprintf("https://%s%s%s?guid=%s", podPrefix, PrivateAppStoreAPIDomain, PrivateAppStoreAPIPathDownload, guid),
 		Method:         http.MethodPOST,
 		ResponseFormat: http.ResponseFormatXML,
-		Headers: map[string]string{
-			"Content-Type": "application/x-apple-plist",
-			"iCloud-DSID":  acc.DirectoryServicesID,
-			"X-Dsid":       acc.DirectoryServicesID,
-		},
+		ActionSigner:   signer,
+		Headers:        headers,
 		Payload: &http.XMLPayload{
 			Content: payload,
 		},

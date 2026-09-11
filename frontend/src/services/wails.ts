@@ -15,6 +15,7 @@ import type {
   UpdateInfo,
   Firmware,
   AppleHardware,
+  PurchasedAppsOutput,
 } from '../types'
 
 import * as AppService from '../../wailsjs/go/services/AppService'
@@ -97,6 +98,17 @@ export const WailsService = {
 
   async clearSearchHistory(): Promise<void> {
     return await AppService.ClearSearchHistory()
+  },
+
+  // Purchases (Owned Apps)
+  async getPurchasedApps(page: number = 1, limit: number = 20): Promise<PurchasedAppsOutput> {
+    try {
+      const res = await (AppService as any).GetPurchasedApps(page, limit)
+      return (res || { count: 0, totalCount: 0, page: 1, results: [] }) as PurchasedAppsOutput
+    } catch (err) {
+      console.error('Failed to get purchased apps:', err)
+      throw err
+    }
   },
 
   // Downloads

@@ -243,6 +243,7 @@ func (c *client[R]) handleXMLResponse(res *http.Response) (Result[R], error) {
 		StatusCode: res.StatusCode,
 		Headers:    responseHeaders(res),
 		Data:       data,
+		Raw:        body,
 	}, nil
 }
 

@@ -39,6 +39,14 @@ export interface AppMetadata {
   primaryGenre: string
   supportedPlatforms: string[]
   isFavorite: boolean
+  purchaseDate?: string
+}
+
+export interface PurchasedAppsOutput {
+  count: number
+  totalCount: number
+  page: number
+  results: AppMetadata[]
 }
 
 export type DownloadStatus = 'queued' | 'downloading' | 'paused' | 'completed' | 'cancelled' | 'failed' | string

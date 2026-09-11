@@ -59,6 +59,8 @@ export function GetFavorites():Promise<Array<models.FavoriteApp>>;
 
 export function GetLogs(arg1:number):Promise<Array<models.LogEntry>>;
 
+export function GetPurchasedApps(arg1:number,arg2:number):Promise<models.PurchasedAppsOutput>;
+
 export function GetSearchHistory(arg1:number):Promise<Array<models.SearchHistoryItem>>;
 
 export function GetSettings():Promise<models.AppSettings>;

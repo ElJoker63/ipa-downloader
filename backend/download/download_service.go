@@ -456,20 +456,13 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 		}
 		err := appstoreCore.Purchase(input)
 		if err != nil {
-			if errors.Is(err, appstore.ErrLicenseAlreadyExists) {
-				return nil
-			}
 			if errors.Is(err, appstore.ErrPasswordTokenExpired) {
 				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] Token expired during purchase. Refreshing...", task.AppName), "DownloadManager")
 				if refreshErr := m.authService.SilentRefresh(); refreshErr == nil {
 					if freshAcc, accErr := getFreshAccount(); accErr == nil {
 						input.Account = freshAcc
 						input.StoreFront = appstore.StoreFrontForCountry(freshAcc.StoreFront, task.Country)
-						pErr := appstoreCore.Purchase(input)
-						if errors.Is(pErr, appstore.ErrLicenseAlreadyExists) {
-							return nil
-						}
-						return pErr
+						return appstoreCore.Purchase(input)
 					}
 				}
 			}
@@ -502,11 +495,11 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 			}
 
 			m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] License required (Attempt %d/3). Acquiring free license...", task.AppName, attempt), "DownloadManager")
-			if pErr := doPurchase(account); pErr != nil {
-				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License acquisition failed: %v", task.AppName, pErr), "DownloadManager")
-				if attempt == 3 {
-					return fmt.Errorf("failed to acquire license: %w", pErr)
-				}
+			pErr := doPurchase(account)
+			if pErr != nil && !errors.Is(pErr, appstore.ErrLicenseAlreadyExists) {
+				m.emitter.EmitLog("WARN", fmt.Sprintf("[%s] License acquisition returned: %v", task.AppName, pErr), "DownloadManager")
+			} else if errors.Is(pErr, appstore.ErrLicenseAlreadyExists) {
+				m.emitter.EmitLog("INFO", fmt.Sprintf("[%s] License checked on Apple ID. Resuming download...", task.AppName), "DownloadManager")
 			} else {
 				m.emitter.EmitLog("SUCCESS", fmt.Sprintf("[%s] License acquired. Resuming download...", task.AppName), "DownloadManager")
 			}
@@ -523,6 +516,10 @@ func (m *downloadManager) executeAppDownload(ctx context.Context, task *models.D
 
 		// Other errors are fatal
 		return err
+	}
+
+	if errors.Is(lastErr, appstore.ErrLicenseRequired) {
+		return fmt.Errorf("a license is required for '%s'; if this is a new free app, please obtain it once on an iOS device with your Apple ID first", task.AppName)
 	}
 
 	return fmt.Errorf("failed after 3 attempts: %w", lastErr)

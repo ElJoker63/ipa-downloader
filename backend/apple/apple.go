@@ -1,9 +1,14 @@
 package apple
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	gohttp "net/http"
 	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/appstore"
@@ -32,6 +37,7 @@ type Client interface {
 	Lookup(bundleID string, platform models.Platform) (*models.AppMetadata, error)
 	Purchase(app models.AppMetadata) error
 	ListVersions(app models.AppMetadata) ([]models.VersionInfo, error)
+	GetPurchasedApps(page, limit int) (*models.PurchasedAppsOutput, error)
 	GetKeychain() keychain.Keychain
 }
 
@@ -241,6 +247,8 @@ func (c *client) Purchase(app models.AppMetadata) error {
 			Price:    app.Price,
 			Version:  app.Version,
 		},
+		StoreFront: accInfo.Account.StoreFront,
+		Platform:   appstore.PlatformIPhone,
 	})
 	if err != nil && !errors.Is(err, appstore.ErrLicenseAlreadyExists) {
 		return err
@@ -287,6 +295,180 @@ func (c *client) ListVersions(app models.AppMetadata) ([]models.VersionInfo, err
 	return versions, nil
 }
 
+func (c *client) GetPurchasedApps(page, limit int) (*models.PurchasedAppsOutput, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 20
+	}
+	if limit > appstore.MaxOwnedAppsLimit {
+		limit = appstore.MaxOwnedAppsLimit
+	}
+
+	accInfo, err := c.appstore.AccountInfo()
+	if err != nil {
+		return nil, fmt.Errorf("authentication required: %w", err)
+	}
+
+	out, err := c.appstore.OwnedApps(appstore.OwnedAppsInput{
+		Account: accInfo.Account,
+		Page:    page,
+		Limit:   limit,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	countryCode := storefront.GetCountry(accInfo.Account.StoreFront).ID
+	if countryCode == "" || countryCode == "Unknown" {
+		countryCode = "US"
+	}
+
+	// Batch lookup artwork icons & metadata from iTunes for the current page
+	var idStrs []string
+	for _, app := range out.Results {
+		if app.ID > 0 {
+			idStrs = append(idStrs, strconv.FormatInt(app.ID, 10))
+		}
+	}
+
+	appLookupMap := make(map[int64]models.AppMetadata)
+	if len(idStrs) > 0 {
+		lookupURL := fmt.Sprintf("https://%s%s?id=%s&country=%s", "itunes.apple.com", "/lookup", strings.Join(idStrs, ","), countryCode)
+		req, rErr := gohttp.NewRequest("GET", lookupURL, nil)
+		if rErr == nil {
+			req.Header.Set("User-Agent", "Mozilla/5.0")
+			resp, doErr := gohttp.DefaultClient.Do(req)
+			if doErr == nil && resp.StatusCode == gohttp.StatusOK {
+				defer resp.Body.Close()
+				var searchRes struct {
+					ResultCount int `json:"resultCount"`
+					Results     []struct {
+						TrackID        int64   `json:"trackId"`
+						BundleID       string  `json:"bundleId"`
+						TrackName      string  `json:"trackName"`
+						ArtistName     string  `json:"artistName"`
+						ArtworkURL512  string  `json:"artworkUrl512"`
+						ArtworkURL100  string  `json:"artworkUrl100"`
+						ArtworkURL60   string  `json:"artworkUrl60"`
+						PrimaryGenre   string  `json:"primaryGenreName"`
+						Price          float64 `json:"price"`
+						FormattedPrice string  `json:"formattedPrice"`
+						Version        string  `json:"version"`
+					} `json:"results"`
+				}
+				if jsonErr := json.NewDecoder(resp.Body).Decode(&searchRes); jsonErr == nil {
+					for _, item := range searchRes.Results {
+						artwork := item.ArtworkURL512
+						if artwork == "" {
+							artwork = item.ArtworkURL100
+						}
+						if artwork == "" {
+							artwork = item.ArtworkURL60
+						}
+						appLookupMap[item.TrackID] = models.AppMetadata{
+							ID:             item.TrackID,
+							BundleID:       item.BundleID,
+							Name:           item.TrackName,
+							Developer:      item.ArtistName,
+							ArtworkURL:     artwork,
+							ArtworkURL512:  item.ArtworkURL512,
+							PrimaryGenre:   item.PrimaryGenre,
+							Price:          item.Price,
+							FormattedPrice: item.FormattedPrice,
+						}
+					}
+				}
+			}
+		}
+
+		// Fallback for any missing items without country filter
+		var missingIDs []string
+		for _, idStr := range idStrs {
+			id, _ := strconv.ParseInt(idStr, 10, 64)
+			if _, ok := appLookupMap[id]; !ok {
+				missingIDs = append(missingIDs, idStr)
+			}
+		}
+		if len(missingIDs) > 0 {
+			globalURL := fmt.Sprintf("https://%s%s?id=%s", "itunes.apple.com", "/lookup", strings.Join(missingIDs, ","))
+			if gReq, gErr := gohttp.NewRequest("GET", globalURL, nil); gErr == nil {
+				gReq.Header.Set("User-Agent", "Mozilla/5.0")
+				if gResp, gDoErr := gohttp.DefaultClient.Do(gReq); gDoErr == nil && gResp.StatusCode == gohttp.StatusOK {
+					defer gResp.Body.Close()
+					var gSearchRes struct {
+						ResultCount int `json:"resultCount"`
+						Results     []struct {
+							TrackID        int64   `json:"trackId"`
+							BundleID       string  `json:"bundleId"`
+							TrackName      string  `json:"trackName"`
+							ArtistName     string  `json:"artistName"`
+							ArtworkURL512  string  `json:"artworkUrl512"`
+							ArtworkURL100  string  `json:"artworkUrl100"`
+							ArtworkURL60   string  `json:"artworkUrl60"`
+							PrimaryGenre   string  `json:"primaryGenreName"`
+							Price          float64 `json:"price"`
+							FormattedPrice string  `json:"formattedPrice"`
+							Version        string  `json:"version"`
+						} `json:"results"`
+					}
+					if jsonErr := json.NewDecoder(gResp.Body).Decode(&gSearchRes); jsonErr == nil {
+						for _, item := range gSearchRes.Results {
+							artwork := item.ArtworkURL512
+							if artwork == "" {
+								artwork = item.ArtworkURL100
+							}
+							if artwork == "" {
+								artwork = item.ArtworkURL60
+							}
+							appLookupMap[item.TrackID] = models.AppMetadata{
+								ID:             item.TrackID,
+								BundleID:       item.BundleID,
+								Name:           item.TrackName,
+								Developer:      item.ArtistName,
+								ArtworkURL:     artwork,
+								ArtworkURL512:  item.ArtworkURL512,
+								PrimaryGenre:   item.PrimaryGenre,
+								Price:          item.Price,
+								FormattedPrice: item.FormattedPrice,
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	var results []models.AppMetadata
+	for _, raw := range out.Results {
+		meta := convertAppToMetadata(raw)
+		if enriched, ok := appLookupMap[raw.ID]; ok {
+			if enriched.ArtworkURL != "" {
+				meta.ArtworkURL = enriched.ArtworkURL
+				meta.ArtworkURL512 = enriched.ArtworkURL512
+			}
+			if enriched.Developer != "" {
+				meta.Developer = enriched.Developer
+			}
+			if enriched.PrimaryGenre != "" {
+				meta.PrimaryGenre = enriched.PrimaryGenre
+			}
+			if enriched.FormattedPrice != "" {
+				meta.FormattedPrice = enriched.FormattedPrice
+			}
+		}
+		results = append(results, meta)
+	}
+
+	return &models.PurchasedAppsOutput{
+		Count:      out.Count,
+		TotalCount: out.TotalCount,
+		Page:       out.Page,
+		Results:    results,
+	}, nil
+}
+
 func parseApplePlatform(p models.Platform) (appstore.Platform, error) {
 	switch p {
 	case models.PlatformiPadOS:
@@ -314,6 +496,11 @@ func convertAppToMetadata(a appstore.App) models.AppMetadata {
 		artwork = a.ArtworkURL60
 	}
 
+	purchaseDateStr := ""
+	if !a.PurchaseDate.IsZero() {
+		purchaseDateStr = a.PurchaseDate.Format(time.RFC3339)
+	}
+
 	return models.AppMetadata{
 		ID:             a.ID,
 		BundleID:       a.BundleID,
@@ -322,5 +509,6 @@ func convertAppToMetadata(a appstore.App) models.AppMetadata {
 		Price:          a.Price,
 		FormattedPrice: formattedPrice,
 		ArtworkURL:     artwork,
+		PurchaseDate:   purchaseDateStr,
 	}
 }

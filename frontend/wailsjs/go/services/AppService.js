@@ -114,6 +114,10 @@ export function GetLogs(arg1) {
   return window['go']['services']['AppService']['GetLogs'](arg1);
 }
 
+export function GetPurchasedApps(arg1, arg2) {
+  return window['go']['services']['AppService']['GetPurchasedApps'](arg1, arg2);
+}
+
 export function GetSearchHistory(arg1) {
   return window['go']['services']['AppService']['GetSearchHistory'](arg1);
 }

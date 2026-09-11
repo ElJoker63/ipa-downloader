@@ -215,6 +215,10 @@ func (s *AppService) ClearSearchHistory() error {
 	return s.searchService.ClearSearchHistory()
 }
 
+func (s *AppService) GetPurchasedApps(page, limit int) (*models.PurchasedAppsOutput, error) {
+	return s.appleClient.GetPurchasedApps(page, limit)
+}
+
 // ----------------- Download Bindings -----------------
 
 func (s *AppService) QueueDownload(app models.AppMetadata, platform string, externalVersionID string, customOutputPath string) (*models.DownloadTask, error) {

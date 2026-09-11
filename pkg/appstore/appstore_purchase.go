@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	gohttp "net/http"
-	"strings"
 
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/http"
 )
@@ -30,7 +29,10 @@ func (t *appstore) Purchase(input PurchaseInput) error {
 		return fmt.Errorf("failed to get mac address: %w", err)
 	}
 
-	guid := strings.ReplaceAll(strings.ToUpper(macAddr), ":", "")
+	guid, machineID, err := machineIdentity(macAddr)
+	if err != nil {
+		return fmt.Errorf("failed to get machine identity: %w", err)
+	}
 
 	if input.App.Price > 0 {
 		return errors.New("purchasing paid apps is not supported")
@@ -44,19 +46,31 @@ func (t *appstore) Purchase(input PurchaseInput) error {
 		targetStoreFront = input.Account.StoreFront
 	}
 
-	err = t.purchaseWithParams(input.Account, input.App, targetStoreFront, guid, PricingParameterAppStore)
+	var signer ActionSigner
+	if t.actionSignerFactory != nil {
+		bag, bagErr := t.bag(guid)
+		if bagErr == nil {
+			s, sErr := t.actionSignerFactory(bag.SAPConfig, machineID)
+			if sErr == nil && s != nil {
+				signer = s
+				defer signer.Close()
+			}
+		}
+	}
+
+	err = t.purchaseWithParams(input.Account, input.App, targetStoreFront, guid, PricingParameterAppStore, signer)
 	if err == nil {
 		return nil
 	}
 
 	if targetStoreFront != input.Account.StoreFront && input.Account.StoreFront != "" {
-		if fbErr := t.purchaseWithParams(input.Account, input.App, input.Account.StoreFront, guid, PricingParameterAppStore); fbErr == nil {
+		if fbErr := t.purchaseWithParams(input.Account, input.App, input.Account.StoreFront, guid, PricingParameterAppStore, signer); fbErr == nil {
 			return nil
 		}
 	}
 
 	if input.Platform != PlatformMacOS && errors.Is(err, ErrTemporarilyUnavailable) {
-		err = t.purchaseWithParams(input.Account, input.App, targetStoreFront, guid, PricingParameterAppleArcade)
+		err = t.purchaseWithParams(input.Account, input.App, targetStoreFront, guid, PricingParameterAppleArcade, signer)
 		if err != nil {
 			return fmt.Errorf("failed to purchase item with param '%s': %w", PricingParameterAppleArcade, err)
 		}
@@ -75,8 +89,8 @@ type purchaseResult struct {
 	MAllowed        *bool  `plist:"m-allowed,omitempty"`
 }
 
-func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, guid string, pricingParameters string) error {
-	req := t.purchaseRequest(acc, app, storeFront, guid, pricingParameters)
+func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, guid string, pricingParameters string, signer ActionSigner) error {
+	req := t.purchaseRequest(acc, app, storeFront, guid, pricingParameters, signer)
 	res, err := t.purchaseClient.Send(req)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
@@ -123,7 +137,7 @@ func (t *appstore) purchaseWithParams(acc Account, app App, storeFront string, g
 	return nil
 }
 
-func (t *appstore) purchaseRequest(acc Account, app App, storeFront, guid string, pricingParameters string) http.Request {
+func (t *appstore) purchaseRequest(acc Account, app App, storeFront, guid string, pricingParameters string, signer ActionSigner) http.Request {
 	podPrefix := ""
 	if acc.Pod != "" {
 		podPrefix = "p" + acc.Pod + "-"
@@ -133,6 +147,7 @@ func (t *appstore) purchaseRequest(acc Account, app App, storeFront, guid string
 		URL:            fmt.Sprintf("https://%s%s%s", podPrefix, PrivateAppStoreAPIDomain, PrivateAppStoreAPIPathPurchase),
 		Method:         http.MethodPOST,
 		ResponseFormat: http.ResponseFormatXML,
+		ActionSigner:   signer,
 		Headers: map[string]string{
 			"Content-Type":        "application/x-apple-plist",
 			"iCloud-DSID":         acc.DirectoryServicesID,

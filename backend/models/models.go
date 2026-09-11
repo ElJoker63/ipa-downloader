@@ -55,6 +55,15 @@ type AppMetadata struct {
 	SupportedPlatforms    []string `json:"supportedPlatforms"`
 	Country               string   `json:"country,omitempty"`
 	IsFavorite            bool     `json:"isFavorite"`
+	PurchaseDate          string   `json:"purchaseDate,omitempty"`
+}
+
+// PurchasedAppsOutput represents paginated list of apps purchased by the account.
+type PurchasedAppsOutput struct {
+	Count      int           `json:"count"`
+	TotalCount int           `json:"totalCount"`
+	Page       int           `json:"page"`
+	Results    []AppMetadata `json:"results"`
 }
 
 // DownloadStatus represents the state of a download task.

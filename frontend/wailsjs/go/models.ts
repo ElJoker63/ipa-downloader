@@ -91,6 +91,7 @@ export namespace models {
 	    supportedPlatforms: string[];
 	    country?: string;
 	    isFavorite: boolean;
+	    purchaseDate?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new AppMetadata(source);
@@ -127,6 +128,7 @@ export namespace models {
 	        this.supportedPlatforms = source["supportedPlatforms"];
 	        this.country = source["country"];
 	        this.isFavorite = source["isFavorite"];
+	        this.purchaseDate = source["purchaseDate"];
 	    }
 	}
 	export class AppDetailsOutput {
@@ -611,6 +613,42 @@ export namespace models {
 	        this.level = source["level"];
 	        this.message = source["message"];
 	        this.context = source["context"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class PurchasedAppsOutput {
+	    count: number;
+	    totalCount: number;
+	    page: number;
+	    results: AppMetadata[];
+	
+	    static createFrom(source: any = {}) {
+	        return new PurchasedAppsOutput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.count = source["count"];
+	        this.totalCount = source["totalCount"];
+	        this.page = source["page"];
+	        this.results = this.convertValues(source["results"], AppMetadata);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
