@@ -115,6 +115,15 @@ func (s *deviceService) pollLoop() {
 	}
 }
 
+// deviceUpdate carries the result of probing one currently-connected device,
+// computed outside of s.mu so slow device I/O never holds up other callers.
+type deviceUpdate struct {
+	udid  string
+	dev   giDevice.Device
+	info  *models.DeviceInfo
+	isNew bool
+}
+
 func (s *deviceService) checkDeviceConnection() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -122,53 +131,93 @@ func (s *deviceService) checkDeviceConnection() {
 		}
 	}()
 
-	usbmux, err := giDevice.NewUsbmux()
-	if err != nil {
-		return
+	// Reuse a single usbmux connection across poll ticks instead of dialing a
+	// fresh one every cycle: the underlying Usbmux interface exposes no Close,
+	// so re-dialing every 3s leaked one OS socket per tick for as long as the
+	// app ran (1200+/hour), which was a steady, unbounded resource drain.
+	s.mu.Lock()
+	usbmux := s.usbmux
+	s.mu.Unlock()
+
+	if usbmux == nil {
+		var err error
+		usbmux, err = giDevice.NewUsbmux()
+		if err != nil {
+			return
+		}
+		s.mu.Lock()
+		s.usbmux = usbmux
+		s.mu.Unlock()
 	}
 
 	rawDevices, err := usbmux.Devices()
 	if err != nil {
+		// The connection may have gone stale (e.g. usbmuxd restarted); drop it
+		// so the next tick dials a fresh one instead of failing forever.
+		s.mu.Lock()
+		if s.usbmux == usbmux {
+			s.usbmux = nil
+		}
+		s.mu.Unlock()
 		return
 	}
 
-	s.mu.Lock()
-	s.usbmux = usbmux
-	currentUdids := make(map[string]bool)
+	// Snapshot known UDIDs under a brief read lock, then do all the (slow,
+	// blocking) per-device lockdown round trips without holding s.mu, so
+	// GetConnectedDevices/QueueInstall/etc. from the UI are never blocked
+	// for the duration of a poll.
+	s.mu.RLock()
+	known := make(map[string]bool, len(s.devices))
+	for udid := range s.devices {
+		known[udid] = true
+	}
+	s.mu.RUnlock()
+
+	currentUdids := make(map[string]bool, len(rawDevices))
+	updates := make([]deviceUpdate, 0, len(rawDevices))
 
 	for _, dev := range rawDevices {
 		udid := dev.Properties().SerialNumber
 		currentUdids[udid] = true
 
-		if _, exists := s.devices[udid]; !exists {
-			// New device connected
-			s.devices[udid] = dev
-			info, err := s.fetchDeviceInfo(dev)
-			if err == nil {
-				s.deviceInfos[udid] = info
-				s.emitter.EmitLog("INFO", fmt.Sprintf("iOS Device connected: %s (%s)", info.Name, info.Model), "DeviceService")
-				s.emitter.Emit("device:connected", info)
-			}
-		} else {
-			// Update existing device info (battery/storage might change)
-			info, err := s.fetchDeviceInfo(dev)
-			if err == nil {
-				s.deviceInfos[udid] = info
-				s.emitter.Emit("device:updated", info)
-			}
+		info, err := s.fetchDeviceInfo(dev)
+		if err != nil {
+			continue
 		}
+		updates = append(updates, deviceUpdate{udid: udid, dev: dev, info: info, isNew: !known[udid]})
 	}
 
-	// Detect disconnections
+	var disconnected []string
+
+	s.mu.Lock()
+	for _, u := range updates {
+		s.devices[u.udid] = u.dev
+		s.deviceInfos[u.udid] = u.info
+	}
 	for udid := range s.devices {
 		if !currentUdids[udid] {
-			s.emitter.EmitLog("INFO", fmt.Sprintf("iOS Device disconnected: %s", udid), "DeviceService")
-			delete(s.devices, udid)
-			delete(s.deviceInfos, udid)
-			s.emitter.Emit("device:disconnected", udid)
+			disconnected = append(disconnected, udid)
 		}
 	}
+	for _, udid := range disconnected {
+		delete(s.devices, udid)
+		delete(s.deviceInfos, udid)
+	}
 	s.mu.Unlock()
+
+	// Emit events after releasing the lock; the emitter has its own locking.
+	for _, u := range updates {
+		if u.isNew {
+			s.emitter.EmitLog("INFO", fmt.Sprintf("iOS Device connected: %s (%s)", u.info.Name, u.info.Model), "DeviceService")
+			s.emitter.Emit("device:connected", u.info)
+		} else {
+			s.emitter.Emit("device:updated", u.info)
+		}
+	}
+	for _, udid := range disconnected {
+		s.emitter.EmitLog("INFO", fmt.Sprintf("iOS Device disconnected: %s", udid), "DeviceService")
+		s.emitter.Emit("device:disconnected", udid)
+	}
 }
 
 func (s *deviceService) processInstallQueue() {
