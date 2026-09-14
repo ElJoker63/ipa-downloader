@@ -16,7 +16,7 @@
       <!-- Search Widget -->
       <div
         @click="router.push('/search')"
-        class="group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.03] border border-white/[0.08] hover:border-[#0A84FF]/40 hover:bg-white/[0.06] transition-all cursor-pointer shadow-xl"
+        class="liquid-shine group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.1] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_rgba(0,0,0,0.2)] hover:border-[#0A84FF]/40 hover:bg-white/[0.07] hover:-translate-y-1.5 active:translate-y-0 active:scale-[0.99] transition-all duration-500 ease-liquid cursor-pointer"
       >
         <div class="flex flex-col h-full justify-between space-y-4">
           <div class="flex items-center justify-between">
@@ -39,7 +39,7 @@
       <!-- Transfers Widget -->
       <div
         @click="router.push('/downloads')"
-        class="group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.03] border border-white/[0.08] hover:border-[#64D2FF]/40 hover:bg-white/[0.06] transition-all cursor-pointer shadow-xl"
+        class="liquid-shine group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.1] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_rgba(0,0,0,0.2)] hover:border-[#64D2FF]/40 hover:bg-white/[0.07] hover:-translate-y-1.5 active:translate-y-0 active:scale-[0.99] transition-all duration-500 ease-liquid cursor-pointer"
       >
         <div class="flex flex-col h-full justify-between space-y-4">
           <div class="flex items-center justify-between">
@@ -62,7 +62,7 @@
       <!-- Devices Widget -->
       <div
         @click="router.push('/apps')"
-        class="group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.03] border border-white/[0.08] hover:border-[#30D158]/40 hover:bg-white/[0.06] transition-all cursor-pointer shadow-xl"
+        class="liquid-shine group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.1] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_rgba(0,0,0,0.2)] hover:border-[#30D158]/40 hover:bg-white/[0.07] hover:-translate-y-1.5 active:translate-y-0 active:scale-[0.99] transition-all duration-500 ease-liquid cursor-pointer"
       >
         <div class="flex flex-col h-full justify-between space-y-4">
           <div class="flex items-center justify-between">
@@ -85,7 +85,7 @@
       <!-- Firmwares Widget -->
       <div
         @click="router.push('/firmwares')"
-        class="group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.03] border border-white/[0.08] hover:border-[#5E5CE6]/40 hover:bg-white/[0.06] transition-all cursor-pointer shadow-xl"
+        class="liquid-shine group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.1] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_rgba(0,0,0,0.2)] hover:border-[#5E5CE6]/40 hover:bg-white/[0.07] hover:-translate-y-1.5 active:translate-y-0 active:scale-[0.99] transition-all duration-500 ease-liquid cursor-pointer"
       >
         <div class="flex flex-col h-full justify-between space-y-4">
           <div class="flex items-center justify-between">
@@ -105,7 +105,7 @@
       <!-- Favorites Widget -->
       <div
         @click="router.push('/favorites')"
-        class="group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.03] border border-white/[0.08] hover:border-[#FFD60A]/40 hover:bg-white/[0.06] transition-all cursor-pointer shadow-xl"
+        class="liquid-shine group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.1] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_rgba(0,0,0,0.2)] hover:border-[#FFD60A]/40 hover:bg-white/[0.07] hover:-translate-y-1.5 active:translate-y-0 active:scale-[0.99] transition-all duration-500 ease-liquid cursor-pointer"
       >
         <div class="flex flex-col h-full justify-between space-y-4">
           <div class="flex items-center justify-between">
@@ -128,7 +128,7 @@
       <!-- Logs Widget -->
       <div
         @click="router.push('/logs')"
-        class="group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.03] border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.06] transition-all cursor-pointer shadow-xl"
+        class="liquid-shine group relative overflow-hidden p-6 rounded-[32px] bg-white/[0.04] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.1] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_rgba(0,0,0,0.2)] hover:border-white/20 hover:bg-white/[0.07] hover:-translate-y-1.5 active:translate-y-0 active:scale-[0.99] transition-all duration-500 ease-liquid cursor-pointer"
       >
         <div class="flex flex-col h-full justify-between space-y-4">
           <div class="flex items-center justify-between">

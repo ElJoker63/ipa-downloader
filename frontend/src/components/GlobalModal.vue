@@ -1,8 +1,8 @@
 <template>
   <Transition name="fade-backdrop">
-    <div v-if="modalStore.isOpen" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-center justify-center p-6">
+    <div v-if="modalStore.isOpen" class="fixed inset-0 bg-black/50 backdrop-blur-xl z-[9999] flex items-center justify-center p-6">
       <Transition name="modal-scale">
-        <div class="w-full max-w-sm bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
+        <div class="glass-card w-full max-w-sm !rounded-[28px] !bg-[#1C1C1E]/75 backdrop-saturate-150 overflow-hidden p-6 space-y-6">
           <div class="flex flex-col items-center text-center space-y-4">
             <!-- Icon based on type -->
             <div
@@ -35,7 +35,7 @@
             <button
               @click="modalStore.handleConfirm"
               :disabled="modalStore.loading"
-              class="w-full py-3 rounded-2xl text-white font-bold text-sm transition shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50"
+              class="liquid-shine w-full py-3 rounded-2xl text-white font-bold text-sm transition-all duration-300 ease-liquid shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] flex items-center justify-center space-x-2 disabled:opacity-50"
               :class="confirmBtnClass"
             >
               <svg v-if="modalStore.loading" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@
               v-if="modalStore.options.cancelText"
               @click="modalStore.handleCancel"
               :disabled="modalStore.loading"
-              class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition disabled:opacity-50"
+              class="btn-secondary w-full py-3 !rounded-2xl text-white font-semibold text-sm text-center disabled:opacity-50"
             >
               {{ modalStore.options.cancelText }}
             </button>

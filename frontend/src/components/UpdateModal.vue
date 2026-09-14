@@ -1,6 +1,6 @@
 <template>
-  <div v-if="visible" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-6">
-    <div class="w-full max-w-md bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+  <div v-if="visible" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-xl p-6">
+    <div class="glass-card w-full max-w-md !rounded-[28px] !bg-[#1C1C1E]/75 backdrop-saturate-150 overflow-hidden flex flex-col">
       <!-- Header -->
       <div class="p-6 border-b border-white/10 flex items-center space-x-4 bg-white/[0.02]">
         <div class="w-12 h-12 rounded-2xl bg-[#0A84FF] flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#0A84FF]/20">
@@ -41,9 +41,9 @@
             <span class="font-medium text-white">{{ statusMessage }}</span>
             <span class="font-mono font-bold text-[#0A84FF]">{{ progress }}%</span>
           </div>
-          <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 relative">
+          <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] relative">
             <div
-              class="h-full bg-gradient-to-r from-[#0A84FF] to-[#5E5CE6] rounded-full transition-all duration-300"
+              class="h-full bg-gradient-to-r from-[#0A84FF] to-[#5E5CE6] rounded-full shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35)] transition-all duration-300 ease-liquid"
               :style="{ width: `${progress}%` }"
             ></div>
             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
@@ -56,7 +56,7 @@
         <button
           v-if="!updating"
           @click="startUpdate"
-          class="w-full py-3.5 rounded-2xl bg-[#0A84FF] hover:bg-[#0071E3] text-white font-bold text-sm shadow-xl shadow-[#0A84FF]/20 transition-all active:scale-[0.98]"
+          class="btn-primary liquid-shine w-full py-3.5 !rounded-2xl text-white font-bold text-sm text-center hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97]"
         >
           {{ t.updates.updateAndRestart }}
         </button>

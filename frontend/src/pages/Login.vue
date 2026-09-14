@@ -1,9 +1,9 @@
 <template>
   <div class="max-w-md mx-auto h-full flex flex-col justify-center animate-slide-up font-sans">
-    <div class="glass-card p-8 rounded-[24px] space-y-8 shadow-2xl">
+    <div class="glass-card !rounded-[28px] p-8 space-y-8">
       <!-- Login Header -->
       <div class="flex flex-col items-center text-center space-y-4">
-        <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#0071E3] via-[#0A84FF] to-[#64D2FF] flex items-center justify-center shadow-xl shadow-[#0A84FF]/20 border border-white/20 shrink-0">
+        <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#0071E3] via-[#0A84FF] to-[#64D2FF] flex items-center justify-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_12px_32px_rgba(10,132,255,0.35)] border border-white/20 shrink-0">
           <img src="/logo.png" alt="IPA Downloader" class="w-14 h-14 object-contain invert brightness-0" />
         </div>
         <div>
@@ -60,7 +60,7 @@
         <div class="pt-2">
           <button
             type="submit"
-            class="btn-primary w-full py-3.5 text-sm font-bold shadow-lg shadow-[#0A84FF]/25"
+            class="btn-primary liquid-shine w-full py-3.5 text-sm font-bold"
             :disabled="authStore.isLoading"
           >
             <span v-if="authStore.isLoading" class="flex items-center justify-center space-x-2">
@@ -85,7 +85,7 @@
 
     <button
       @click="router.push('/')"
-      class="mt-6 mx-auto flex items-center space-x-2 text-[#7D8592] hover:text-white transition-colors text-sm font-medium"
+      class="mt-6 mx-auto flex items-center space-x-2 text-[#7D8592] hover:text-white transition-all duration-300 ease-liquid text-sm font-medium"
     >
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
       <span>{{ t.auth.backToHome }}</span>

@@ -21,8 +21,8 @@
           <div class="grid grid-cols-2 gap-3 max-w-sm">
             <button
               type="button"
-              class="p-3 rounded-[12px] border text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-150"
-              :class="currentLanguage === 'es' ? 'bg-[#0A84FF]/20 border-[#0A84FF] text-white shadow-sm' : 'bg-white/[0.04] border-white/[0.08] text-[#B8C0CC] hover:text-white'"
+              class="p-3 rounded-[14px] border backdrop-blur-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-300 ease-liquid"
+              :class="currentLanguage === 'es' ? 'bg-[#0A84FF]/20 border-[#0A84FF] text-white shadow-specular-soft' : 'bg-white/[0.05] border-white/[0.1] text-[#B8C0CC] hover:text-white hover:bg-white/[0.08]'"
               @click="changeLang('es')"
             >
               <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-white/[0.1] text-[#64D2FF]">ES</span>
@@ -30,8 +30,8 @@
             </button>
             <button
               type="button"
-              class="p-3 rounded-[12px] border text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-150"
-              :class="currentLanguage === 'en' ? 'bg-[#0A84FF]/20 border-[#0A84FF] text-white shadow-sm' : 'bg-white/[0.04] border-white/[0.08] text-[#B8C0CC] hover:text-white'"
+              class="p-3 rounded-[14px] border backdrop-blur-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all duration-300 ease-liquid"
+              :class="currentLanguage === 'en' ? 'bg-[#0A84FF]/20 border-[#0A84FF] text-white shadow-specular-soft' : 'bg-white/[0.05] border-white/[0.1] text-[#B8C0CC] hover:text-white hover:bg-white/[0.08]'"
               @click="changeLang('en')"
             >
               <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-white/[0.1] text-[#64D2FF]">EN</span>
@@ -75,7 +75,7 @@
           </div>
 
           <!-- Informative Subdirectory Structure Banner -->
-          <div class="p-3.5 rounded-[12px] bg-white/[0.03] border border-white/[0.06] space-y-1 text-[#B8C0CC]">
+          <div class="glass-panel !rounded-[14px] p-3.5 space-y-1 text-[#B8C0CC]">
             <div class="font-semibold text-white flex items-center space-x-1.5 text-[11px] uppercase tracking-wider">
               <svg class="w-3.5 h-3.5 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -115,7 +115,7 @@
         <!-- Automation Toggles -->
         <div class="space-y-3 pt-2">
           <!-- Auto Acquire License -->
-          <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+          <div class="glass-panel flex items-center justify-between !rounded-[16px] p-3.5">
             <div class="pr-4">
               <div class="text-xs font-semibold text-[#FFFFFF]">{{ t.settings.autoLicenseTitle }}</div>
               <p class="text-[11px] text-[#B8C0CC] mt-0.5">{{ t.settings.autoLicenseDesc }}</p>
@@ -129,7 +129,7 @@
           </div>
 
           <!-- Remember Credentials -->
-          <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+          <div class="glass-panel flex items-center justify-between !rounded-[16px] p-3.5">
             <div class="pr-4">
               <div class="text-xs font-semibold text-[#FFFFFF]">{{ t.settings.keychainTitle }}</div>
               <p class="text-[11px] text-[#B8C0CC] mt-0.5">{{ t.settings.keychainDesc }}</p>
@@ -148,7 +148,7 @@
       <div class="glass-card p-6 rounded-[18px] space-y-5">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.settings.storageSection }}</h2>
 
-        <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+        <div class="glass-panel flex items-center justify-between !rounded-[16px] p-3.5">
           <div>
             <div class="text-xs font-semibold text-[#FFFFFF]">{{ t.settings.cacheTitle }}</div>
             <p class="text-[11px] text-[#B8C0CC] mt-0.5">{{ t.settings.cacheDesc }} <span class="font-mono text-[#64D2FF]">{{ settingsStore.cacheSize }}</span></p>
@@ -162,7 +162,7 @@
           </button>
         </div>
 
-        <div class="flex items-center justify-between p-3.5 rounded-[14px] bg-white/[0.04] border border-white/[0.08]">
+        <div class="glass-panel flex items-center justify-between !rounded-[16px] p-3.5">
           <div>
             <div class="text-xs font-semibold text-[#FFFFFF]">{{ t.settings.exportLogsTitle }}</div>
             <p class="text-[11px] text-[#B8C0CC] mt-0.5">{{ t.settings.exportLogsDesc }}</p>

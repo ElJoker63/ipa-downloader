@@ -59,7 +59,7 @@
     <!-- Live Terminal Glass Box -->
     <div
       ref="logContainerRef"
-      class="flex-1 rounded-[18px] border border-white/[0.12] bg-[#0A0D14]/90 backdrop-blur-[30px] p-4 font-mono text-xs overflow-y-auto space-y-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.35)] min-h-[420px]"
+      class="flex-1 rounded-[22px] border border-white/[0.12] bg-[#0A0D14]/85 backdrop-blur-[36px] backdrop-saturate-[180%] p-4 font-mono text-xs overflow-y-auto space-y-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_12px_40px_rgba(0,0,0,0.35)] min-h-[420px]"
     >
       <div v-if="logsStore.filteredLogs.length === 0" class="text-[#7D8592] text-center py-24 font-sans text-xs">
         {{ t.logs.empty }}
@@ -68,7 +68,7 @@
       <div
         v-for="entry in logsStore.filteredLogs"
         :key="entry.id"
-        class="flex items-start space-x-2.5 leading-relaxed hover:bg-white/[0.04] p-1 rounded-lg transition duration-100"
+        class="flex items-start space-x-2.5 leading-relaxed hover:bg-white/[0.05] p-1 rounded-lg transition-all duration-200 ease-liquid"
       >
         <span class="text-[#7D8592] shrink-0 font-mono text-[11px]">{{ formatTime(entry.timestamp) }}</span>
         <span

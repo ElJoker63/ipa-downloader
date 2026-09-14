@@ -1,12 +1,12 @@
 <template>
   <div
     v-if="searchStore.isDetailsModalOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-200"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl transition-all duration-200"
     @click.self="closeModal"
   >
     <div
       v-if="app"
-      class="glass-card w-full max-w-4xl max-h-[88vh] rounded-[22px] border border-white/[0.18] shadow-[0_16px_48px_rgba(0,0,0,0.45)] overflow-hidden flex flex-col animate-modal font-sans"
+      class="glass-card w-full max-w-4xl max-h-[88vh] !rounded-[26px] overflow-hidden flex flex-col animate-modal font-sans"
     >
       <!-- Modal Header -->
       <div class="p-6 border-b border-white/[0.08] flex items-start justify-between gap-4 shrink-0 bg-white/[0.02]">
@@ -121,29 +121,29 @@
         <!-- Description -->
         <div v-if="app.description" class="space-y-2">
           <h3 class="text-xs font-semibold uppercase tracking-wider text-[#B8C0CC]">{{ t.details.description }}</h3>
-          <div class="p-4 rounded-[14px] bg-white/[0.04] border border-white/[0.08] text-xs text-[#B8C0CC] leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto font-normal">
+          <div class="glass-panel p-4 !rounded-[16px] text-xs text-[#B8C0CC] leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto font-normal">
             {{ app.description }}
           </div>
         </div>
 
         <!-- Metadata Properties Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-          <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
+          <div class="glass-panel p-3 !rounded-[14px]">
             <span class="text-[#7D8592] block">{{ t.details.bundleId }}</span>
             <span class="font-mono text-[#FFFFFF] truncate block mt-0.5">{{ app.bundleId }}</span>
           </div>
 
-          <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
+          <div class="glass-panel p-3 !rounded-[14px]">
             <span class="text-[#7D8592] block">{{ t.details.minOs }}</span>
             <span class="font-mono text-[#FFFFFF] block mt-0.5">iOS {{ app.minimumOsVersion || '12.0' }}</span>
           </div>
 
-          <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
+          <div class="glass-panel p-3 !rounded-[14px]">
             <span class="text-[#7D8592] block">{{ t.details.releaseDate }}</span>
             <span class="text-[#FFFFFF] block mt-0.5">{{ formatDate(app.releaseDate) }}</span>
           </div>
 
-          <div class="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
+          <div class="glass-panel p-3 !rounded-[14px]">
             <span class="text-[#7D8592] block">{{ t.details.adamId }}</span>
             <span class="font-mono text-[#FFFFFF] block mt-0.5">{{ app.id }}</span>
           </div>
@@ -170,7 +170,7 @@
           </div>
 
           <!-- Loading Indicator when fetching version builds -->
-          <div v-if="searchStore.isDetailsLoading" class="p-4 rounded-[14px] bg-white/[0.03] border border-white/[0.08] text-center text-xs text-[#0A84FF] font-medium flex items-center justify-center space-x-2 animate-pulse">
+          <div v-if="searchStore.isDetailsLoading" class="glass-panel p-4 !rounded-[16px] text-center text-xs text-[#0A84FF] font-medium flex items-center justify-center space-x-2 animate-pulse">
             <svg class="animate-spin h-4 w-4 text-[#0A84FF]" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -179,11 +179,11 @@
           </div>
 
           <!-- Version History Scrollable List -->
-          <div v-else-if="filteredVersions.length > 0" class="rounded-[14px] border border-white/[0.08] divide-y divide-white/[0.08] max-h-60 overflow-y-auto bg-white/[0.02]">
+          <div v-else-if="filteredVersions.length > 0" class="glass-panel !rounded-[16px] divide-y divide-white/[0.08] max-h-60 overflow-y-auto">
             <div
               v-for="(v, index) in filteredVersions"
               :key="v.externalVersionId"
-              class="p-3.5 flex items-center justify-between text-xs hover:bg-white/[0.04] transition duration-150 gap-3"
+              class="p-3.5 flex items-center justify-between text-xs hover:bg-white/[0.05] transition-colors duration-200 ease-liquid gap-3"
             >
               <div class="flex items-center space-x-3 min-w-0">
                 <div class="flex items-center space-x-2">
@@ -242,13 +242,13 @@
     <!-- Fullscreen HD Screenshot Lightbox Viewer -->
     <div
       v-if="isLightboxOpen"
-      class="fixed inset-0 z-60 flex items-center justify-center p-6 bg-black/85 backdrop-blur-[40px] animate-modal"
+      class="fixed inset-0 z-60 flex items-center justify-center p-6 bg-black/85 backdrop-blur-[48px] backdrop-saturate-150 animate-modal"
       @click.self="closeLightbox"
     >
       <!-- Close Button -->
       <button
         type="button"
-        class="absolute top-6 right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-xl transition duration-150 z-70"
+        class="absolute top-6 right-6 p-2.5 rounded-full bg-white/10 backdrop-blur-xl hover:bg-white/20 hover:-translate-y-0.5 active:scale-90 text-white border border-white/20 shadow-specular-soft transition-all duration-200 ease-liquid z-70"
         title="Close Preview (Esc)"
         @click="closeLightbox"
       >
@@ -261,7 +261,7 @@
       <button
         v-if="screenshots.length > 1"
         type="button"
-        class="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/25 text-white border border-white/20 shadow-xl transition duration-150 z-70"
+        class="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 backdrop-blur-xl hover:bg-white/25 hover:scale-105 active:scale-90 text-white border border-white/20 shadow-specular-soft transition-all duration-200 ease-liquid z-70"
         title="Previous Screenshot (←)"
         @click.stop="prevScreenshot"
       >
@@ -279,7 +279,7 @@
         />
 
         <!-- Image Counter Capsule -->
-        <div class="mt-4 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-xs font-mono text-white shadow-md">
+        <div class="mt-4 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-xl backdrop-saturate-150 text-xs font-mono text-white shadow-specular-soft">
           {{ activeScreenshotIndex + 1 }} / {{ screenshots.length }}
         </div>
       </div>
@@ -288,7 +288,7 @@
       <button
         v-if="screenshots.length > 1"
         type="button"
-        class="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/25 text-white border border-white/20 shadow-xl transition duration-150 z-70"
+        class="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 backdrop-blur-xl hover:bg-white/25 hover:scale-105 active:scale-90 text-white border border-white/20 shadow-specular-soft transition-all duration-200 ease-liquid z-70"
         title="Next Screenshot (→)"
         @click.stop="nextScreenshot"
       >

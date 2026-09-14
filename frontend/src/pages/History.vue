@@ -26,11 +26,11 @@
 
     <!-- History Table & List (Clean macOS Table) -->
     <div class="flex-1 min-h-0 overflow-y-auto">
-      <div v-if="historyStore.history.length > 0" class="glass-card rounded-[18px] divide-y divide-white/[0.08] overflow-hidden">
+      <div v-if="historyStore.history.length > 0" class="glass-card !rounded-[20px] divide-y divide-white/[0.08] overflow-hidden">
         <div
           v-for="item in historyStore.history"
           :key="item.id"
-          class="p-4 flex items-center justify-between hover:bg-white/[0.04] transition duration-150 gap-4"
+          class="p-4 flex items-center justify-between hover:bg-white/[0.05] transition-all duration-300 ease-liquid gap-4"
         >
           <!-- App Info -->
           <div class="flex items-center space-x-3.5 min-w-0 flex-1">
@@ -89,7 +89,7 @@
 
             <button
               type="button"
-              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
+              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 backdrop-blur-xl transition-all duration-300 ease-liquid active:scale-90"
               :title="t.history.deleteFile"
               @click="handleDeleteFile(item.destinationPath, item.id)"
             >
@@ -100,7 +100,7 @@
 
             <button
               type="button"
-              class="p-1.5 rounded-lg text-[#7D8592] hover:text-white hover:bg-white/10 transition duration-150"
+              class="p-1.5 rounded-lg text-[#7D8592] hover:text-white hover:bg-white/10 backdrop-blur-xl transition-all duration-300 ease-liquid active:scale-90"
               :title="t.history.deleteRecord"
               @click="deleteItem(item.id)"
             >
@@ -113,7 +113,7 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="glass-card p-12 rounded-[22px] text-center space-y-3 max-w-lg mx-auto mt-12">
+      <div v-else class="glass-card !rounded-[26px] p-12 text-center space-y-3 max-w-lg mx-auto mt-12">
         <svg class="w-10 h-10 text-[#7D8592] mx-auto opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -127,10 +127,10 @@
     <!-- Device Picker Modal -->
     <div
       v-if="ipaToInstall && deviceStore.devices.length > 1"
-      class="fixed inset-0 bg-black/60 backdrop-blur-md z-[80] flex items-center justify-center p-6"
+      class="fixed inset-0 bg-black/60 backdrop-blur-xl z-[80] flex items-center justify-center p-6"
       @click.self="ipaToInstall = null"
     >
-      <div class="w-full max-w-sm bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
+      <div class="w-full max-w-sm glass-card !rounded-[28px] !bg-[#1C1C1E]/85 overflow-hidden p-6 space-y-6">
         <div class="text-center space-y-2">
           <h3 class="text-lg font-bold text-white">{{ t.common.selectTargetDevice }}</h3>
           <p class="text-xs text-[#8E8E93]">{{ t.common.multipleDevicesDesc }}</p>
@@ -141,7 +141,7 @@
             v-for="dev in deviceStore.devices"
             :key="dev.udid"
             @click="installToDevice(ipaToInstall!, dev.udid)"
-            class="w-full p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition text-left flex items-center justify-between group"
+            class="w-full p-4 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:bg-white/[0.08] hover:border-white/20 shadow-specular-soft transition-all duration-300 ease-liquid active:scale-[0.98] text-left flex items-center justify-between group"
           >
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF]">
@@ -162,7 +162,7 @@
 
         <button
           @click="ipaToInstall = null"
-          class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition"
+          class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-xl text-white font-semibold text-sm transition-all duration-300 ease-liquid active:scale-[0.98]"
         >
           Cancel
         </button>

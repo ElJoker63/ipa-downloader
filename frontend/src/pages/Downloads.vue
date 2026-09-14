@@ -42,7 +42,7 @@
           <div
             v-for="task in downloadsStore.activeDownloads"
             :key="task.id"
-            class="glass-card p-5 rounded-[22px] border border-white/[0.08] hover:border-white/20 transition-all flex flex-col space-y-4 shadow-xl"
+            class="glass-card !rounded-[24px] p-5 flex flex-col space-y-4"
           >
             <div class="flex items-start justify-between gap-4">
               <div class="flex items-center space-x-4 min-w-0">
@@ -64,7 +64,7 @@
                 <button
                   v-if="task.status === 'downloading'"
                   @click="downloadsStore.pauseDownload(task.id)"
-                  class="p-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-[#B8C0CC] hover:text-white transition duration-150"
+                  class="p-2 rounded-xl bg-white/[0.08] backdrop-blur-xl hover:bg-white/[0.16] text-[#B8C0CC] hover:text-white transition-all duration-300 ease-liquid active:scale-90"
                   title="Pause"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -72,14 +72,14 @@
                 <button
                   v-else-if="task.status === 'paused'"
                   @click="downloadsStore.resumeDownload(task.id)"
-                  class="p-2 rounded-xl bg-[#30D158]/15 hover:bg-[#30D158]/25 text-[#30D158] border border-[#30D158]/30 transition duration-150"
+                  class="p-2 rounded-xl bg-[#30D158]/15 backdrop-blur-xl hover:bg-[#30D158]/25 text-[#30D158] border border-[#30D158]/30 transition-all duration-300 ease-liquid active:scale-90"
                   title="Resume"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </button>
                 <button
                   @click="downloadsStore.cancelDownload(task.id)"
-                  class="p-2 rounded-xl bg-[#FF453A]/15 hover:bg-[#FF453A]/25 text-[#FF453A] border border-[#FF453A]/30 transition duration-150"
+                  class="p-2 rounded-xl bg-[#FF453A]/15 backdrop-blur-xl hover:bg-[#FF453A]/25 text-[#FF453A] border border-[#FF453A]/30 transition-all duration-300 ease-liquid active:scale-90"
                   title="Cancel"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12" /></svg>
@@ -97,10 +97,10 @@
             </div>
 
             <div class="space-y-2">
-              <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden border border-white/5">
+              <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden border border-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)]">
                 <div
-                  class="h-full rounded-full transition-all duration-300"
-                  :class="task.status === 'paused' ? 'bg-[#FFD60A]' : 'bg-[#0A84FF] shadow-[0_0_12px_rgba(10,132,255,0.5)]'"
+                  class="h-full rounded-full transition-all duration-300 ease-liquid"
+                  :class="task.status === 'paused' ? 'bg-[#FFD60A] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35)]' : 'bg-[#0A84FF] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_0_12px_rgba(10,132,255,0.5)]'"
                   :style="{ width: `${task.progress}%` }"
                 ></div>
               </div>
@@ -127,8 +127,8 @@
       </section>
 
       <!-- No Active Downloads Empty Card -->
-      <div v-else class="glass-card p-10 rounded-[18px] text-center space-y-2">
-        <div class="w-14 h-14 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center mx-auto text-[#7D8592]">
+      <div v-else class="glass-card !rounded-[24px] p-10 text-center space-y-2">
+        <div class="w-14 h-14 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/10 shadow-specular-soft flex items-center justify-center mx-auto text-[#7D8592]">
           <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
@@ -144,7 +144,7 @@
           <div
             v-for="task in downloadsStore.completedDownloads"
             :key="task.id"
-            class="p-4 rounded-[18px] bg-[#171A21]/40 border border-white/[0.06] hover:border-white/10 transition-colors flex items-center justify-between group"
+            class="glass-panel glass-interactive !rounded-[18px] p-4 flex items-center justify-between group"
           >
             <div class="flex items-center space-x-4 min-w-0">
               <img :src="task.artworkUrl" class="w-10 h-10 rounded-xl object-cover border border-white/10 shrink-0" />
@@ -213,7 +213,7 @@
               </button>
               <button
                 type="button"
-                class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
+                class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 backdrop-blur-xl transition-all duration-300 ease-liquid active:scale-90"
                 :title="t.downloads.deleteFile"
                 @click="handleDeleteFile(task.destinationPath, task.id)"
               >
@@ -232,10 +232,10 @@
     <!-- Device Picker Modal -->
     <div
       v-if="ipaToInstall && deviceStore.devices.length > 1"
-      class="fixed inset-0 bg-black/60 backdrop-blur-md z-[80] flex items-center justify-center p-6"
+      class="fixed inset-0 bg-black/60 backdrop-blur-xl z-[80] flex items-center justify-center p-6"
       @click.self="ipaToInstall = null"
     >
-      <div class="w-full max-w-sm bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-6">
+      <div class="w-full max-w-sm glass-card !rounded-[28px] !bg-[#1C1C1E]/85 overflow-hidden p-6 space-y-6">
         <div class="text-center space-y-2">
           <h3 class="text-lg font-bold text-white">{{ t.common.selectTargetDevice }}</h3>
           <p class="text-xs text-[#8E8E93]">{{ t.common.multipleDevicesDesc }}</p>
@@ -246,7 +246,7 @@
             v-for="dev in deviceStore.devices"
             :key="dev.udid"
             @click="installToDevice(ipaToInstall!, dev.udid)"
-            class="w-full p-4 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition text-left flex items-center justify-between group"
+            class="w-full p-4 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 hover:bg-white/[0.08] hover:border-white/20 shadow-specular-soft transition-all duration-300 ease-liquid active:scale-[0.98] text-left flex items-center justify-between group"
           >
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-[#0A84FF]/10 flex items-center justify-center text-[#0A84FF]">

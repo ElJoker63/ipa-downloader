@@ -68,13 +68,13 @@
       </div>
 
       <!-- Error State -->
-      <div v-else-if="purchasesStore.error" class="glass-card p-8 rounded-[22px] text-center space-y-3 max-w-md mx-auto mt-12 border-red-500/30">
+      <div v-else-if="purchasesStore.error" class="glass-card !rounded-[24px] p-8 text-center space-y-3 max-w-md mx-auto mt-12 !border-red-500/30">
         <svg class="w-10 h-10 text-[#FF453A] mx-auto opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <h3 class="text-sm font-semibold text-[#FFFFFF]">{{ t.common.failed }}</h3>
         <p class="text-xs text-[#FF453A]">{{ purchasesStore.error }}</p>
-        <button type="button" class="btn-primary text-xs px-4 py-1.5 mt-2" @click="refreshPurchases">
+        <button type="button" class="btn-primary liquid-shine text-xs px-4 py-1.5 mt-2" @click="refreshPurchases">
           {{ t.common.retry }}
         </button>
       </div>
@@ -85,7 +85,7 @@
           <div
             v-for="app in filteredApps"
             :key="app.id"
-            class="glass-card p-5 rounded-[18px] flex flex-col justify-between space-y-4 hover:border-white/[0.2] transition-all duration-200"
+            class="glass-card glass-interactive !rounded-[20px] p-5 flex flex-col justify-between space-y-4"
           >
             <!-- App Header -->
             <div class="flex items-start space-x-3.5">
@@ -147,7 +147,7 @@
               <button
                 v-if="downloadedAppsStore.isUpdateAvailable(app.bundleId, app.version)"
                 type="button"
-                class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] text-white text-xs font-semibold shadow-md shadow-[#30D158]/20 flex items-center space-x-1.5 transition-all duration-200"
+                class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] backdrop-blur-xl text-white text-xs font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_16px_rgba(48,209,88,0.3)] liquid-shine flex items-center space-x-1.5 transition-all duration-300 ease-liquid active:scale-95"
                 @click="downloadApp(app)"
                 :title="`Actualizar a v${app.version}`"
               >
@@ -161,7 +161,7 @@
                 v-else-if="downloadedAppsStore.getDownloadedByBundleId(app.bundleId)"
                 type="button"
                 disabled
-                class="px-3.5 py-1.5 rounded-xl bg-white/[0.08] text-[#30D158] border border-[#30D158]/30 text-xs font-medium flex items-center space-x-1.5 cursor-default opacity-80 select-none"
+                class="px-3.5 py-1.5 rounded-xl bg-white/[0.08] backdrop-blur-xl text-[#30D158] border border-[#30D158]/30 text-xs font-medium flex items-center space-x-1.5 cursor-default opacity-80 select-none"
                 :title="`Aplicación ya descargada en tu biblioteca (v${downloadedAppsStore.getDownloadedByBundleId(app.bundleId)?.version})`"
               >
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -173,7 +173,7 @@
               <button
                 v-else
                 type="button"
-                class="btn-primary text-xs px-4 py-1.5 flex items-center space-x-1.5 shadow-sm"
+                class="btn-primary liquid-shine text-xs px-4 py-1.5 flex items-center space-x-1.5"
                 @click="downloadApp(app)"
               >
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -213,7 +213,7 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="glass-card p-12 rounded-[22px] text-center space-y-3 max-w-lg mx-auto mt-12">
+      <div v-else class="glass-card !rounded-[26px] p-12 text-center space-y-3 max-w-lg mx-auto mt-12">
         <svg class="w-12 h-12 text-[#7D8592] mx-auto opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
         </svg>

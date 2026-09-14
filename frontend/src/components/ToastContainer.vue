@@ -4,7 +4,7 @@
       <div
         v-for="t in toasts"
         :key="t.id"
-        class="pointer-events-auto relative overflow-hidden p-4 rounded-[18px] backdrop-blur-[35px] border flex items-start space-x-3.5 transition-all duration-200 shadow-2xl"
+        class="pointer-events-auto relative overflow-hidden p-4 rounded-[20px] backdrop-blur-[40px] backdrop-saturate-150 border flex items-start space-x-3.5 transition-all duration-300 ease-liquid hover:-translate-y-0.5"
         :class="toastStyleClass(t.severity)"
       >
         <!-- Left Vertical Accent Bar -->
@@ -76,13 +76,13 @@ const { toasts, dismissToast } = useNotifications()
 function toastStyleClass(severity: string) {
   switch (severity) {
     case 'success':
-      return 'bg-[#0F1E14]/90 border-[#30D158]/35 shadow-[0_12px_36px_rgba(48,209,88,0.15)]'
+      return 'bg-[#0F1E14]/70 border-[#30D158]/35 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_12px_36px_rgba(48,209,88,0.18)]'
     case 'error':
-      return 'bg-[#220F11]/90 border-[#FF453A]/35 shadow-[0_12px_36px_rgba(255,69,58,0.15)]'
+      return 'bg-[#220F11]/70 border-[#FF453A]/35 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_12px_36px_rgba(255,69,58,0.18)]'
     case 'warning':
-      return 'bg-[#221B0A]/90 border-[#FFD60A]/35 shadow-[0_12px_36px_rgba(255,214,10,0.15)]'
+      return 'bg-[#221B0A]/70 border-[#FFD60A]/35 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_12px_36px_rgba(255,214,10,0.18)]'
     default:
-      return 'bg-[#0E1A29]/90 border-[#64D2FF]/35 shadow-[0_12px_36px_rgba(100,210,255,0.15)]'
+      return 'bg-[#0E1A29]/70 border-[#64D2FF]/35 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_12px_36px_rgba(100,210,255,0.18)]'
   }
 }
 

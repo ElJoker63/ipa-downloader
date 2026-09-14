@@ -4,8 +4,8 @@
     <button
       type="button"
       @click="isOpen = !isOpen"
-      class="flex items-center justify-between w-full bg-white/[0.06] border border-white/[0.1] hover:border-white/[0.2] rounded-xl px-3.5 py-2 text-xs text-white transition-all duration-200 active:scale-[0.98]"
-      :class="[isOpen ? 'border-[#0A84FF]/50 ring-2 ring-[#0A84FF]/20' : '']"
+      class="glass-input flex items-center justify-between w-full px-3.5 py-2 text-xs text-white active:scale-[0.98]"
+      :class="[isOpen ? '!border-[#0A84FF]/50 ring-2 ring-[#0A84FF]/20' : '']"
     >
       <div class="flex items-center space-x-2 truncate mr-2">
         <slot name="icon" :selected="selectedOption"></slot>
@@ -26,7 +26,7 @@
     <Transition name="dropdown-fade">
       <div
         v-if="isOpen"
-        class="absolute z-[100] mt-2 w-full min-w-[160px] bg-[#1C1C1E]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-1.5"
+        class="absolute z-[100] mt-2 w-full min-w-[160px] bg-[#1C1C1E]/80 backdrop-blur-[40px] backdrop-saturate-150 border border-white/[0.14] rounded-2xl shadow-specular overflow-hidden py-1.5"
       >
         <div class="max-h-60 overflow-y-auto custom-scrollbar">
           <button

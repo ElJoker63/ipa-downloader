@@ -23,13 +23,13 @@
             v-model="searchQuery"
             type="text"
             :placeholder="t.firmwares.searchPlaceholder"
-            class="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[#0A84FF] transition"
+            class="glass-input w-full pl-9 pr-4 py-2 text-sm text-white focus:outline-none"
           />
         </div>
         <button
           @click="fetchDevices"
           :disabled="loading"
-          class="p-2 rounded-xl bg-white/[0.06] border border-white/[0.1] text-[#8E8E93] hover:text-white hover:bg-white/[0.12] transition"
+          class="p-2 rounded-xl bg-white/[0.07] backdrop-blur-2xl backdrop-saturate-150 border border-white/[0.12] shadow-specular-soft text-[#8E8E93] hover:text-white hover:bg-white/[0.14] transition-all duration-300 ease-liquid active:scale-90"
         >
           <svg class="w-5 h-5" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -48,8 +48,8 @@
             v-for="cat in categories"
             :key="cat.id"
             @click="activeCategory = cat.id"
-            class="w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition flex items-center justify-between"
-            :class="activeCategory === cat.id ? 'bg-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20' : 'text-[#8E8E93] hover:bg-white/[0.05] hover:text-white'"
+            class="w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-all duration-300 ease-liquid flex items-center justify-between"
+            :class="activeCategory === cat.id ? 'bg-[#0A84FF] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_16px_rgba(10,132,255,0.3)]' : 'text-[#8E8E93] hover:bg-white/[0.06] hover:text-white'"
           >
             <div class="flex items-center space-x-3">
               <span v-html="cat.icon"></span>
@@ -69,8 +69,8 @@
             v-for="dev in filteredDevices"
             :key="dev.identifier"
             @click="selectDevice(dev)"
-            class="w-full px-4 py-2 rounded-xl text-left transition group"
-            :class="selectedDevice?.identifier === dev.identifier ? 'bg-white/[0.08] border border-white/10' : 'hover:bg-white/[0.04]'"
+            class="w-full px-4 py-2 rounded-xl text-left transition-all duration-300 ease-liquid group"
+            :class="selectedDevice?.identifier === dev.identifier ? 'bg-white/[0.09] border border-white/[0.16] shadow-specular-soft' : 'border border-transparent hover:bg-white/[0.05]'"
           >
             <div class="text-sm font-semibold truncate" :class="selectedDevice?.identifier === dev.identifier ? 'text-[#0A84FF]' : 'text-white group-hover:text-[#0A84FF]'">{{ dev.name }}</div>
             <div class="text-[10px] text-[#8E8E93] font-mono">{{ dev.identifier }}</div>
@@ -79,7 +79,7 @@
       </div>
 
       <!-- Firmware List (Right Side) -->
-      <div class="flex-1 bg-[#171A21]/50 border border-white/[0.05] rounded-3xl overflow-hidden flex flex-col">
+      <div class="glass-panel flex-1 !bg-[#171A21]/45 backdrop-saturate-150 !rounded-[28px] overflow-hidden flex flex-col">
         <div v-if="!selectedDevice" class="flex-1 flex flex-col items-center justify-center space-y-4 opacity-40">
            <div class="w-20 h-20 rounded-full bg-white/[0.03] flex items-center justify-center">
              <svg class="w-10 h-10 text-[#8E8E93]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,7 +111,7 @@
               </div>
             </div>
 
-            <div class="flex p-1 bg-white/[0.06] border border-white/[0.08] rounded-xl">
+            <div class="glass-input flex p-1 !rounded-xl">
                <button
                 @click="filterType = 'all'"
                 class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition"
@@ -134,7 +134,7 @@
               <div
                 v-for="fw in filteredFirmwares"
                 :key="fw.buildid"
-                class="group p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05] hover:border-white/10 hover:bg-white/[0.06] transition-all flex items-center justify-between"
+                class="glass-panel glass-interactive group p-4 !rounded-2xl flex items-center justify-between"
               >
                 <div class="flex items-center space-x-4 min-w-0">
                   <!-- Signing Status Icon -->
@@ -170,7 +170,7 @@
 
                 <button
                   @click="handleDownload(fw)"
-                  class="px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-[#0A84FF] text-white text-xs font-bold transition-all shadow-lg hover:shadow-[#0A84FF]/25 flex items-center space-x-2"
+                  class="liquid-shine px-4 py-2 rounded-xl bg-white/[0.09] backdrop-blur-xl border border-white/[0.12] hover:bg-[#0A84FF] hover:border-[#0A84FF] text-white text-xs font-bold transition-all duration-300 ease-liquid shadow-specular-soft hover:shadow-[0_8px_24px_rgba(10,132,255,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 flex items-center space-x-2"
                 >
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

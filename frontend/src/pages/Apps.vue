@@ -30,7 +30,7 @@
         <button
           @click="handleRefresh"
           :disabled="deviceStore.isLoadingApps"
-          class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-sm font-medium text-white transition flex items-center space-x-2 disabled:opacity-50"
+          class="btn-secondary !rounded-xl px-3.5 py-2 text-sm text-white flex items-center space-x-2 disabled:opacity-50"
         >
           <svg class="w-4 h-4 text-[#8E8E93]" :class="{ 'animate-spin': deviceStore.isLoadingApps }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -41,7 +41,7 @@
         <button
           @click="triggerIPAInstall"
           :disabled="!deviceStore.isConnected || deviceStore.isInstalling"
-          class="px-4 py-2 rounded-xl bg-[#0A84FF] hover:bg-[#0071E3] text-sm font-medium text-white shadow-lg shadow-[#0A84FF]/25 transition flex items-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          class="btn-primary liquid-shine !rounded-xl px-4 py-2 text-sm text-white flex items-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -59,10 +59,10 @@
           v-for="dev in deviceStore.devices"
           :key="dev.udid"
           @click="deviceStore.selectedUdid = dev.udid; deviceStore.fetchApps()"
-          class="px-4 py-2 rounded-2xl border transition-all shrink-0 flex items-center space-x-2"
+          class="px-4 py-2 rounded-2xl border backdrop-blur-xl transition-all duration-300 ease-liquid shrink-0 flex items-center space-x-2"
           :class="deviceStore.selectedUdid === dev.udid
-            ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-lg shadow-[#0A84FF]/20'
-            : 'bg-white/[0.04] border-white/10 text-[#8E8E93] hover:bg-white/[0.08]'"
+            ? 'bg-[#0A84FF] border-[#0A84FF] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_16px_rgba(10,132,255,0.3)]'
+            : 'bg-white/[0.05] border-white/[0.1] text-[#8E8E93] hover:bg-white/[0.09] shadow-specular-soft'"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -75,7 +75,7 @@
       <div
         v-if="deviceStore.selectedDevice"
         @click="showDeviceDetails = true"
-        class="p-5 rounded-2xl bg-[#171A21]/90 border border-white/[0.08] hover:border-white/[0.15] cursor-pointer group transition-all duration-300 backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4"
+        class="glass-card glass-interactive !bg-[#171A21]/60 backdrop-saturate-150 !rounded-[24px] p-5 cursor-pointer group flex flex-col md:flex-row md:items-center justify-between gap-4"
       >
         <div class="flex items-center space-x-4">
           <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0A84FF]/20 to-[#5E5CE6]/20 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -119,7 +119,7 @@
     </div>
 
     <!-- No Device Connected Banner -->
-    <div v-else class="p-8 rounded-2xl bg-[#171A21]/60 border border-white/[0.08] backdrop-blur-xl text-center flex flex-col items-center justify-center space-y-4">
+    <div v-else class="glass-panel !bg-[#171A21]/45 backdrop-saturate-150 !rounded-[24px] p-8 text-center flex flex-col items-center justify-center space-y-4">
       <div class="w-16 h-16 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#8E8E93]">
         <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -146,7 +146,7 @@
     <div
       v-if="deviceStore.isConnected"
       @click="triggerIPAInstall"
-      class="border-2 border-dashed border-white/10 hover:border-[#0A84FF]/50 hover:bg-[#0A84FF]/5 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2"
+      class="border-2 border-dashed border-white/[0.14] hover:border-[#0A84FF]/50 hover:bg-[#0A84FF]/5 backdrop-blur-md rounded-[24px] p-6 text-center cursor-pointer transition-all duration-300 ease-liquid flex flex-col items-center justify-center space-y-2"
     >
       <svg class="w-8 h-8 text-[#0A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
         <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -164,7 +164,7 @@
         </span>
       </div>
       <div class="space-y-2">
-        <div v-for="task in deviceStore.installTasks" :key="task.id" class="glass-card p-4 rounded-2xl border border-white/[0.05] hover:border-white/10 transition-all flex flex-col space-y-3">
+        <div v-for="task in deviceStore.installTasks" :key="task.id" class="glass-card !rounded-2xl p-4 flex flex-col space-y-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-[#0A84FF]">
@@ -201,9 +201,9 @@
       <div class="flex items-center justify-between gap-4">
         <div class="relative flex-1 max-w-md">
           <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8E8E93]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          <input v-model="searchQuery" type="text" :placeholder="t.apps.searchPlaceholder" class="w-full bg-white/[0.06] border border-white/[0.1] rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[#0A84FF] transition" />
+          <input v-model="searchQuery" type="text" :placeholder="t.apps.searchPlaceholder" class="glass-input w-full pl-10 pr-4 py-2 text-sm text-white focus:outline-none" />
         </div>
-        <div class="flex p-1 bg-white/[0.06] border border-white/[0.08] rounded-xl text-xs font-medium">
+        <div class="glass-input flex !rounded-xl p-1 text-xs font-medium">
           <button @click="switchTab('user')" class="px-3 py-1.5 rounded-lg transition" :class="deviceStore.activeTab === 'user' ? 'bg-[#0A84FF] text-white shadow-sm' : 'text-[#8E8E93] hover:text-white'">{{ t.apps.userApps }} ({{ deviceStore.userApps.length }})</button>
           <button @click="switchTab('system')" class="px-3 py-1.5 rounded-lg transition" :class="deviceStore.activeTab === 'system' ? 'bg-[#0A84FF] text-white shadow-sm' : 'text-[#8E8E93] hover:text-white'">{{ t.apps.systemApps }} ({{ deviceStore.systemApps.length }})</button>
         </div>
@@ -213,7 +213,7 @@
       </div>
       <div v-else-if="filteredApps.length === 0" class="py-12 text-center text-[#8E8E93] text-sm">{{ t.common.noResults }}</div>
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        <div v-for="app in filteredApps" :key="app.bundleId" class="p-4 rounded-xl bg-[#171A21]/70 border border-white/[0.08] hover:border-white/20 transition flex items-center justify-between group">
+        <div v-for="app in filteredApps" :key="app.bundleId" class="glass-panel glass-interactive !bg-[#171A21]/50 backdrop-saturate-150 !rounded-xl p-4 flex items-center justify-between group">
           <div class="flex items-center space-x-3 overflow-hidden">
             <img v-if="app.artworkUrl" :src="app.artworkUrl" class="w-10 h-10 rounded-xl bg-[#171A21] border border-white/10 shrink-0 object-cover" />
             <div v-else class="w-10 h-10 rounded-xl bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 flex items-center justify-center font-bold text-sm text-white shrink-0">{{ app.name.charAt(0).toUpperCase() }}</div>
@@ -229,8 +229,8 @@
     </div>
 
     <!-- Device Details Modal -->
-    <div v-if="showDeviceDetails && deviceStore.selectedDevice" class="fixed inset-0 bg-black/80 backdrop-blur-xl z-[60] flex items-center justify-center p-6" @click.self="showDeviceDetails = false">
-      <div class="w-full max-w-2xl bg-[#1C1C1E] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div v-if="showDeviceDetails && deviceStore.selectedDevice" class="fixed inset-0 bg-black/70 backdrop-blur-xl z-[60] flex items-center justify-center p-6" @click.self="showDeviceDetails = false">
+      <div class="glass-card w-full max-w-2xl !rounded-[28px] !bg-[#1C1C1E]/75 backdrop-saturate-150 overflow-hidden flex flex-col max-h-[90vh]">
         <div class="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
           <div class="flex items-center space-x-4">
             <div class="w-12 h-12 rounded-2xl bg-[#0A84FF] flex items-center justify-center text-white"><svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg></div>
@@ -243,15 +243,15 @@
         </div>
         <div class="flex-1 overflow-y-auto p-6 space-y-8">
           <div class="grid grid-cols-2 gap-4">
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.iosVersion }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.iosVersion }} ({{ deviceStore.selectedDevice.buildVersion }})</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.serialNumber }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.serialNumber }}</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.imei }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.imei || 'N/A' }}</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.modelName }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.modelNumber || 'N/A' }}</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.region }}</div><div class="text-sm text-white">{{ deviceStore.selectedDevice.regionInfo || 'N/A' }}</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.activation }}</div><div class="text-sm" :class="deviceStore.selectedDevice.activationState === 'Activated' ? 'text-[#30D158]' : 'text-white'">{{ deviceStore.selectedDevice.activationState || 'N/A' }}</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.chipset }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.hardwareModel || 'N/A' }}</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.cpuArch }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.cpuArchitecture || 'N/A' }}</div></div>
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.boardConfig }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.boardConfig || 'N/A' }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.iosVersion }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.iosVersion }} ({{ deviceStore.selectedDevice.buildVersion }})</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.serialNumber }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.serialNumber }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.imei }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.imei || 'N/A' }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.modelName }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.modelNumber || 'N/A' }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.region }}</div><div class="text-sm text-white">{{ deviceStore.selectedDevice.regionInfo || 'N/A' }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.activation }}</div><div class="text-sm" :class="deviceStore.selectedDevice.activationState === 'Activated' ? 'text-[#30D158]' : 'text-white'">{{ deviceStore.selectedDevice.activationState || 'N/A' }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.chipset }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.hardwareModel || 'N/A' }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.cpuArch }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.cpuArchitecture || 'N/A' }}</div></div>
+            <div class="glass-panel !rounded-2xl p-4 space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">{{ t.apps.details.boardConfig }}</div><div class="text-sm text-white font-mono">{{ deviceStore.selectedDevice.boardConfig || 'N/A' }}</div></div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-3">
@@ -265,7 +265,7 @@
               <div class="flex justify-between text-[10px] text-[#8E8E93] font-medium px-1 pt-1"><span>{{ t.apps.details.batteryHealth }}: <span class="text-white font-bold">{{ deviceStore.selectedDevice.batteryHealth || '--' }}%</span></span><span>{{ t.apps.details.batteryCycles }}: <span class="text-white font-bold">{{ deviceStore.selectedDevice.chargeCycles || '--' }}</span></span></div>
             </div>
           </div>
-          <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-4">
+          <div class="glass-panel !rounded-2xl p-4 space-y-4">
             <h4 class="text-sm font-semibold text-white">{{ t.apps.details.connectivityTitle }}</h4>
             <div class="grid grid-cols-2 gap-y-4">
               <div class="space-y-1"><div class="text-[10px] font-bold text-[#8E8E93] uppercase">{{ t.apps.details.wifi }}</div><div class="text-xs text-white font-mono">{{ deviceStore.selectedDevice.wifiAddress || 'N/A' }}</div></div>
@@ -275,7 +275,7 @@
           </div>
         </div>
         <div class="p-4 border-t border-white/10 bg-white/[0.01] flex justify-end">
-          <button @click="showDeviceDetails = false" class="px-6 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-semibold text-white transition">{{ t.apps.details.done }}</button>
+          <button @click="showDeviceDetails = false" class="btn-secondary !rounded-xl px-6 py-2 text-sm font-semibold text-white">{{ t.apps.details.done }}</button>
         </div>
       </div>
     </div>

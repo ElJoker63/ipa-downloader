@@ -9,16 +9,31 @@
   --bg-primary: #0F1115;
   --bg-secondary: #171A21;
   --bg-surface: #1E222B;
-  --bg-card: rgba(35, 40, 52, 0.75);
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-hover: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.18);
+  --bg-card: rgba(35, 40, 52, 0.6);
+
+  /* Liquid Glass material: a translucent, vibrant layer that picks up the
+     color of whatever sits behind it (the animated glow orbs in
+     MainLayout), lensed at the top edge by a bright specular rim. */
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-hover: rgba(255, 255, 255, 0.13);
+  --glass-active: rgba(255, 255, 255, 0.17);
+  --glass-border: rgba(255, 255, 255, 0.16);
   --glass-separator: rgba(255, 255, 255, 0.08);
-  
+  --glass-specular: rgba(255, 255, 255, 0.5);
+  --glass-specular-soft: rgba(255, 255, 255, 0.22);
+  --glass-blur: 36px;
+  --glass-blur-strong: 48px;
+  --glass-saturate: 180%;
+
+  /* A soft, slightly overshooting spring curve — the "liquid" motion feel
+     used for anything glass: panels, cards, buttons, modals. */
+  --liquid-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --liquid-ease-fast: cubic-bezier(0.3, 1.2, 0.4, 1);
+
   --text-primary: #FFFFFF;
   --text-secondary: #B8C0CC;
   --text-muted: #7D8592;
-  
+
   --brand-primary: #0A84FF;
   --brand-hover: #339CFF;
   --status-success: #30D158;
@@ -53,81 +68,255 @@ button { font-weight: 500; }
   transition: background 200ms ease;
 }
 
-/* Glassmorphism Classes (Dynamic Variables) */
+/* ------------------------------------------------------------------ */
+/* Liquid Glass material system                                        */
+/*                                                                      */
+/* The "specular rim" recipe below is what reads as iOS 26 Liquid Glass */
+/* rather than flat glassmorphism: a bright inset line along the top    */
+/* edge (light catching the curved lip of the material), a much fainter */
+/* full inset border for edge definition, and a soft ambient shadow for */
+/* elevation. It's implemented purely with box-shadow (no pseudo-       */
+/* elements, no overflow:hidden) so it never clips absolutely-          */
+/* positioned children like dropdowns or badges.                        */
+/* ------------------------------------------------------------------ */
+
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   border-radius: 18px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-specular-soft),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 12px 40px rgba(0, 0, 0, 0.25);
+  transition: background 320ms var(--liquid-ease), border-color 320ms var(--liquid-ease), box-shadow 320ms var(--liquid-ease), transform 320ms var(--liquid-ease);
 }
 
 .glass-card {
   background: var(--bg-card);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-specular-soft),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: background 320ms var(--liquid-ease), border-color 320ms var(--liquid-ease), box-shadow 320ms var(--liquid-ease), transform 320ms var(--liquid-ease);
+}
+
+/* Interactive glass surfaces (clickable cards, list rows) get a gentle
+   lift + brighter rim on hover, and settle back down on press — the
+   "fluid" tactile response Liquid Glass controls have. */
+.glass-interactive {
+  cursor: pointer;
+}
+
+.glass-interactive:hover {
+  background: var(--glass-hover);
+  border-color: rgba(255, 255, 255, 0.26);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-specular),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 18px 48px rgba(0, 0, 0, 0.32);
+}
+
+.glass-interactive:active {
+  transform: translateY(0) scale(0.985);
+  transition-duration: 120ms;
 }
 
 .glass-input {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   color: var(--text-primary);
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 1px 0 0 var(--glass-specular-soft);
+  transition: all 220ms var(--liquid-ease);
 }
 
 .glass-input:focus {
   outline: none;
   border-color: var(--brand-primary);
   background: var(--glass-hover);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-specular-soft),
+    0 0 0 4px rgba(10, 132, 255, 0.18);
 }
 
 /* Buttons */
 .btn-primary {
+  position: relative;
+  overflow: hidden;
   background-color: var(--brand-primary);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 55%);
   color: #FFFFFF;
   border-radius: 14px;
   padding: 0.55rem 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 14px rgba(0, 113, 227, 0.25);
-  transition: all 200ms ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
+    0 4px 14px rgba(0, 113, 227, 0.32);
+  transition: transform 220ms var(--liquid-ease-fast), box-shadow 220ms var(--liquid-ease), background-color 220ms var(--liquid-ease);
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-hover);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.45),
+    0 6px 22px rgba(0, 113, 227, 0.42);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.97);
 }
 
 .btn-secondary {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
   border-radius: 14px;
   padding: 0.55rem 1.15rem;
-  transition: all 200ms ease;
+  box-shadow: inset 0 1px 0 0 var(--glass-specular-soft);
+  transition: all 220ms var(--liquid-ease);
 }
 
-.btn-secondary:hover { background: var(--glass-hover); }
+.btn-secondary:hover {
+  background: var(--glass-hover);
+  border-color: rgba(255, 255, 255, 0.26);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.97);
+}
 
 /* Sidebar Active Selection */
 .nav-item-active {
-  background-color: rgba(10, 132, 255, 0.15);
-  border: 1px solid rgba(10, 132, 255, 0.3);
+  background-color: rgba(10, 132, 255, 0.16);
+  border: 1px solid rgba(10, 132, 255, 0.32);
   color: var(--brand-primary);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 0 16px rgba(10, 132, 255, 0.15);
 }
 
-.nav-item-inactive { color: var(--text-secondary); }
+.nav-item-inactive { color: var(--text-secondary); transition: background 220ms var(--liquid-ease), color 220ms var(--liquid-ease); }
 .nav-item-inactive:hover { background: var(--glass-bg); color: var(--text-primary); }
 
 .animate-slide-up {
-  animation: slideUpFade 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideUpFade 300ms var(--liquid-ease) forwards;
 }
 
 @keyframes slideUpFade {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------------------------------------------------------ */
+/* Ambient background glow — the color field the glass refracts.       */
+/* Three large, softly blurred, slowly drifting color fields sit fixed  */
+/* behind the whole app so every backdrop-blur surface (sidebar, top    */
+/* bar, cards, modals) has something vivid to pick up, instead of a     */
+/* flat near-black. Pure CSS, no layout impact, pointer-events: none.   */
+/* ------------------------------------------------------------------ */
+.liquid-glow-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.liquid-glow-bg span {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(120px);
+  opacity: 0.28;
+  will-change: transform;
+}
+
+.liquid-glow-bg .glow-1 {
+  width: 46vw;
+  height: 46vw;
+  top: -14vw;
+  left: -10vw;
+  background: radial-gradient(circle, #0A84FF, transparent 70%);
+  animation: liquidDrift1 34s var(--liquid-ease) infinite alternate;
+}
+
+.liquid-glow-bg .glow-2 {
+  width: 40vw;
+  height: 40vw;
+  bottom: -16vw;
+  right: -8vw;
+  background: radial-gradient(circle, #5E5CE6, transparent 70%);
+  animation: liquidDrift2 40s var(--liquid-ease) infinite alternate;
+}
+
+.liquid-glow-bg .glow-3 {
+  width: 32vw;
+  height: 32vw;
+  bottom: 10vh;
+  left: 20vw;
+  background: radial-gradient(circle, #30D158, transparent 70%);
+  opacity: 0.16;
+  animation: liquidDrift3 46s var(--liquid-ease) infinite alternate;
+}
+
+@keyframes liquidDrift1 {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(6vw, 8vh) scale(1.12); }
+}
+
+@keyframes liquidDrift2 {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-7vw, -6vh) scale(1.08); }
+}
+
+@keyframes liquidDrift3 {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(4vw, -5vh) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glow-bg span { animation: none; }
+  .animate-slide-up { animation-duration: 1ms; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Liquid shine — a diagonal highlight sweep for primary glass CTAs.   */
+/* Opt-in via class="liquid-shine" on an element with overflow-hidden   */
+/* already set (buttons, pill toggles).                                */
+/* ------------------------------------------------------------------ */
+.liquid-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  background-size: 220% 220%;
+  background-position: 120% 0%;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+
+.liquid-shine:hover::after {
+  opacity: 1;
+  animation: liquidSweep 900ms var(--liquid-ease-fast);
+}
+
+@keyframes liquidSweep {
+  from { background-position: 120% 0%; }
+  to { background-position: -20% 0%; }
 }

@@ -23,7 +23,7 @@
           type="button"
           @click="checkUpdates"
           :disabled="downloadedAppsStore.isCheckingUpdates"
-          class="px-3.5 py-2 rounded-xl bg-[#0A84FF]/20 hover:bg-[#0A84FF]/30 border border-[#0A84FF]/30 text-xs font-semibold text-[#0A84FF] transition flex items-center space-x-2 disabled:opacity-50"
+          class="px-3.5 py-2 rounded-xl bg-[#0A84FF]/20 hover:bg-[#0A84FF]/30 backdrop-blur-xl border border-[#0A84FF]/30 shadow-specular-soft text-xs font-semibold text-[#0A84FF] transition-all duration-300 ease-liquid active:scale-95 flex items-center space-x-2 disabled:opacity-50"
         >
           <svg class="w-4 h-4 text-[#0A84FF]" :class="{ 'animate-spin': downloadedAppsStore.isCheckingUpdates }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -35,7 +35,7 @@
           type="button"
           @click="refreshIPAs"
           :disabled="downloadedAppsStore.isLoading"
-          class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-xs font-medium text-white transition flex items-center space-x-2 disabled:opacity-50"
+          class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] backdrop-blur-xl border border-white/[0.08] shadow-specular-soft text-xs font-medium text-white transition-all duration-300 ease-liquid active:scale-95 flex items-center space-x-2 disabled:opacity-50"
         >
           <svg class="w-4 h-4 text-[#8E8E93]" :class="{ 'animate-spin': downloadedAppsStore.isLoading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -59,7 +59,7 @@
         />
       </div>
 
-      <div class="text-xs text-[#7D8592] font-mono px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+      <div class="text-xs text-[#7D8592] font-mono px-3 py-2 rounded-xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.08] shadow-specular-soft">
         {{ totalStorageSizeFormatted }}
       </div>
     </div>
@@ -71,7 +71,7 @@
         <div
           v-for="ipa in filteredIPAs"
           :key="ipa.filePath"
-          class="glass-card p-5 rounded-[20px] flex flex-col justify-between space-y-4 border border-white/[0.08] hover:border-white/20 transition-all shadow-xl group"
+          class="glass-card glass-interactive !rounded-[22px] p-5 flex flex-col justify-between space-y-4 group"
         >
           <!-- Header Info -->
           <div class="flex items-start space-x-3.5">
@@ -110,7 +110,7 @@
           </div>
 
           <!-- File Name & Path Details -->
-          <div class="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[11px] text-[#7D8592] space-y-1">
+          <div class="px-3 py-2 rounded-xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] text-[11px] text-[#7D8592] space-y-1">
             <div class="flex items-center justify-between font-mono">
               <span class="truncate text-[#B8C0CC]" :title="ipa.fileName">📄 {{ ipa.fileName }}</span>
             </div>
@@ -124,7 +124,7 @@
             <button
               v-if="downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)"
               type="button"
-              class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] text-white text-xs font-semibold shadow-md shadow-[#30D158]/20 flex items-center space-x-1.5 transition-all duration-200"
+              class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] backdrop-blur-xl text-white text-xs font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_16px_rgba(48,209,88,0.3)] liquid-shine flex items-center space-x-1.5 transition-all duration-300 ease-liquid active:scale-95"
               @click="updateApp(downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.appMetadata)"
               :title="`Actualizar a v${downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.latestVersion}`"
             >
@@ -160,7 +160,7 @@
 
             <button
               type="button"
-              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 transition duration-150"
+              class="p-1.5 rounded-lg text-[#7D8592] hover:text-[#FF453A] hover:bg-[#FF453A]/15 backdrop-blur-xl transition-all duration-300 ease-liquid active:scale-90"
               title="Eliminar IPA"
               @click="deleteIPA(ipa.filePath)"
             >
@@ -173,8 +173,8 @@
       </div>
 
       <!-- Empty State Panel -->
-      <div v-else-if="!downloadedAppsStore.isLoading" class="glass-card p-12 rounded-[22px] text-center space-y-4 max-w-lg mx-auto mt-12">
-        <div class="w-16 h-16 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-[#0A84FF] mx-auto shadow-inner">
+      <div v-else-if="!downloadedAppsStore.isLoading" class="glass-card !rounded-[26px] p-12 text-center space-y-4 max-w-lg mx-auto mt-12">
+        <div class="w-16 h-16 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/10 shadow-specular-soft flex items-center justify-center text-[#0A84FF] mx-auto">
           <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v1a2 2 0 01-2 2M5 8v10a2 2 0 002 2h14a2 2 0 002-2V8m-9 4h4" />
           </svg>

@@ -1,5 +1,5 @@
 <template>
-  <header class="wails-drag h-11 flex items-center justify-between px-4 border-b border-white/[0.08] bg-[#0F1115]/80 backdrop-blur-[30px] select-none z-50">
+  <header class="wails-drag h-11 flex items-center justify-between px-4 border-b border-white/[0.1] bg-[#0F1115]/70 backdrop-blur-[40px] backdrop-saturate-150 shadow-specular select-none z-50">
     <!-- Left: App Icon & Brand -->
     <div class="flex items-center space-x-3">
       <img src="/logo.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-sm shrink-0" />
@@ -10,7 +10,7 @@
     <!-- Center: Live Connection Status Pill (macOS Capsule) -->
     <div class="flex items-center space-x-2">
       <div
-        class="wails-no-drag flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium border backdrop-blur-md transition cursor-default shadow-sm"
+        class="wails-no-drag flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium border backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 ease-liquid cursor-default shadow-specular-soft"
         :class="statusBadgeClass"
       >
         <span class="w-2 h-2 rounded-full" :class="statusDotClass"></span>

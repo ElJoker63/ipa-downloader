@@ -64,11 +64,22 @@ export default {
         'glass': '18px',
         'glass-sm': '12px',
         'glass-lg': '22px',
+        'liquid': '28px',
       },
       boxShadow: {
         'glass': '0 12px 40px rgba(0, 0, 0, 0.25)',
         'glass-hover': '0 16px 48px rgba(0, 0, 0, 0.35)',
         'glow-primary': '0 0 24px rgba(10, 132, 255, 0.35)',
+        'specular': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 40px rgba(0, 0, 0, 0.25)',
+        'specular-soft': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.03)',
+      },
+      transitionTimingFunction: {
+        'liquid': 'cubic-bezier(0.22, 1, 0.36, 1)',
+        'liquid-fast': 'cubic-bezier(0.3, 1.2, 0.4, 1)',
+      },
+      backdropBlur: {
+        'glass': '36px',
+        'glass-strong': '48px',
       },
     },
   },

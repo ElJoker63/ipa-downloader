@@ -13,27 +13,27 @@
         </div>
 
         <!-- Platform Segmented Pills (macOS / visionOS Style) -->
-        <div class="flex items-center p-1 rounded-[14px] bg-white/[0.06] border border-white/[0.12] shrink-0 backdrop-blur-md">
+        <div class="glass-input flex items-center !rounded-[16px] p-1 shrink-0">
           <button
             type="button"
-            class="px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 flex items-center space-x-1.5"
-            :class="searchStore.platform === 'ios' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-300 ease-liquid flex items-center space-x-1.5"
+            :class="searchStore.platform === 'ios' ? 'bg-[#0A84FF] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_2px_10px_rgba(10,132,255,0.4)]' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('ios')"
           >
             <span>{{ t.search.iphone }}</span>
           </button>
           <button
             type="button"
-            class="px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 flex items-center space-x-1.5"
-            :class="searchStore.platform === 'ipados' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-300 ease-liquid flex items-center space-x-1.5"
+            :class="searchStore.platform === 'ipados' ? 'bg-[#0A84FF] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_2px_10px_rgba(10,132,255,0.4)]' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('ipados')"
           >
             <span>{{ t.search.ipad }}</span>
           </button>
           <button
             type="button"
-            class="px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all duration-200 flex items-center space-x-1.5"
-            :class="searchStore.platform === 'tvos' ? 'bg-[#0A84FF] text-white shadow-sm shadow-[#0A84FF]/40' : 'text-[#B8C0CC] hover:text-white'"
+            class="px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-300 ease-liquid flex items-center space-x-1.5"
+            :class="searchStore.platform === 'tvos' ? 'bg-[#0A84FF] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_2px_10px_rgba(10,132,255,0.4)]' : 'text-[#B8C0CC] hover:text-white'"
             @click="changePlatform('tvos')"
           >
             <span>{{ t.search.appleTv }}</span>
@@ -132,7 +132,7 @@
           v-for="item in searchStore.searchHistory.slice(0, 6)"
           :key="item.id"
           type="button"
-          class="px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-xs text-[#B8C0CC] hover:text-white transition duration-150"
+          class="px-2.5 py-1 rounded-lg bg-white/[0.06] backdrop-blur-md hover:bg-white/[0.13] border border-white/[0.1] text-xs text-[#B8C0CC] hover:text-white transition-all duration-300 ease-liquid hover:-translate-y-0.5 active:scale-95"
           @click="selectRecent(item.term)"
         >
           {{ item.term }}
@@ -146,7 +146,7 @@
         <div
           v-for="app in searchStore.results"
           :key="app.id"
-          class="glass-card p-5 rounded-[18px] flex flex-col justify-between space-y-4"
+          class="glass-card glass-interactive p-5 flex flex-col justify-between space-y-4"
         >
           <!-- App Header -->
           <div class="flex items-start space-x-3.5">
