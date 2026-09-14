@@ -1,40 +1,41 @@
 # IPA Downloader
 
-IPA Downloader is a cross-platform desktop application and command-line suite designed to search, inspect, and download signed `.ipa` packages directly from Apple's App Store with FairPlay SINF DRM signature replication.
+**IPA Downloader** is a desktop application by **UDYAT** for searching, downloading, and managing iOS/iPadOS/tvOS/visionOS/macOS app packages from the App Store using your own Apple ID, with direct USB sideloading to connected Apple devices and IPSW firmware browsing — all in one native app, with a CLI mode for scripting.
 
 ## Overview
 
-The project provides both a modern desktop graphical user interface and a full-featured CLI tool sharing a unified backend engine written in Go. Supports iOS, iPadOS, tvOS, visionOS, and macOS apps on the [App Store](https://apps.apple.com).
+The app talks directly to Apple's App Store protocol (search, licensing, and download) and wraps it in a modern desktop GUI built with Wails, Vue 3, and TailwindCSS, sharing a single Go backend with a full command-line interface. Everything happens locally: your Apple ID credentials, session, and download history stay on your machine.
 
 ### Core Capabilities
 
-- **Direct App Store Integration**: Authenticate with Apple ID (including 2FA verification) to acquire free licenses and download original encrypted `.ipa` binaries.
-- **SAP Authentication**: Modern SAP-based signing for App Store authentication.
-- **FairPlay DRM SINF Replication**: Automatically replicates and injects FairPlay DRM signatures into downloaded packages for sideloading and analysis.
-- **Multi-Platform Search**: Real-time App Store search across iOS, iPadOS, tvOS, visionOS, and macOS with high-resolution artwork, screenshot lightboxes, and historical build listings.
-- **macOS App Downloads**: Download `.pkg` macOS app packages from the App Store.
-- **Concurrent Transfer Queue**: Chunked streaming downloads with live speed tracking, ETA calculations, pause/resume controls, and retry handling.
-- **List Purchases**: View and manage apps owned by the authenticated account.
-- **Multi-Language Support**: Complete interface localization in English and Spanish (Español).
-- **Offline Persistence**: Embedded pure-Go SQLite storage for favorites, transfer queues, search history, and settings without external database dependencies.
-- **Diagnostic Logging**: Live streaming logs with severity filtering (INFO, SUCCESS, WARN, ERROR) and one-click file export.
-- **CLI Compatibility**: Full command-line interface preserving backward compatibility with scripts and automated workflows.
+- **App Store Search & Download**: Search by name or bundle ID across iOS, iPadOS, tvOS, visionOS, and macOS, with artwork, screenshots, and historical build listings, and download the original signed `.ipa`/`.pkg` package.
+- **Apple ID Authentication**: Sign in with 2FA support and SAP-based signing, with credentials kept in the OS keychain.
+- **Your Purchases**: Browse and re-download apps already owned by the authenticated account, with platform filtering.
+- **Device Manager**: Pair a USB-connected iPhone/iPad, browse its installed apps, install or uninstall an `.ipa` directly on the device, and validate an `.ipa` before installing it — no Xcode or third-party sideloading tool required.
+- **Local Library**: Keep track of downloaded apps, mark favorites, and review download history.
+- **Firmware Browser**: Look up available IPSW firmware builds per device model.
+- **Concurrent Download Queue**: Chunked streaming downloads with live speed, ETA, pause/resume, and automatic retry/recovery when Apple's download endpoints are flaky.
+- **FairPlay DRM SINF Replication**: Automatically replicates and injects the FairPlay signature into downloaded packages.
+- **Auto-Update**: Checks GitHub releases and applies updates in place.
+- **Multi-Language UI**: Full interface localization in English and Spanish.
+- **Live Logs**: Streaming log panel with severity filtering and one-click export, useful for diagnosing failed downloads.
+- **CLI Mode**: The same binary runs as a scriptable CLI (`auth`, `search`, `purchase`, `list-purchases`, `list-versions`, `download`, ...) when invoked with arguments, for automation.
 
 ---
 
 ## Tech Stack
 
 ### Backend (Go)
-- **Framework**: Wails v2 for native desktop window management and Go-to-TypeScript runtime bindings.
-- **App Store Engine**: Custom iTunes Storefront and GrandSlam protocol implementations with SAP signing.
-- **Storage**: Zero-CGO SQLite driver (`modernc.org/sqlite`) for local persistence.
-- **Security**: OS Keychain integration via `github.com/byteness/keyring` with persistent cookie jar.
+- **Framework**: Wails v2 for the native desktop window and Go↔TypeScript bindings.
+- **App Store Engine**: Custom iTunes Storefront / GrandSlam protocol implementation with SAP signing.
+- **Device Communication**: `github.com/electricbubble/gidevice` for USB device pairing and app install/uninstall.
+- **Storage**: Zero-CGO SQLite (`modernc.org/sqlite`) for local persistence (library, favorites, history, settings).
+- **Security**: OS keychain integration with a persistent cookie jar for the Apple ID session.
 
 ### Frontend (TypeScript / Vue 3)
-- **Framework**: Vue 3 (Composition API / `<script setup>`).
-- **State Management**: Pinia stores for authentication, downloads queue, favorites, history, settings, and logs.
-- **Styling**: TailwindCSS with Apple / visionOS glassmorphism design tokens and San Francisco (SF Pro) typography.
-- **Routing**: Vue Router 4.
+- **Framework**: Vue 3 (Composition API, `<script setup>`) with Vue Router 4.
+- **State Management**: Pinia stores — auth, search, downloads, downloaded apps, purchases, favorites, history, settings, logs, device.
+- **Styling**: TailwindCSS with a glassmorphism design and SF Pro typography.
 
 ---
 
@@ -42,42 +43,44 @@ The project provides both a modern desktop graphical user interface and a full-f
 
 ### Prerequisites
 
-- **Go**: Version 1.21 or higher
-- **Node.js**: Version 18 or higher (with npm)
-- **Wails CLI** (optional for live development):
+- **Go**: 1.25 or higher
+- **Node.js**: 18 or higher (with npm)
+- **Wails CLI**:
   ```shell
   go install github.com/wailsapp/wails/v2/cmd/wails@latest
   ```
 
-### Build Desktop Application
-
-To compile the native desktop executable:
+### Build the Desktop Application
 
 ```shell
-# Build frontend assets
-cd frontend
-npm install
-npm run build
-cd ..
-
-# Compile desktop binary
-go build -o ipa-downloader-desktop.exe .
+wails build
 ```
 
-### Build CLI Tool
+This builds the frontend and produces the native desktop binary in `build/bin`.
 
-To compile the command-line binary:
+### Build the CLI Binary Manually
 
 ```shell
-go build -o ipa-downloader.exe main.go
+cd frontend && npm install && npm run build && cd ..
+go build -o ipa-downloader.exe .
 ```
 
 ### Development Mode
 
-Run live development with hot reload:
-
 ```shell
 wails dev
+```
+
+Runs the desktop app with Vite hot module replacement for the frontend.
+
+### Run in CLI Mode
+
+Passing any argument runs the CLI instead of launching the GUI:
+
+```shell
+./ipa-downloader.exe auth login -e "user@icloud.com"
+./ipa-downloader.exe search "Spotify"
+./ipa-downloader.exe download -b "com.spotify.client" --purchase
 ```
 
 ---
@@ -87,54 +90,46 @@ wails dev
 ### Authentication
 
 ```shell
-# Authenticate with Apple ID
 ipa-downloader auth login --email "name@icloud.com" --password "secret"
-
-# Check current authentication status
 ipa-downloader auth info
-
-# Revoke credentials
 ipa-downloader auth revoke
 ```
 
 ### Search
 
 ```shell
-# Search for apps by name or bundle ID (supports: iphone, ipad, appletv, visionos, macos)
+# platform: iphone, ipad, appletv, visionos, macos
 ipa-downloader search "Telegram" --limit 10 --platform iphone
 ```
 
 ### License Purchase
 
 ```shell
-# Acquire a license for a free application
 ipa-downloader purchase --bundle-identifier "ph.telegra.Telegraph"
 ```
 
 ### List Purchases
 
 ```shell
-# List apps owned by the authenticated account
 ipa-downloader list-purchases --max-results 10 --page 1
 ```
 
 ### Version Listing
 
 ```shell
-# List all historical version build identifiers available from Apple
 ipa-downloader list-versions --bundle-identifier "ph.telegra.Telegraph"
 ```
 
 ### Download
 
 ```shell
-# Download latest version
+# Latest version
 ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --output "./Telegram.ipa"
 
-# Download a specific historical build
+# A specific historical build
 ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --external-version-id "854000123" --output "./Telegram_v10.ipa"
 
-# Download macOS app
+# macOS package
 ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --platform macos --output "./Telegram.pkg"
 ```
 
@@ -142,14 +137,10 @@ ipa-downloader download --bundle-identifier "ph.telegra.Telegraph" --platform ma
 
 ## Testing
 
-Run unit tests and verification across packages:
-
 ```shell
-# Run Go unit tests
 go generate ./...
 go test -v ./...
 
-# Verify frontend types and production bundle
 cd frontend
 npm run build
 ```
@@ -159,3 +150,5 @@ npm run build
 ## License
 
 This project is released under the [MIT License](LICENSE).
+
+Built on top of the App Store protocol work from [ipatool](https://github.com/majd/ipatool).
