@@ -1,6 +1,6 @@
 module github.com/ElJoker63/ipa-downloader/v2
 
-go 1.25.0
+go 1.24.0
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -19,7 +19,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.13.1
 	github.com/spf13/cobra v1.6.1
 	github.com/thediveo/enumflag/v2 v2.0.1
-	github.com/wailsapp/wails/v2 v2.15.0
+	github.com/wailsapp/wails/v2 v2.12.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/term v0.44.0
 	howett.net/plist v1.0.2-0.20250314012144-ee69052608d9

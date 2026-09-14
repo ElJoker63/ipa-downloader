@@ -34,7 +34,7 @@ jobs:
           node-version: 20
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25.0"
+          go-version: "1.24.13"
           cache: true
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -61,7 +61,7 @@ jobs:
           node-version: 20
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25.0"
+          go-version: "1.24.13"
           cache: true
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -92,7 +92,7 @@ jobs:
           node-version: 20
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.25.0"
+          go-version: "1.24.13"
           cache: true
       - name: Install dependencies
         run: |
