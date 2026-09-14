@@ -7,15 +7,16 @@ import (
 )
 
 type App struct {
-	ID            int64     `json:"trackId,omitempty"`
-	BundleID      string    `json:"bundleId,omitempty"`
-	Name          string    `json:"trackName,omitempty"`
-	Version       string    `json:"version,omitempty"`
-	Price         float64   `json:"price,omitempty"`
-	ArtworkURL60  string    `json:"artworkUrl60,omitempty"`
-	ArtworkURL100 string    `json:"artworkUrl100,omitempty"`
-	ArtworkURL512 string    `json:"artworkUrl512,omitempty"`
-	PurchaseDate  time.Time `json:"purchaseDate,omitzero"`
+	ID            int64      `json:"trackId,omitempty"`
+	BundleID      string     `json:"bundleId,omitempty"`
+	Name          string     `json:"trackName,omitempty"`
+	Version       string     `json:"version,omitempty"`
+	Price         float64    `json:"price,omitempty"`
+	ArtworkURL60  string     `json:"artworkUrl60,omitempty"`
+	ArtworkURL100 string     `json:"artworkUrl100,omitempty"`
+	ArtworkURL512 string     `json:"artworkUrl512,omitempty"`
+	PurchaseDate  time.Time  `json:"purchaseDate,omitzero"`
+	Platforms     []Platform `json:"platforms,omitzero"`
 }
 
 type VersionHistoryInfo struct {
@@ -49,5 +50,14 @@ func (a App) MarshalZerologObject(event *zerolog.Event) {
 
 	if !a.PurchaseDate.IsZero() {
 		event.Time("purchaseDate", a.PurchaseDate)
+	}
+
+	if a.Platforms != nil {
+		platforms := make([]string, len(a.Platforms))
+		for index, platform := range a.Platforms {
+			platforms[index] = string(platform)
+		}
+
+		event.Strs("platforms", platforms)
 	}
 }

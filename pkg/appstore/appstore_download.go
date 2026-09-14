@@ -7,12 +7,12 @@ import (
 	"fmt"
 
 	"io"
+	gohttp "net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/ElJoker63/ipa-downloader/v2/pkg/http"
 	"github.com/schollz/progressbar/v3"
 	"howett.net/plist"
 )
@@ -76,11 +76,9 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 		}
 	}
 
-	req := t.downloadRequest(input.Account, input.App, guid, externalVersionID, signer)
-
-	res, err := t.downloadClient.Send(req)
+	res, resolvedPlatform, err := t.sendDownloadProduct(input.Account, input.App, guid, externalVersionID, input.Platform, signer)
 	if err != nil {
-		return DownloadOutput{}, fmt.Errorf("failed to send http request: %w", err)
+		return DownloadOutput{}, err
 	}
 
 	if res.Data.FailureType == FailureTypePasswordTokenExpired ||
@@ -94,7 +92,7 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 		return DownloadOutput{}, ErrLicenseRequired
 	}
 
-	if res.Data.FailureType != "" && res.Data.CustomerMessage != "" {
+	if res.Data.CustomerMessage != "" && (res.Data.FailureType != "" || len(res.Data.Items) == 0) {
 		return DownloadOutput{}, NewErrorWithMetadata(fmt.Errorf("received error: %s", res.Data.CustomerMessage), res)
 	}
 
@@ -136,13 +134,21 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 		return DownloadOutput{}, fmt.Errorf("failed to download file: %w", err)
 	}
 
-	err = t.applyPatches(item, input.Account, tmpPath, destination)
-	if err != nil {
-		return DownloadOutput{}, fmt.Errorf("failed to apply patches: %w", err)
+	if err := t.validatePackagePlatform(tmpPath, resolvedPlatform); err != nil {
+		if removeErr := t.os.Remove(tmpPath); removeErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to remove invalid package: %w", removeErr))
+		}
+
+		return DownloadOutput{}, fmt.Errorf("failed to validate package platform: %w", err)
 	}
 
-	if err := t.validatePackagePlatform(destination, input.Platform); err != nil {
-		return DownloadOutput{}, fmt.Errorf("failed to validate package platform: %w", err)
+	artwork, err := t.downloadArtwork(input.Context, item.ArtworkURL)
+	if err != nil {
+		return DownloadOutput{}, fmt.Errorf("failed to download artwork: %w", err)
+	}
+
+	if err := t.applyPatches(item, input.Account, tmpPath, destination, artwork); err != nil {
+		return DownloadOutput{}, fmt.Errorf("failed to apply patches: %w", err)
 	}
 
 	if err := t.os.Remove(tmpPath); err != nil {
@@ -163,6 +169,8 @@ func (*appstore) validatePackagePlatform(path string, platform Platform) error {
 	var expectedPlatform string
 
 	switch platform {
+	case PlatformIPhone, PlatformIPad:
+		expectedPlatform = "iPhoneOS"
 	case PlatformAppleTV:
 		expectedPlatform = "AppleTVOS"
 	case PlatformVisionOS:
@@ -222,10 +230,11 @@ func isTopLevelAppInfoPlist(path string) bool {
 }
 
 type downloadItemResult struct {
-	HashMD5  string                 `plist:"md5,omitempty"`
-	URL      string                 `plist:"URL,omitempty"`
-	Sinfs    []Sinf                 `plist:"sinfs,omitempty"`
-	Metadata map[string]interface{} `plist:"metadata,omitempty"`
+	ArtworkURL string                 `plist:"artworkURL,omitempty"`
+	HashMD5    string                 `plist:"md5,omitempty"`
+	URL        string                 `plist:"URL,omitempty"`
+	Sinfs      []Sinf                 `plist:"sinfs,omitempty"`
+	Metadata   map[string]interface{} `plist:"metadata,omitempty"`
 }
 
 type downloadResult struct {
@@ -235,7 +244,13 @@ type downloadResult struct {
 	Authorized      *bool                `plist:"authorized,omitempty"`
 }
 
-func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *progressbar.ProgressBar, callback ProgressCallback) error {
+//nolint:nonamedreturns // Deferred close errors must propagate to callers.
+func (t *appstore) downloadFile(
+	ctx context.Context,
+	src, dst string,
+	progress *progressbar.ProgressBar,
+	callback ProgressCallback,
+) (err error) {
 	req, err := t.httpClient.NewRequest("GET", src, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -255,7 +270,11 @@ func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *
 		return fmt.Errorf("failed to open file: %w", err)
 	}
 
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			err = joinCleanupError(err, "failed to close downloaded file", closeErr)
+		}
+	}()
 
 	stat, err := t.os.Stat(dst)
 	if err != nil {
@@ -272,36 +291,48 @@ func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *
 	}
 	defer res.Body.Close()
 
-	var currentSize int64
-	if stat != nil {
-		currentSize = stat.Size()
+	offset, remaining, total, complete, err := downloadResponseRange(res, stat.Size())
+	if err != nil {
+		return err
 	}
-	totalSize := res.ContentLength + currentSize
+
+	if complete {
+		return nil
+	}
+
+	if res.StatusCode == gohttp.StatusOK {
+		if err := file.Truncate(0); err != nil {
+			return fmt.Errorf("failed to restart download: %w", err)
+		}
+	}
+
+	if _, err := file.Seek(offset, io.SeekStart); err != nil {
+		return fmt.Errorf("can not seek file: %w", err)
+	}
+
+	var writer io.Writer = file
 
 	if progress != nil {
-		progress.ChangeMax64(totalSize)
-		err = progress.Set64(currentSize)
+		progress.ChangeMax64(total)
 
-		if err != nil {
+		if err := progress.Set64(offset); err != nil {
 			return fmt.Errorf("can not set bar progress: %w", err)
 		}
 
-		_, err = file.Seek(0, io.SeekEnd)
-		if err != nil {
-			return fmt.Errorf("can not seek file: %w", err)
-		}
+		writer = io.MultiWriter(file, progress)
+	}
 
-		_, err = io.Copy(io.MultiWriter(file, progress), res.Body)
-	} else if callback != nil {
-		_, err = file.Seek(0, io.SeekEnd)
-		if err != nil {
-			return fmt.Errorf("can not seek file: %w", err)
-		}
+	var body io.Reader = res.Body
+	if remaining >= 0 {
+		body = io.LimitReader(body, remaining)
+	}
 
-		current := stat.Size()
-		callback(current, totalSize)
+	if callback != nil {
+		current := offset
+		callback(current, total)
 
 		buf := make([]byte, 64*1024)
+
 		for {
 			if ctx != nil {
 				select {
@@ -311,75 +342,45 @@ func (t *appstore) downloadFile(ctx context.Context, src, dst string, progress *
 				}
 			}
 
-			n, rErr := res.Body.Read(buf)
+			n, rErr := body.Read(buf)
 
 			if n > 0 {
-				_, wErr := file.Write(buf[:n])
-				if wErr != nil {
+				if _, wErr := writer.Write(buf[:n]); wErr != nil {
 					return fmt.Errorf("failed to write chunk: %w", wErr)
 				}
+
 				current += int64(n)
-				callback(current, totalSize)
+				callback(current, total)
 			}
+
 			if rErr != nil {
 				if rErr == io.EOF {
 					break
 				}
+
 				return fmt.Errorf("failed to read stream: %w", rErr)
 			}
 		}
-	} else {
-		_, err = io.Copy(file, res.Body)
+
+		written := current - offset
+
+		if remaining >= 0 && written != remaining || total >= 0 && current != total {
+			return fmt.Errorf("download is incomplete: %w", io.ErrUnexpectedEOF)
+		}
+
+		return nil
 	}
 
+	written, err := io.Copy(writer, body)
 	if err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
+	if remaining >= 0 && written != remaining || total >= 0 && offset+written != total {
+		return fmt.Errorf("download is incomplete: %w", io.ErrUnexpectedEOF)
+	}
+
 	return nil
-}
-
-func (*appstore) downloadRequest(acc Account, app App, guid string, externalVersionID string, signer ActionSigner) http.Request {
-	payload := map[string]interface{}{
-		"creditDisplay":     "",
-		"guid":              guid,
-		"salableAdamId":     app.ID,
-		"serialNumber":      "0",
-		"pricingParameters": "STDQ",
-	}
-
-	if externalVersionID != "" {
-		payload["appExtVrsId"] = externalVersionID
-		payload["externalVersionId"] = externalVersionID
-	}
-
-	podPrefix := ""
-	if acc.Pod != "" {
-		podPrefix = "p" + acc.Pod + "-"
-	}
-
-	headers := map[string]string{
-		"Content-Type": "application/x-apple-plist",
-		"iCloud-DSID":  acc.DirectoryServicesID,
-		"X-Dsid":       acc.DirectoryServicesID,
-	}
-	if acc.StoreFront != "" {
-		headers["X-Apple-Store-Front"] = acc.StoreFront
-	}
-	if acc.PasswordToken != "" {
-		headers["X-Token"] = acc.PasswordToken
-	}
-
-	return http.Request{
-		URL:            fmt.Sprintf("https://%s%s%s?guid=%s", podPrefix, PrivateAppStoreAPIDomain, PrivateAppStoreAPIPathDownload, guid),
-		Method:         http.MethodPOST,
-		ResponseFormat: http.ResponseFormatXML,
-		ActionSigner:   signer,
-		Headers:        headers,
-		Payload: &http.XMLPayload{
-			Content: payload,
-		},
-	}
 }
 
 func fileName(app App, version string) string {
@@ -446,7 +447,8 @@ func (t *appstore) isDirectory(path string) (bool, error) {
 	return info.IsDir(), nil
 }
 
-func (t *appstore) applyPatches(item downloadItemResult, acc Account, src, dst string) error {
+//nolint:nonamedreturns // Deferred close errors must propagate to callers.
+func (t *appstore) applyPatches(item downloadItemResult, acc Account, src, dst string, artwork []byte) (err error) {
 	srcZip, err := zip.OpenReader(src)
 	if err != nil {
 		return fmt.Errorf("failed to open zip reader: %w", err)
@@ -457,14 +459,34 @@ func (t *appstore) applyPatches(item downloadItemResult, acc Account, src, dst s
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer dstFile.Close()
+
+	defer func() {
+		if closeErr := dstFile.Close(); closeErr != nil {
+			err = joinCleanupError(err, "failed to close patched file", closeErr)
+		}
+	}()
 
 	dstZip := zip.NewWriter(dstFile)
-	defer dstZip.Close()
+	defer func() {
+		if closeErr := dstZip.Close(); closeErr != nil {
+			err = joinCleanupError(err, "failed to close zip writer", closeErr)
+		}
+	}()
 
-	err = t.replicateZip(srcZip, dstZip)
+	err = t.replicateZip(srcZip, dstZip, src)
 	if err != nil {
 		return fmt.Errorf("failed to replicate zip: %w", err)
+	}
+
+	if len(artwork) != 0 {
+		file, err := dstZip.Create("iTunesArtwork")
+		if err != nil {
+			return fmt.Errorf("failed to create artwork: %w", err)
+		}
+
+		if _, err := file.Write(artwork); err != nil {
+			return fmt.Errorf("failed to write artwork: %w", err)
+		}
 	}
 
 	err = t.writeMetadata(item.Metadata, acc, dstZip)

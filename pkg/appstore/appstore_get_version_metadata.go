@@ -1,18 +1,19 @@
 package appstore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/ElJoker63/ipa-downloader/v2/pkg/http"
 )
 
 type GetVersionMetadataInput struct {
+	Context   context.Context
 	Account   Account
 	App       App
 	VersionID string
+	Platform  Platform
 }
 
 type GetVersionMetadataOutput struct {
@@ -21,6 +22,17 @@ type GetVersionMetadataOutput struct {
 }
 
 func (t *appstore) GetVersionMetadata(input GetVersionMetadataInput) (GetVersionMetadataOutput, error) {
+	platform := input.Platform
+	if platform == "" {
+		platform = PlatformIPhone
+	}
+
+	switch platform {
+	case PlatformIPhone, PlatformIPad, PlatformAppleTV, PlatformVisionOS, PlatformMacOS:
+	default:
+		return GetVersionMetadataOutput{}, fmt.Errorf("invalid platform %q", platform)
+	}
+
 	macAddr, err := t.machine.MacAddress()
 	if err != nil {
 		return GetVersionMetadataOutput{}, fmt.Errorf("failed to get mac address: %w", err)
@@ -43,11 +55,9 @@ func (t *appstore) GetVersionMetadata(input GetVersionMetadataInput) (GetVersion
 		}
 	}
 
-	req := t.getVersionMetadataRequest(input.Account, input.App, guid, input.VersionID, signer)
-	res, err := t.downloadClient.Send(req)
-
+	res, _, err := t.sendDownloadProduct(input.Account, input.App, guid, input.VersionID, platform, signer)
 	if err != nil {
-		return GetVersionMetadataOutput{}, fmt.Errorf("failed to send http request: %w", err)
+		return GetVersionMetadataOutput{}, err
 	}
 
 	if res.Data.FailureType == FailureTypePasswordTokenExpired || res.Data.FailureType == FailureTypeSignInRequired {
@@ -58,7 +68,7 @@ func (t *appstore) GetVersionMetadata(input GetVersionMetadataInput) (GetVersion
 		return GetVersionMetadataOutput{}, ErrLicenseRequired
 	}
 
-	if res.Data.FailureType != "" && res.Data.CustomerMessage != "" {
+	if res.Data.CustomerMessage != "" && (res.Data.FailureType != "" || len(res.Data.Items) == 0) {
 		return GetVersionMetadataOutput{}, NewErrorWithMetadata(fmt.Errorf("received error: %s", res.Data.CustomerMessage), res)
 	}
 
@@ -71,6 +81,26 @@ func (t *appstore) GetVersionMetadata(input GetVersionMetadataInput) (GetVersion
 	}
 
 	item := res.Data.Items[0]
+	if platform == PlatformMacOS {
+		packagePlatform, err := downloadPackagePlatform(platform, item)
+		if err != nil {
+			return GetVersionMetadataOutput{}, err
+		}
+
+		if packagePlatform == PlatformMacOS {
+			_, hardwareID, err := machineIdentity(macAddr)
+			if err != nil {
+				return GetVersionMetadataOutput{}, err
+			}
+
+			metadata, err := t.readVersionMetadataFromMacPackage(input.Context, item, hardwareID, input.App.BundleID)
+			if err != nil {
+				return GetVersionMetadataOutput{}, fmt.Errorf("failed to read macOS version metadata: %w", err)
+			}
+
+			return GetVersionMetadataOutput(metadata), nil
+		}
+	}
 
 	// Do not fall back to item.Metadata here. The App Store download API can
 	// return stale version and release date values, so the IPA Info.plist is the
@@ -81,44 +111,4 @@ func (t *appstore) GetVersionMetadata(input GetVersionMetadataInput) (GetVersion
 	}
 
 	return GetVersionMetadataOutput(metadata), nil
-}
-
-func (t *appstore) getVersionMetadataRequest(acc Account, app App, guid string, version string, signer ActionSigner) http.Request {
-	payload := map[string]interface{}{
-		"creditDisplay":     "",
-		"guid":              guid,
-		"salableAdamId":     app.ID,
-		"externalVersionId": version,
-		"appExtVrsId":       version,
-		"pricingParameters": "STDQ",
-		"serialNumber":      "0",
-	}
-
-	podPrefix := ""
-	if acc.Pod != "" {
-		podPrefix = "p" + acc.Pod + "-"
-	}
-
-	headers := map[string]string{
-		"Content-Type": "application/x-apple-plist",
-		"iCloud-DSID":  acc.DirectoryServicesID,
-		"X-Dsid":       acc.DirectoryServicesID,
-	}
-	if acc.StoreFront != "" {
-		headers["X-Apple-Store-Front"] = acc.StoreFront
-	}
-	if acc.PasswordToken != "" {
-		headers["X-Token"] = acc.PasswordToken
-	}
-
-	return http.Request{
-		URL:            fmt.Sprintf("https://%s%s%s?guid=%s", podPrefix, PrivateAppStoreAPIDomain, PrivateAppStoreAPIPathDownload, guid),
-		Method:         http.MethodPOST,
-		ResponseFormat: http.ResponseFormatXML,
-		ActionSigner:   signer,
-		Headers:        headers,
-		Payload: &http.XMLPayload{
-			Content: payload,
-		},
-	}
 }

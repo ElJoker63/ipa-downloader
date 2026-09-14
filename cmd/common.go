@@ -19,7 +19,6 @@ import (
 	cookiejar "github.com/juju/persistent-cookiejar"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 )
 
 var dependencies = Dependencies{}
@@ -53,15 +52,15 @@ func newLogger(format OutputFormat, verbose bool) log.Logger {
 }
 
 // newCookieJar returns a new cookie jar instance.
-func newCookieJar(machine machine.Machine) http.CookieJar {
+func newCookieJar(stateDirectory string) http.CookieJar {
 	return util.Must(cookiejar.New(&cookiejar.Options{
-		Filename: filepath.Join(machine.HomeDirectory(), ConfigDirectoryName, CookieJarFileName),
+		Filename: filepath.Join(stateDirectory, CookieJarFileName),
 	}))
 }
 
 // newKeychain returns a new keychain instance.
-func newKeychain(machine machine.Machine, logger log.Logger, interactive bool) keychain.Keychain {
-	ring := util.Must(keyring.Open(keyring.Config{
+func newKeychain(stateDirectory string, interactive bool) keychain.Keychain {
+	ring := util.Must(openKeyring(keyring.Config{
 		AllowedBackends: []keyring.BackendType{
 			keyring.KeychainBackend,
 			keyring.SecretServiceBackend,
@@ -69,7 +68,7 @@ func newKeychain(machine machine.Machine, logger log.Logger, interactive bool) k
 		},
 		ServiceName:              KeychainServiceName,
 		KeychainTrustApplication: true,
-		FileDir:                  filepath.Join(machine.HomeDirectory(), ConfigDirectoryName),
+		FileDir:                  stateDirectory,
 		FilePasswordFunc: func(s string) (string, error) {
 			if keychainPassphrase == "" && !interactive {
 				return "", errors.New("keychain passphrase is required when not running in interactive mode; use the \"--keychain-passphrase\" flag")
@@ -80,15 +79,10 @@ func newKeychain(machine machine.Machine, logger log.Logger, interactive bool) k
 			}
 
 			path := strings.Split(s, " unlock ")[1]
-			logger.Log().Msgf("enter passphrase to unlock %s (this is separate from your Apple ID password): ", path)
-			bytes, err := term.ReadPassword(int(os.Stdin.Fd()))
+			password, err := readPrompt(fmt.Sprintf("enter passphrase to unlock %s (this is separate from your Apple ID password): ", path), true)
 			if err != nil {
 				return "", fmt.Errorf("failed to read password: %w", err)
 			}
-
-			password := string(bytes)
-			password = strings.Trim(password, "\n")
-			password = strings.Trim(password, "\r")
 
 			return password, nil
 		},
@@ -109,31 +103,13 @@ func initWithCommand(cmd *cobra.Command) {
 	dependencies.Logger = newLogger(format, verbose)
 	dependencies.OS = operatingsystem.New()
 	dependencies.Machine = machine.New(machine.Args{OS: dependencies.OS})
-	dependencies.CookieJar = newCookieJar(dependencies.Machine)
-	dependencies.Keychain = newKeychain(dependencies.Machine, dependencies.Logger, interactive)
+	stateDirectory := util.Must(prepareStateDirectory(dependencies.OS, dependencies.Machine.HomeDirectory()))
+	dependencies.CookieJar = newCookieJar(stateDirectory)
+	dependencies.Keychain = newKeychain(stateDirectory, interactive)
 	dependencies.AppStore = appstore.NewAppStore(appstore.Args{
 		CookieJar:       dependencies.CookieJar,
 		OperatingSystem: dependencies.OS,
 		Keychain:        dependencies.Keychain,
 		Machine:         dependencies.Machine,
 	})
-
-	util.Must("", createConfigDirectory(dependencies.OS, dependencies.Machine))
-}
-
-// createConfigDirectory creates the configuration directory for the CLI tool, if needed.
-func createConfigDirectory(os operatingsystem.OperatingSystem, machine machine.Machine) error {
-	configDirectoryPath := filepath.Join(machine.HomeDirectory(), ConfigDirectoryName)
-	_, err := os.Stat(configDirectoryPath)
-
-	if err != nil && os.IsNotExist(err) {
-		err = os.MkdirAll(configDirectoryPath, 0700)
-		if err != nil {
-			return fmt.Errorf("failed to create config directory: %w", err)
-		}
-	} else if err != nil {
-		return fmt.Errorf("could not read metadata: %w", err)
-	}
-
-	return nil
 }

@@ -4,13 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/ElJoker63/ipa-downloader/v2/pkg/http"
 )
 
 type ListVersionsInput struct {
-	Account Account
-	App     App
+	Account  Account
+	App      App
+	Platform Platform
 }
 
 type ListVersionsOutput struct {
@@ -19,6 +18,17 @@ type ListVersionsOutput struct {
 }
 
 func (t *appstore) ListVersions(input ListVersionsInput) (ListVersionsOutput, error) {
+	platform := input.Platform
+	if platform == "" {
+		platform = PlatformIPhone
+	}
+
+	switch platform {
+	case PlatformIPhone, PlatformIPad, PlatformAppleTV, PlatformVisionOS, PlatformMacOS:
+	default:
+		return ListVersionsOutput{}, fmt.Errorf("invalid platform %q", platform)
+	}
+
 	macAddr, err := t.machine.MacAddress()
 	if err != nil {
 		return ListVersionsOutput{}, fmt.Errorf("failed to get mac address: %w", err)
@@ -41,11 +51,22 @@ func (t *appstore) ListVersions(input ListVersionsInput) (ListVersionsOutput, er
 		}
 	}
 
-	req := t.listVersionsRequest(input.Account, input.App, guid, signer)
-	res, err := t.downloadClient.Send(req)
+	var externalVersionID string
+
+	switch platform {
+	case PlatformMacOS:
+		externalVersionID, err = t.lookupLatestMacOSExternalVersionID(input.Account, input.App)
+	case PlatformAppleTV, PlatformVisionOS:
+		externalVersionID, err = t.lookupLatestExternalVersionID(input.Account, input.App, platform)
+	}
 
 	if err != nil {
-		return ListVersionsOutput{}, fmt.Errorf("failed to send http request: %w", err)
+		return ListVersionsOutput{}, fmt.Errorf("failed to resolve platform version: %w", err)
+	}
+
+	res, _, err := t.sendDownloadProduct(input.Account, input.App, guid, externalVersionID, platform, signer)
+	if err != nil {
+		return ListVersionsOutput{}, err
 	}
 
 	if res.Data.FailureType == FailureTypePasswordTokenExpired || res.Data.FailureType == FailureTypeSignInRequired {
@@ -56,7 +77,7 @@ func (t *appstore) ListVersions(input ListVersionsInput) (ListVersionsOutput, er
 		return ListVersionsOutput{}, ErrLicenseRequired
 	}
 
-	if res.Data.FailureType != "" && res.Data.CustomerMessage != "" {
+	if res.Data.CustomerMessage != "" && (res.Data.FailureType != "" || len(res.Data.Items) == 0) {
 		return ListVersionsOutput{}, NewErrorWithMetadata(fmt.Errorf("received error: %s", res.Data.CustomerMessage), res)
 	}
 
@@ -89,42 +110,4 @@ func (t *appstore) ListVersions(input ListVersionsInput) (ListVersionsOutput, er
 		ExternalVersionIdentifiers: externalVersionIdentifiers,
 		LatestExternalVersionID:    fmt.Sprintf("%v", latestExternalVersionID),
 	}, nil
-}
-
-func (t *appstore) listVersionsRequest(acc Account, app App, guid string, signer ActionSigner) http.Request {
-	payload := map[string]interface{}{
-		"creditDisplay":     "",
-		"guid":              guid,
-		"salableAdamId":     app.ID,
-		"serialNumber":      "0",
-		"pricingParameters": "STDQ",
-	}
-
-	podPrefix := ""
-	if acc.Pod != "" {
-		podPrefix = "p" + acc.Pod + "-"
-	}
-
-	headers := map[string]string{
-		"Content-Type": "application/x-apple-plist",
-		"iCloud-DSID":  acc.DirectoryServicesID,
-		"X-Dsid":       acc.DirectoryServicesID,
-	}
-	if acc.StoreFront != "" {
-		headers["X-Apple-Store-Front"] = acc.StoreFront
-	}
-	if acc.PasswordToken != "" {
-		headers["X-Token"] = acc.PasswordToken
-	}
-
-	return http.Request{
-		URL:            fmt.Sprintf("https://%s%s%s?guid=%s", podPrefix, PrivateAppStoreAPIDomain, PrivateAppStoreAPIPathDownload, guid),
-		Method:         http.MethodPOST,
-		ResponseFormat: http.ResponseFormatXML,
-		ActionSigner:   signer,
-		Headers:        headers,
-		Payload: &http.XMLPayload{
-			Content: payload,
-		},
-	}
 }
