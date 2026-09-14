@@ -67,10 +67,20 @@ func (t *appstore) Login(input LoginInput) (LoginOutput, error) {
 
 	acc, loginErr := t.login(input.Email, input.Password, input.AuthCode, guid, bag.SAPConfig.AuthEndpoint, signer)
 	if loginErr != nil {
-		// A failed login may mean the cached signer's session is no longer
-		// valid; drop it so the next attempt starts from a clean handshake
-		// instead of silently reusing a broken signer.
-		_ = t.closeSharedSigner()
+		// ErrAuthCodeRequired is not a failure: it's the expected mid-flow
+		// response when Apple wants a 2FA code, and the caller immediately
+		// retries with the same signer once the user provides it. Tearing
+		// the signer down here forced a brand-new handshake for that retry,
+		// which Apple's servers can reject outright (surfacing as an opaque
+		// "something went wrong" failureType) — most visible on accounts
+		// that actually require 2FA, since a trusted account/device pair
+		// that skips the code prompt never took this path. Only a real
+		// login failure means the cached signer's session may no longer be
+		// valid, so only drop it then, letting the next attempt start from
+		// a clean handshake instead of silently reusing a broken signer.
+		if !errors.Is(loginErr, ErrAuthCodeRequired) {
+			_ = t.closeSharedSigner()
+		}
 
 		return LoginOutput{}, loginErr
 	}

@@ -233,6 +233,7 @@ var _ = Describe("AppStore (Login)", func() {
 					Password: testPassword,
 				})
 				Expect(err).To(HaveOccurred())
+				Expect(signer.closeCalls).To(Equal(1))
 			})
 		})
 
@@ -273,6 +274,15 @@ var _ = Describe("AppStore (Login)", func() {
 					Password: testPassword,
 				})
 				Expect(err).To(Equal(ErrAuthCodeRequired))
+			})
+
+			It("keeps the cached signer so the code retry reuses the same handshake", func() {
+				_, err := as.Login(LoginInput{
+					Password: testPassword,
+				})
+				Expect(err).To(Equal(ErrAuthCodeRequired))
+				Expect(signer.closeCalls).To(Equal(0))
+				Expect(as.signerState.signer).To(BeIdenticalTo(signer))
 			})
 		})
 
