@@ -262,7 +262,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 							Expect(payload).To(HaveKeyWithValue("guid", testGUID))
 							Expect(payload).To(HaveKeyWithValue("appExtVrsId", testVersionID))
 							Expect(payload).ToNot(HaveKey("externalVersionId"))
-							Expect(payload).ToNot(HaveKey("pricingParameters"))
+							Expect(payload).To(HaveKeyWithValue("pricingParameters", "STDQ"))
 						}).Return(expected, nil),
 				)
 				actual, resolvedPlatform, err := store.sendDownloadProduct(account, app, testGUID, "", platform, nil)
