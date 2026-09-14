@@ -72,7 +72,17 @@ func NewSQLiteStorage(dataDir string) (Storage, error) {
 		return nil, fmt.Errorf("failed to open sqlite database: %w", err)
 	}
 
-	db.SetMaxOpenConns(1) // SQLite single-writer safe mode
+	// WAL mode (enabled via the DSN pragma above) lets multiple readers proceed
+	// concurrently alongside a single writer, so capping the pool at a single
+	// connection was serializing every read too: with MaxOpenConns(1),
+	// database/sql queues all queries behind the one physical connection
+	// regardless of the RWMutex below permitting concurrent RLock callers,
+	// which meant e.g. loading favorites and reading the log history could
+	// never actually run in parallel. Writers still serialize with each other
+	// (busy_timeout above absorbs brief WAL write contention), so a small pool
+	// is safe and lets independent reads and a write proceed side by side.
+	db.SetMaxOpenConns(4)
+	db.SetMaxIdleConns(4)
 
 	s := &sqliteStorage{
 		db:     db,
