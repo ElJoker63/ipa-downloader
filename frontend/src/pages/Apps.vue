@@ -283,7 +283,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useDeviceStore } from '../stores/device'
 import { useModalStore } from '../stores/modal'
 import { useI18n } from '../i18n'
@@ -310,6 +310,13 @@ const filteredApps = computed(() => {
 onMounted(() => {
   deviceStore.initListeners()
   deviceStore.checkDevices()
+})
+
+// This page has no <keep-alive> and remounts on every visit; without this,
+// each visit stacked a fresh set of Wails event listeners on top of the
+// previous ones instead of replacing them.
+onUnmounted(() => {
+  deviceStore.disposeListeners()
 })
 
 function handleRefresh() {

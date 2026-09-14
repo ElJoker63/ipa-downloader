@@ -125,8 +125,19 @@ export const useDeviceStore = defineStore('device', () => {
     }
   }
 
+  // Apps.vue (the only caller of initListeners) is a routed page with no
+  // <keep-alive>, so it remounts on every visit. Without tracking and
+  // releasing these subscriptions on unmount, each visit registered a fresh
+  // set of Wails event listeners on top of the previous ones — an
+  // unbounded, ever-growing leak for a long session with repeat visits.
+  const listenerCleanups: Array<() => void> = []
+  let listenersInitialized = false
+
   function initListeners() {
-    WailsService.onEvent('device:connected', (devInfo: DeviceInfo) => {
+    if (listenersInitialized) return
+    listenersInitialized = true
+
+    listenerCleanups.push(WailsService.onEvent('device:connected', (devInfo: DeviceInfo) => {
       if (!devices.value.find(d => d.udid === devInfo.udid)) {
         devices.value.push(devInfo)
       }
@@ -134,35 +145,34 @@ export const useDeviceStore = defineStore('device', () => {
         selectedUdid.value = devInfo.udid
         fetchApps()
       }
-    })
+    }))
 
-    WailsService.onEvent('device:updated', (devInfo: DeviceInfo) => {
+    listenerCleanups.push(WailsService.onEvent('device:updated', (devInfo: DeviceInfo) => {
       const idx = devices.value.findIndex(d => d.udid === devInfo.udid)
       if (idx !== -1) {
         devices.value[idx] = devInfo
       }
-    })
+    }))
 
-    WailsService.onEvent('device:disconnected', (udid: string) => {
+    listenerCleanups.push(WailsService.onEvent('device:disconnected', (udid: string) => {
       devices.value = devices.value.filter((d) => d.udid !== udid)
       if (selectedUdid.value === udid) {
         selectedUdid.value = devices.value.length > 0 ? devices.value[0].udid : ''
         installedApps.value = []
         if (selectedUdid.value) fetchApps()
       }
-    })
+    }))
 
-    WailsService.onEvent('device:install_progress', (prog: DeviceInstallTask) => {
+    listenerCleanups.push(WailsService.onEvent('device:install_progress', (prog: DeviceInstallTask) => {
       const idx = installTasks.value.findIndex(t => t.id === prog.id)
       if (idx !== -1) {
         installTasks.value[idx] = prog
       } else {
         installTasks.value.unshift(prog)
       }
-    })
+    }))
 
-
-    WailsService.onEvent('device:install_complete', (data: any) => {
+    listenerCleanups.push(WailsService.onEvent('device:install_complete', (data: any) => {
       if (data.udid === selectedUdid.value) {
         fetchApps()
       }
@@ -178,15 +188,27 @@ export const useDeviceStore = defineStore('device', () => {
           removeInstallTask(data.id)
         }, 5000)
       }
-    })
+    }))
 
-    WailsService.onEvent('device:install_failed', (data: any) => {
+    listenerCleanups.push(WailsService.onEvent('device:install_failed', (data: any) => {
       const idx = installTasks.value.findIndex(t => t.id === data.id)
       if (idx !== -1) {
         installTasks.value[idx].phase = 'Failed'
         installTasks.value[idx].message = data.error
       }
+    }))
+  }
+
+  function disposeListeners() {
+    listenerCleanups.forEach((cleanup) => {
+      try {
+        cleanup()
+      } catch {
+        // ignore
+      }
     })
+    listenerCleanups.length = 0
+    listenersInitialized = false
   }
 
   function removeInstallTask(id: string) {
@@ -215,5 +237,6 @@ export const useDeviceStore = defineStore('device', () => {
     removeInstallTask,
     closeInstallModal,
     initListeners,
+    disposeListeners,
   }
 })
