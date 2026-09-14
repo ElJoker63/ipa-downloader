@@ -90,6 +90,10 @@ export function GetCacheSize() {
   return window['go']['services']['AppService']['GetCacheSize']();
 }
 
+export function GetCachedPurchasedApps(arg1, arg2) {
+  return window['go']['services']['AppService']['GetCachedPurchasedApps'](arg1, arg2);
+}
+
 export function GetConnectedDevices() {
   return window['go']['services']['AppService']['GetConnectedDevices']();
 }

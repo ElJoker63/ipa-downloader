@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/apple"
@@ -215,8 +217,57 @@ func (s *AppService) ClearSearchHistory() error {
 	return s.searchService.ClearSearchHistory()
 }
 
+// GetPurchasedApps fetches a page of purchased apps live from Apple and
+// updates the local cache with the result, so the next GetCachedPurchasedApps
+// call (typically on the next app launch) can render it instantly.
 func (s *AppService) GetPurchasedApps(page, limit int) (*models.PurchasedAppsOutput, error) {
-	return s.appleClient.GetPurchasedApps(page, limit)
+	out, err := s.appleClient.GetPurchasedApps(page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	if key, keyErr := s.purchasedAppsCacheKey(page, limit); keyErr == nil {
+		_ = s.storage.SavePurchasedAppsCache(key, *out)
+	}
+
+	return out, nil
+}
+
+// GetCachedPurchasedApps returns the purchased-apps page last cached for the
+// signed-in account, without contacting Apple. The frontend uses this to
+// render the Purchases page instantly on open (including right after a fresh
+// app launch), then calls GetPurchasedApps in the background to silently
+// refresh it. A nil result (with no error) means nothing is cached yet for
+// this account/page, and the caller should fall back to a live fetch.
+func (s *AppService) GetCachedPurchasedApps(page, limit int) (*models.PurchasedAppsOutput, error) {
+	key, err := s.purchasedAppsCacheKey(page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	cached, _, err := s.storage.GetPurchasedAppsCache(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return cached, nil
+}
+
+// purchasedAppsCacheKey scopes the purchased-apps cache to the currently
+// signed-in account (by email) plus the requested page/limit, so switching
+// Apple IDs never shows one account's cached purchases while signed into
+// another.
+func (s *AppService) purchasedAppsCacheKey(page, limit int) (string, error) {
+	acc, err := s.authService.GetAccount()
+	if err != nil {
+		return "", err
+	}
+
+	if acc == nil || !acc.IsLoggedIn || acc.Email == "" {
+		return "", errors.New("not logged in")
+	}
+
+	return fmt.Sprintf("%s|%d|%d", strings.ToLower(acc.Email), page, limit), nil
 }
 
 // ----------------- Download Bindings -----------------

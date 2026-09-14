@@ -111,6 +111,18 @@ export const WailsService = {
     }
   },
 
+  // Returns whatever purchased-apps page is cached locally (no Apple call),
+  // or null when nothing is cached yet for this account/page.
+  async getCachedPurchasedApps(page: number = 1, limit: number = 20): Promise<PurchasedAppsOutput | null> {
+    try {
+      const res = await (AppService as any).GetCachedPurchasedApps(page, limit)
+      if (!res) return null
+      return { ...res, results: res.results || [] } as PurchasedAppsOutput
+    } catch {
+      return null
+    }
+  },
+
   // Downloads
   async queueDownload(app: AppMetadata, platform: string = 'ios', externalVersionId: string = '', customPath: string = ''): Promise<DownloadTask> {
     return await AppService.QueueDownload(app as any, platform, externalVersionId, customPath)

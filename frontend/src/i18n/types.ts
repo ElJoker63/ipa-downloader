@@ -80,6 +80,7 @@ export interface Translations {
     licensed: string
     loading: string
     refreshed: string
+    refreshingInBackground: string
     showing: string
     of: string
     prev: string

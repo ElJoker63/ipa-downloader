@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -47,6 +48,10 @@ type Storage interface {
 	GetCachedAppMetadata(bundleID string) (*models.AppMetadata, error)
 	ClearAppCache() error
 	GetCacheSizeBytes() (int64, error)
+
+	// Purchased Apps Cache
+	SavePurchasedAppsCache(cacheKey string, output models.PurchasedAppsOutput) error
+	GetPurchasedAppsCache(cacheKey string) (*models.PurchasedAppsOutput, time.Time, error)
 
 	// Logs
 	AddLog(level, message, context string) (*models.LogEntry, error)
@@ -168,6 +173,12 @@ func (s *sqliteStorage) initSchema() error {
 
 	CREATE TABLE IF NOT EXISTS app_cache (
 		bundle_id TEXT PRIMARY KEY,
+		data_json TEXT NOT NULL,
+		cached_at TIMESTAMP NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS purchased_apps_cache (
+		cache_key TEXT PRIMARY KEY,
 		data_json TEXT NOT NULL,
 		cached_at TIMESTAMP NOT NULL
 	);
@@ -735,6 +746,58 @@ func (s *sqliteStorage) GetCacheSizeBytes() (int64, error) {
 		return 0, err
 	}
 	return fi.Size(), nil
+}
+
+// ----------------- Purchased Apps Cache -----------------
+
+// SavePurchasedAppsCache persists a purchased-apps page under cacheKey (scoped
+// to a single account/page/limit combination by the caller) so it can be
+// shown instantly on the next app launch, before Apple is even contacted.
+func (s *sqliteStorage) SavePurchasedAppsCache(cacheKey string, output models.PurchasedAppsOutput) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	data, err := json.Marshal(output)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Exec(`
+		INSERT INTO purchased_apps_cache (cache_key, data_json, cached_at)
+		VALUES (?, ?, ?)
+		ON CONFLICT(cache_key) DO UPDATE SET
+			data_json = excluded.data_json,
+			cached_at = excluded.cached_at;
+	`, cacheKey, string(data), time.Now())
+	return err
+}
+
+// GetPurchasedAppsCache returns the last cached purchased-apps page for
+// cacheKey, however old it is — unlike GetCachedAppMetadata this cache has no
+// TTL cutoff, since callers want to render it immediately and decide for
+// themselves (by refreshing in the background) whether it's stale. A missing
+// cache entry is not an error: it returns (nil, zero time, nil) so callers
+// can treat "no cache yet" as a normal first-launch case.
+func (s *sqliteStorage) GetPurchasedAppsCache(cacheKey string) (*models.PurchasedAppsOutput, time.Time, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var dataJSON string
+	var cachedAt time.Time
+	err := s.db.QueryRow("SELECT data_json, cached_at FROM purchased_apps_cache WHERE cache_key = ?", cacheKey).Scan(&dataJSON, &cachedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, time.Time{}, nil
+		}
+		return nil, time.Time{}, err
+	}
+
+	var output models.PurchasedAppsOutput
+	if err := json.Unmarshal([]byte(dataJSON), &output); err != nil {
+		return nil, time.Time{}, err
+	}
+
+	return &output, cachedAt, nil
 }
 
 // ----------------- Logs -----------------

@@ -47,6 +47,8 @@ export function GetAuthStatus():Promise<string>;
 
 export function GetCacheSize():Promise<string>;
 
+export function GetCachedPurchasedApps(arg1:number,arg2:number):Promise<models.PurchasedAppsOutput>;
+
 export function GetConnectedDevices():Promise<Array<models.DeviceInfo>>;
 
 export function GetDeviceFirmwares(arg1:string):Promise<models.AppleHardware>;

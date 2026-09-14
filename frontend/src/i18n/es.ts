@@ -82,6 +82,7 @@ export const es: Translations = {
     licensed: 'Licencia Activa',
     loading: 'Cargando aplicaciones de tu cuenta de Apple...',
     refreshed: 'Catálogo de compras actualizado',
+    refreshingInBackground: 'Sincronizando en segundo plano...',
     showing: 'Mostrando página',
     of: 'de',
     prev: 'Anterior',

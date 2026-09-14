@@ -38,12 +38,13 @@
         <button
           type="button"
           class="btn-secondary px-3 py-2 text-xs flex items-center space-x-1.5 shrink-0"
-          :disabled="purchasesStore.isLoading"
+          :disabled="purchasesStore.isLoading || purchasesStore.isRefreshing"
+          :title="purchasesStore.isRefreshing ? (t.purchases?.refreshingInBackground || 'Sincronizando en segundo plano...') : ''"
           @click="refreshPurchases"
         >
           <svg
             class="w-3.5 h-3.5"
-            :class="{ 'animate-spin': purchasesStore.isLoading }"
+            :class="{ 'animate-spin': purchasesStore.isLoading || purchasesStore.isRefreshing }"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -247,7 +248,10 @@ const { showToast } = useNotifications()
 
 onMounted(async () => {
   if (purchasesStore.purchasedApps.length === 0) {
-    await purchasesStore.fetchPurchases(1)
+    // Cache-first: renders instantly from the local cache (if any) and
+    // silently refreshes from Apple in the background, so reopening this
+    // page (or relaunching the app) never has to sit through a full reload.
+    await purchasesStore.loadPurchases(purchasesStore.currentPage)
   }
 })
 
@@ -266,7 +270,7 @@ const filteredApps = computed(() => {
 
 async function refreshPurchases() {
   await purchasesStore.fetchPurchases(purchasesStore.currentPage)
-  showToast(t.value.purchases?.refreshed || 'Compras actualizadas', 'success')
+  showToast(t.value.purchases?.refreshed || 'Compras actualizadas', '', 'success')
 }
 
 function openDetails(app: AppMetadata) {

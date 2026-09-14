@@ -82,6 +82,7 @@ export const en: Translations = {
     licensed: 'Active License',
     loading: 'Loading apps from your Apple account...',
     refreshed: 'Purchased catalog refreshed',
+    refreshingInBackground: 'Syncing in the background...',
     showing: 'Showing page',
     of: 'of',
     prev: 'Previous',
