@@ -8,6 +8,11 @@ const (
 	FailureTypeTemporarilyUnavailable   = "2059"
 	FailureTypeLicenseAlreadyExists     = "5002"
 	FailureTypeDeviceVerificationFailed = "1008"
+	// FailureTypeAccountNeedsVerification is returned, with no customerMessage,
+	// for an Apple ID Apple wants verified interactively before it will allow
+	// this legacy purchase-API sign-in — typically a rarely-used or brand new
+	// account that has never signed in on an actual Apple device or browser.
+	FailureTypeAccountNeedsVerification = "5005"
 
 	CustomerMessageBadLogin             = "MZFinance.BadLogin.Configurator_message"
 	CustomerMessageAccountDisabled      = "Your account is disabled."

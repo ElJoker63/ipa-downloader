@@ -271,6 +271,12 @@ func (t *appstore) parseLoginResponse(res *http.Result[loginResult], attempt int
 		err = ErrAuthCodeRequired
 	} else if res.Data.FailureType == "" && res.Data.CustomerMessage == CustomerMessageAccountDisabled {
 		err = NewErrorWithMetadata(errors.New("account is disabled"), res)
+	} else if res.Data.FailureType == FailureTypeAccountNeedsVerification && res.Data.CustomerMessage == "" {
+		err = NewErrorWithMetadata(errors.New(
+			"this Apple ID needs to be verified on a real Apple device or browser before it can sign in here: "+
+				"open the App Store on an iPhone, iPad, or Mac (or sign in at appleid.apple.com) with this account, "+
+				"accept any pending terms, then try again",
+		), res)
 	} else if res.Data.FailureType != "" {
 		if res.Data.CustomerMessage != "" {
 			err = NewErrorWithMetadata(errors.New(res.Data.CustomerMessage), res)

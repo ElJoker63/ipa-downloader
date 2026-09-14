@@ -258,6 +258,26 @@ var _ = Describe("AppStore (Login)", func() {
 			})
 		})
 
+		When("store API indicates the account needs interactive verification", func() {
+			BeforeEach(func() {
+				mockClient.EXPECT().
+					Send(gomock.Any()).
+					Return(http.Result[loginResult]{
+						Data: loginResult{
+							FailureType: FailureTypeAccountNeedsVerification,
+						},
+					}, nil)
+			})
+
+			It("returns an actionable error instead of a bare failure code", func() {
+				_, err := as.Login(LoginInput{
+					Password: testPassword,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("verified on a real Apple device"))
+			})
+		})
+
 		When("store API requires 2FA code", func() {
 			BeforeEach(func() {
 				mockClient.EXPECT().
