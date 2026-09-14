@@ -275,7 +275,13 @@ func (t *appstore) parseLoginResponse(res *http.Result[loginResult], attempt int
 		if res.Data.CustomerMessage != "" {
 			err = NewErrorWithMetadata(errors.New(res.Data.CustomerMessage), res)
 		} else {
-			err = NewErrorWithMetadata(errors.New("something went wrong"), res)
+			// Apple sometimes rejects a login with a bare failure code and no
+			// human-readable customerMessage (e.g. on a second -5000 after the
+			// standard attempt-1 retry, which usually means invalid credentials,
+			// or an account that needs an interactive/trusted-device verification
+			// this client can't perform). Include the code and HTTP status so
+			// logs actually say why instead of just "something went wrong".
+			err = NewErrorWithMetadata(fmt.Errorf("something went wrong (failureType %q, HTTP %d)", res.Data.FailureType, res.StatusCode), res)
 		}
 	} else if res.StatusCode != gohttp.StatusOK || res.Data.PasswordToken == "" || res.Data.DirectoryServicesID == "" {
 		err = fmt.Errorf("apple returned no usable authentication response (HTTP %d): missing account credentials or unexpected status; try again later or from another network", res.StatusCode)

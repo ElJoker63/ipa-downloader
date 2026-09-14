@@ -228,11 +228,12 @@ var _ = Describe("AppStore (Login)", func() {
 					}, nil)
 			})
 
-			It("returns error", func() {
+			It("returns an error that names the failure type instead of a bare 'something went wrong'", func() {
 				_, err := as.Login(LoginInput{
 					Password: testPassword,
 				})
 				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("random-error"))
 				Expect(signer.closeCalls).To(Equal(1))
 			})
 		})
