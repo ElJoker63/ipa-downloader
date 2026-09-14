@@ -63,7 +63,7 @@ func (t *appstore) OwnedApps(input OwnedAppsInput) (OwnedAppsOutput, error) {
 		return OwnedAppsOutput{}, errors.New("SAP action signer is not configured")
 	}
 
-	signer, err := t.actionSignerFactory(bag.SAPConfig, machineID)
+	signer, err := t.sharedSigner(guid, machineID, bag.SAPConfig)
 	if err != nil {
 		return OwnedAppsOutput{}, fmt.Errorf("failed to initialize SAP action signer: %w", err)
 	}
@@ -73,6 +73,10 @@ func (t *appstore) OwnedApps(input OwnedAppsInput) (OwnedAppsOutput, error) {
 	}
 
 	apps, fetchErr := t.fetchOwnedApps(input.Account, guid, signer)
+	if fetchErr != nil {
+		return OwnedAppsOutput{}, fetchErr
+	}
+
 	if input.Platform != "" {
 		apps = slices.DeleteFunc(apps, func(app App) bool {
 			return !slices.Contains(app.Platforms, input.Platform)
@@ -86,23 +90,6 @@ func (t *appstore) OwnedApps(input OwnedAppsInput) (OwnedAppsOutput, error) {
 		TotalCount: len(apps),
 		Page:       input.Page,
 		Results:    pageApps,
-	}
-	closeErr := signer.Close()
-
-	if closeErr != nil {
-		closeErr = fmt.Errorf("failed to close SAP action signer: %w", closeErr)
-	}
-
-	if fetchErr != nil {
-		if closeErr != nil {
-			return OwnedAppsOutput{}, errors.Join(fetchErr, closeErr)
-		}
-
-		return OwnedAppsOutput{}, fetchErr
-	}
-
-	if closeErr != nil {
-		return output, closeErr
 	}
 
 	return output, nil

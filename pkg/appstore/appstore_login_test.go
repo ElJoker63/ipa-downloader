@@ -167,14 +167,16 @@ var _ = Describe("AppStore (Login)", func() {
 				Expect(signer.closeCalls).To(Equal(1))
 			})
 
-			It("preserves both the request and cleanup errors", func() {
+			It("preserves the request error even when signer cleanup fails", func() {
+				// On failure the cached signer is dropped so the next attempt
+				// starts fresh, but a cleanup failure here is secondary
+				// housekeeping and must not mask the real login error.
 				cleanupErr := errors.New("cleanup failed")
 				signer.closeErr = cleanupErr
 
 				_, err := as.Login(LoginInput{Password: testPassword})
 				Expect(errors.Is(err, clientErr)).To(BeTrue())
-				Expect(errors.Is(err, cleanupErr)).To(BeTrue())
-				Expect(err.Error()).To(ContainSubstring("failed to close SAP action signer"))
+				Expect(errors.Is(err, cleanupErr)).To(BeFalse())
 				Expect(signer.closeCalls).To(Equal(1))
 			})
 		})
@@ -391,15 +393,15 @@ var _ = Describe("AppStore (Login)", func() {
 					Expect(out.Account.Name).To(Equal(strings.Join([]string{testFirstName, testLastName}, " ")))
 				})
 
-				It("returns the persisted account with a signer cleanup error", func() {
-					cleanupErr := errors.New("cleanup failed")
-					signer.closeErr = cleanupErr
-
+				It("caches the signer for reuse instead of closing it on success", func() {
+					// A successful login keeps the signer around so the next
+					// AppStore call (search, download, ...) can reuse it
+					// instead of paying for a brand new SAP handshake.
 					out, err := as.Login(LoginInput{Password: testPassword})
-					Expect(errors.Is(err, cleanupErr)).To(BeTrue())
-					Expect(err.Error()).To(ContainSubstring("failed to close SAP action signer"))
+					Expect(err).ToNot(HaveOccurred())
 					Expect(out.Account.Email).To(Equal(testEmail))
-					Expect(signer.closeCalls).To(Equal(1))
+					Expect(signer.closeCalls).To(Equal(0))
+					Expect(as.signerState.signer).To(BeIdenticalTo(signer))
 				})
 			})
 		})

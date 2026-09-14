@@ -53,6 +53,7 @@ type appstore struct {
 	authRetrySleep      func(time.Duration)
 	machine             machine.Machine
 	os                  operatingsystem.OperatingSystem
+	signerState         signerCache
 }
 
 type Args struct {

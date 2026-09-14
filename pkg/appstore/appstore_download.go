@@ -60,10 +60,9 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 	if t.actionSignerFactory != nil {
 		bag, bagErr := t.bag(guid)
 		if bagErr == nil {
-			s, sErr := t.actionSignerFactory(bag.SAPConfig, machineID)
+			s, sErr := t.sharedSigner(guid, machineID, bag.SAPConfig)
 			if sErr == nil && s != nil {
 				signer = s
-				defer signer.Close()
 			}
 		}
 	}

@@ -56,7 +56,7 @@ func (t *appstore) Login(input LoginInput) (LoginOutput, error) {
 		return LoginOutput{}, errors.New("SAP action signer is not configured")
 	}
 
-	signer, err := t.actionSignerFactory(bag.SAPConfig, machineID)
+	signer, err := t.sharedSigner(guid, machineID, bag.SAPConfig)
 	if err != nil {
 		return LoginOutput{}, fmt.Errorf("failed to initialize SAP action signer: %w", err)
 	}
@@ -66,26 +66,16 @@ func (t *appstore) Login(input LoginInput) (LoginOutput, error) {
 	}
 
 	acc, loginErr := t.login(input.Email, input.Password, input.AuthCode, guid, bag.SAPConfig.AuthEndpoint, signer)
-	closeErr := signer.Close()
-
-	if closeErr != nil {
-		closeErr = fmt.Errorf("failed to close SAP action signer: %w", closeErr)
-	}
-
 	if loginErr != nil {
-		if closeErr != nil {
-			return LoginOutput{}, errors.Join(loginErr, closeErr)
-		}
+		// A failed login may mean the cached signer's session is no longer
+		// valid; drop it so the next attempt starts from a clean handshake
+		// instead of silently reusing a broken signer.
+		_ = t.closeSharedSigner()
 
 		return LoginOutput{}, loginErr
 	}
 
-	output := LoginOutput{Account: acc}
-	if closeErr != nil {
-		return output, closeErr
-	}
-
-	return output, nil
+	return LoginOutput{Account: acc}, nil
 }
 
 type loginAddressResult struct {

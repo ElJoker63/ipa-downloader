@@ -159,7 +159,7 @@ var _ = Describe("AppStore (OwnedApps)", func() {
 		Expect(output.Results[0].Platforms).To(Equal([]Platform{PlatformMacOS}))
 		Expect(output.Results[1].ID).To(Equal(int64(123)))
 		Expect(output.Results[1].Platforms).To(Equal([]Platform{PlatformIPhone, PlatformIPad}))
-		Expect(signer.closeCalls).To(Equal(1))
+		Expect(signer.closeCalls).To(Equal(0))
 	})
 
 	It("does not infer a platform from the storefront or app name", func() {
@@ -183,7 +183,7 @@ var _ = Describe("AppStore (OwnedApps)", func() {
 		output, err := as.OwnedApps(OwnedAppsInput{Account: account})
 		Expect(errors.Is(err, ErrPasswordTokenExpired)).To(BeTrue())
 		Expect(output.Results).To(BeEmpty())
-		Expect(signer.closeCalls).To(Equal(1))
+		Expect(signer.closeCalls).To(Equal(0))
 	})
 
 	When("the account has more than one page of apps", func() {
@@ -285,7 +285,7 @@ var _ = Describe("AppStore (OwnedApps)", func() {
 			Expect(output.Results[0].PurchaseDate).To(Equal(time.Unix(1_700_000_120, 0).UTC()))
 			Expect(output.Results[1].ID).To(Equal(int64(1001)))
 			Expect(output.Results[1].PurchaseDate).To(Equal(time.Unix(1_700_000_060, 0).UTC()))
-			Expect(signer.closeCalls).To(Equal(1))
+			Expect(signer.closeCalls).To(Equal(0))
 		})
 	})
 
@@ -316,12 +316,12 @@ var _ = Describe("AppStore (OwnedApps)", func() {
 			Expect(output.Count).To(Equal(0))
 			Expect(output.TotalCount).To(Equal(1))
 			Expect(output.Results).To(BeEmpty())
-			Expect(signer.closeCalls).To(Equal(1))
+			Expect(signer.closeCalls).To(Equal(0))
 		})
 	})
 
 	When("the authenticated session is rejected", func() {
-		It("returns the password-token-expired error and closes the signer", func() {
+		It("returns the password-token-expired error and keeps the signer cached", func() {
 			expectSignerSetup()
 			mockOwnedClient.EXPECT().
 				Send(gomock.Any()).
@@ -330,16 +330,18 @@ var _ = Describe("AppStore (OwnedApps)", func() {
 			_, err := as.OwnedApps(OwnedAppsInput{Account: account})
 
 			Expect(errors.Is(err, ErrPasswordTokenExpired)).To(BeTrue())
-			Expect(signer.closeCalls).To(Equal(1))
+			Expect(signer.closeCalls).To(Equal(0))
 		})
 	})
 
-	When("the purchase history request and signer cleanup both fail", func() {
-		It("preserves both errors", func() {
+	When("the purchase history request fails", func() {
+		It("preserves the request error and keeps the signer cached for reuse", func() {
+			// The signer is only account-hardware signing, not the session
+			// token, so a request failure here doesn't mean it's bad — it
+			// stays cached (see appstore_signer_cache.go) rather than being
+			// torn down and rebuilt on the next call.
 			expectSignerSetup()
 			requestErr := errors.New("request error")
-			cleanupErr := errors.New("cleanup error")
-			signer.closeErr = cleanupErr
 			mockOwnedClient.EXPECT().
 				Send(gomock.Any()).
 				Return(http.Result[[]byte]{}, requestErr)
@@ -347,8 +349,7 @@ var _ = Describe("AppStore (OwnedApps)", func() {
 			_, err := as.OwnedApps(OwnedAppsInput{Account: account})
 
 			Expect(errors.Is(err, requestErr)).To(BeTrue())
-			Expect(errors.Is(err, cleanupErr)).To(BeTrue())
-			Expect(signer.closeCalls).To(Equal(1))
+			Expect(signer.closeCalls).To(Equal(0))
 		})
 	})
 
