@@ -46,6 +46,15 @@
           </div>
         </div>
 
+        <div class="rounded-xl bg-sky-500/[0.08] border border-sky-500/20 p-2.5 text-left flex items-start gap-2">
+          <svg class="w-3.5 h-3.5 text-[#0A84FF] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-[11px] text-[#B8C0CC] leading-snug">
+            {{ t.auth.appSpecificPasswordWarning }}
+          </p>
+        </div>
+
         <div class="flex items-center justify-between px-1">
           <label class="flex items-center space-x-2.5 cursor-pointer select-none text-xs text-[#B8C0CC]">
             <input
@@ -110,8 +119,9 @@ const password = ref('')
 const rememberMe = ref(true)
 
 async function handleLogin() {
+  const cleanEmail = email.value.trim()
   try {
-    await authStore.login(email.value, password.value, '', rememberMe.value)
+    await authStore.login(cleanEmail, password.value, '', rememberMe.value)
     showToast(t.value.auth.signedInSuccess, t.value.auth.welcomeBack.replace('{name}', authStore.account.name || 'User'), 'success')
     router.push('/')
   } catch (err: any) {

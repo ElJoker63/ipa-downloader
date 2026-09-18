@@ -22,25 +22,39 @@
         <button
           type="button"
           @click="checkUpdates"
-          :disabled="downloadedAppsStore.isCheckingUpdates"
+          :disabled="downloadedAppsStore.isCheckingUpdates || downloadedAppsStore.isLoading"
           class="px-3.5 py-2 rounded-xl bg-[#0A84FF]/20 hover:bg-[#0A84FF]/30 backdrop-blur-xl border border-[#0A84FF]/30 shadow-specular-soft text-xs font-semibold text-[#0A84FF] transition-all duration-300 ease-liquid active:scale-95 flex items-center space-x-2 disabled:opacity-50"
         >
-          <svg class="w-4 h-4 text-[#0A84FF]" :class="{ 'animate-spin': downloadedAppsStore.isCheckingUpdates }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4 text-[#0A84FF]" :class="{ 'animate-spin': downloadedAppsStore.isCheckingUpdates || downloadedAppsStore.isLoading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>{{ downloadedAppsStore.isCheckingUpdates ? 'Buscando...' : 'Buscar Actualizaciones' }}</span>
+          <span>{{ (downloadedAppsStore.isCheckingUpdates || downloadedAppsStore.isLoading) ? (t.downloadedApps?.checkingUpdates || 'Buscando...') : (t.downloadedApps?.checkForUpdates || 'Buscar Actualizaciones') }}</span>
         </button>
 
         <button
           type="button"
-          @click="refreshIPAs"
-          :disabled="downloadedAppsStore.isLoading"
-          class="px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] backdrop-blur-xl border border-white/[0.08] shadow-specular-soft text-xs font-medium text-white transition-all duration-300 ease-liquid active:scale-95 flex items-center space-x-2 disabled:opacity-50"
+          @click="updateAllApps"
+          :disabled="appsWithUpdates.length === 0 || isUpdatingAll"
+          :class="[
+            appsWithUpdates.length > 0
+              ? 'bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_16px_rgba(48,209,88,0.3)] liquid-shine cursor-pointer'
+              : 'bg-white/[0.06] text-[#8E8E93] border border-white/[0.08] cursor-not-allowed opacity-50'
+          ]"
+          class="px-3.5 py-2 rounded-xl backdrop-blur-xl text-xs font-semibold transition-all duration-300 ease-liquid active:scale-95 flex items-center space-x-2"
         >
-          <svg class="w-4 h-4 text-[#8E8E93]" :class="{ 'animate-spin': downloadedAppsStore.isLoading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg v-if="isUpdatingAll" class="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>{{ t.apps?.refresh || 'Refrescar' }}</span>
+          <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>{{ isUpdatingAll ? (t.downloadedApps?.updatingAll || 'Encolando...') : (t.downloadedApps?.updateAll || 'Actualizar Todo') }}</span>
+          <span
+            v-if="appsWithUpdates.length > 0"
+            class="px-1.5 py-0.2 rounded-full bg-white/25 text-[10px] font-bold text-white tracking-wide"
+          >
+            {{ appsWithUpdates.length }}
+          </span>
         </button>
       </div>
     </div>
@@ -95,9 +109,15 @@
                 </span>
                 <span
                   v-if="downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)"
-                  class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30 animate-pulse"
+                  class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#30D158]/20 text-[#30D158] border border-[#30D158]/30"
+                  :class="{ 'animate-pulse': !isAppDownloading(ipa.bundleId) }"
                 >
-                  ↑ v{{ downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.latestVersion }} disponible
+                  <template v-if="isAppDownloading(ipa.bundleId)">
+                    ↓ Descargando...
+                  </template>
+                  <template v-else>
+                    ↑ v{{ downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.latestVersion }} disponible
+                  </template>
                 </span>
                 <span class="px-2 py-0.5 text-[10px] font-mono rounded-md bg-white/[0.06] text-[#B8C0CC] border border-white/[0.08]">
                   {{ ipa.formattedSize }}
@@ -124,14 +144,15 @@
             <button
               v-if="downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)"
               type="button"
-              class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] backdrop-blur-xl text-white text-xs font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_16px_rgba(48,209,88,0.3)] liquid-shine flex items-center space-x-1.5 transition-all duration-300 ease-liquid active:scale-95"
+              :disabled="isAppDownloading(ipa.bundleId)"
+              class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#30D158] to-[#28CD41] hover:from-[#28CD41] hover:to-[#30D158] backdrop-blur-xl text-white text-xs font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_16px_rgba(48,209,88,0.3)] liquid-shine flex items-center space-x-1.5 transition-all duration-300 ease-liquid active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
               @click="updateApp(downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.appMetadata)"
               :title="`Actualizar a v${downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)?.latestVersion}`"
             >
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': isAppDownloading(ipa.bundleId) }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>{{ t.downloadedApps?.update || 'Actualizar' }}</span>
+              <span>{{ isAppDownloading(ipa.bundleId) ? (t.downloadedApps?.updatingAll || 'Descargando...') : (t.downloadedApps?.update || 'Actualizar') }}</span>
             </button>
 
             <button
@@ -218,7 +239,14 @@ const { showToast } = useNotifications()
 const searchQuery = ref('')
 const defaultAppIcon = 'https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/app_icon.png/512x512bb.png'
 
+function isAppDownloading(bundleId: string): boolean {
+  if (!bundleId) return false
+  const lower = bundleId.toLowerCase()
+  return downloadsStore.activeDownloads.some((d) => d.bundleId?.toLowerCase() === lower)
+}
+
 onMounted(async () => {
+  downloadedAppsStore.initListeners()
   await downloadedAppsStore.fetchDownloadedIPAs()
   await downloadedAppsStore.checkUpdatesForDownloaded()
 })
@@ -248,18 +276,62 @@ const totalStorageSizeFormatted = computed(() => {
   return `${(totalBytes / Math.pow(div, exp)).toFixed(1)} ${letter}B Total`
 })
 
-function refreshIPAs() {
-  downloadedAppsStore.fetchDownloadedIPAs()
-  downloadedAppsStore.checkUpdatesForDownloaded()
-}
+const isUpdatingAll = ref(false)
+
+const appsWithUpdates = computed(() => {
+  const seen = new Set<string>()
+  const result: { ipa: (typeof downloadedAppsStore.downloadedIPAs)[0]; updateInfo: NonNullable<ReturnType<typeof downloadedAppsStore.getUpdateInfo>> }[] = []
+  for (const ipa of downloadedAppsStore.downloadedIPAs) {
+    if (!ipa.bundleId) continue
+    const key = ipa.bundleId.toLowerCase()
+    if (seen.has(key)) continue
+    if (isAppDownloading(ipa.bundleId)) continue
+    const info = downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)
+    if (info && info.appMetadata) {
+      seen.add(key)
+      result.push({ ipa, updateInfo: info })
+    }
+  }
+  return result
+})
 
 async function checkUpdates() {
+  await downloadedAppsStore.fetchDownloadedIPAs()
   await downloadedAppsStore.checkUpdatesForDownloaded()
-  const updatesCount = downloadedAppsStore.downloadedIPAs.filter(ipa => downloadedAppsStore.getUpdateInfo(ipa.bundleId, ipa.version)).length
-  if (updatesCount > 0) {
-    showToast('Actualizaciones encontradas', `Se encontraron ${updatesCount} actualizaciones disponibles.`, 'info')
+  const count = appsWithUpdates.value.length
+  if (count > 0) {
+    const title = t.value.downloadedApps?.updatesFound || 'Actualizaciones encontradas'
+    const desc = (t.value.downloadedApps?.updatesFoundDesc || 'Se encontraron {count} actualizaciones disponibles.').replace('{count}', String(count))
+    showToast(title, desc, 'info')
   } else {
-    showToast('Todo actualizado', 'Todas tus apps descargadas tienen la versión más reciente.', 'success')
+    const title = t.value.downloadedApps?.allUpToDate || 'Todo actualizado'
+    const desc = t.value.downloadedApps?.allUpToDateDesc || 'Todas tus apps descargadas tienen la versión más reciente.'
+    showToast(title, desc, 'success')
+  }
+}
+
+async function updateAllApps() {
+  if (appsWithUpdates.value.length === 0 || isUpdatingAll.value) return
+  isUpdatingAll.value = true
+  let queuedCount = 0
+  try {
+    for (const item of appsWithUpdates.value) {
+      try {
+        await downloadsStore.queueDownload(item.updateInfo.appMetadata, 'ios')
+        queuedCount++
+      } catch (err: any) {
+        console.error(`Error queuing update for ${item.ipa.appName}:`, err)
+      }
+    }
+    if (queuedCount > 0) {
+      const title = t.value.search?.downloadQueued || 'Descarga Encolada'
+      const desc = (t.value.downloadedApps?.allQueuedDesc || '{count} actualizaciones encoladas para descarga.').replace('{count}', String(queuedCount))
+      showToast(title, desc, 'success')
+    }
+  } catch (err: any) {
+    showToast(t.value.search?.downloadError || 'Error', err?.message || 'Error al iniciar actualizaciones', 'error')
+  } finally {
+    isUpdatingAll.value = false
   }
 }
 
@@ -267,9 +339,9 @@ async function updateApp(appMeta: any) {
   if (!appMeta) return
   try {
     await downloadsStore.queueDownload(appMeta, 'ios')
-    showToast(t.value.search.downloadQueued, `Actualización a v${appMeta.version} para ${appMeta.name}`, 'info')
+    showToast(t.value.search?.downloadQueued || 'Descarga Encolada', `Actualización a v${appMeta.version} para ${appMeta.name}`, 'info')
   } catch (err: any) {
-    showToast(t.value.search.downloadError, err?.message || 'Error al iniciar actualización', 'error')
+    showToast(t.value.search?.downloadError || 'Error', err?.message || 'Error al iniciar actualización', 'error')
   }
 }
 
@@ -299,10 +371,10 @@ async function installToDevice(filePath: string) {
 async function deleteIPA(filePath: string) {
   try {
     await WailsService.deleteFile(filePath)
-    showToast('success', 'Archivo IPA eliminado')
+    showToast(t.value.common.saved || 'Éxito', 'Archivo IPA eliminado', 'success')
     downloadedAppsStore.fetchDownloadedIPAs()
   } catch (err: any) {
-    showToast('error', err?.message || 'Error al borrar el archivo')
+    showToast('Error', err?.message || 'Error al borrar el archivo', 'error')
   }
 }
 

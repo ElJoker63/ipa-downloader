@@ -78,6 +78,11 @@ export const useAuthStore = defineStore('auth', () => {
     )
   }
 
+  function cancel2FA() {
+    is2FAModalOpen.value = false
+    pendingLoginData.value = null
+  }
+
   async function logout() {
     isLoading.value = true
     try {
@@ -122,6 +127,7 @@ export const useAuthStore = defineStore('auth', () => {
     checkAccount,
     login,
     submit2FACode,
+    cancel2FA,
     logout,
     initListeners,
   }

@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/apple"
@@ -67,6 +68,9 @@ func (s *authService) GetAccount() (*models.AccountProfile, error) {
 }
 
 func (s *authService) Login(email, password, authCode string, remember bool) (*models.AccountProfile, error) {
+	email = strings.TrimSpace(email)
+	authCode = strings.TrimSpace(strings.ReplaceAll(authCode, " ", ""))
+
 	s.mu.Lock()
 	s.status = "Connecting"
 	s.mu.Unlock()

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { DownloadedIPA } from '../types'
+import type { DownloadedIPA, DownloadTask } from '../types'
 import { WailsService } from '../services/wails'
 
 export const useDownloadedAppsStore = defineStore('downloadedApps', () => {
@@ -78,10 +78,50 @@ export const useDownloadedAppsStore = defineStore('downloadedApps', () => {
     if (!bundleId) return null
     const data = storeMetadata.value[bundleId.toLowerCase()]
     if (!data || !data.latestVersion) return null
+
+    // If there is ANY downloaded IPA for this bundleId that already has >= latestVersion,
+    // then the update is already downloaded and present locally!
+    const hasLatestOrNewer = downloadedIPAs.value.some(
+      (item) => item.bundleId?.toLowerCase() === bundleId.toLowerCase() &&
+                compareVersions(item.version, data.latestVersion) >= 0
+    )
+    if (hasLatestOrNewer) {
+      return null
+    }
+
     if (compareVersions(data.latestVersion, localVersion) > 0) {
       return data
     }
     return null
+  }
+
+  let listenersInitialized = false
+  function initListeners() {
+    if (listenersInitialized) return
+    listenersInitialized = true
+
+    WailsService.onEvent('download:completed', async (task: DownloadTask) => {
+      if (!task?.bundleId) {
+        await fetchDownloadedIPAs()
+        return
+      }
+
+      const lowerBundle = task.bundleId.toLowerCase()
+      // Optimistically update existing in-memory entry if version matches/exceeds,
+      // so the UI update is instant without waiting for disk I/O
+      if (task.version) {
+        const matchingIPAs = downloadedIPAs.value.filter(
+          (item) => item.bundleId?.toLowerCase() === lowerBundle
+        )
+        for (const item of matchingIPAs) {
+          item.version = task.version
+          item.shortVersion = task.version
+        }
+      }
+
+      // Re-scan directory to reflect real file attributes on disk (size, filename, etc.)
+      await fetchDownloadedIPAs()
+    })
   }
 
   return {
@@ -95,5 +135,6 @@ export const useDownloadedAppsStore = defineStore('downloadedApps', () => {
     isUpdateAvailable,
     getUpdateInfo,
     compareVersions,
+    initListeners,
   }
 })

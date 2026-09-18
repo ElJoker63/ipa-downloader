@@ -98,6 +98,16 @@ export const en: Translations = {
     update: 'Update',
     downloaded: 'Downloaded',
     localVersion: 'Local version',
+    checkForUpdates: 'Check for Updates',
+    checkingUpdates: 'Checking...',
+    updateAll: 'Update All',
+    updatingAll: 'Queuing...',
+    noUpdates: 'No updates',
+    updatesFound: 'Updates found',
+    updatesFoundDesc: 'Found {count} updates available.',
+    allUpToDate: 'All up to date',
+    allUpToDateDesc: 'All your downloaded apps are on the latest version.',
+    allQueuedDesc: '{count} updates queued for download.',
   },
   firmwares: {
     title: 'Apple Firmwares',
@@ -279,6 +289,8 @@ export const en: Translations = {
     verifying: 'Verifying...',
     invalidCode: 'Please enter a valid 6-digit code',
     verifiedToast: 'Signed in successfully with Apple ID',
+    manualCodeTipTitle: 'Did not receive the code automatically?',
+    manualCodeTip: 'On your iPhone/iPad or Mac, go to: Settings > [Your Name] > Sign-In & Security > Get Verification Code, then enter it here.',
   },
   details: {
     screenshots: 'Screenshots',
@@ -366,6 +378,7 @@ export const en: Translations = {
     signedOut: 'Signed Out',
     sessionRevoked: 'Your session has been revoked',
     twoFactorRequired: '2FA Verification Required',
+    appSpecificPasswordWarning: 'Use your regular Apple ID password. The Apple Store does not accept app-specific passwords.',
   },
   profile: {
     title: 'Account Profile',

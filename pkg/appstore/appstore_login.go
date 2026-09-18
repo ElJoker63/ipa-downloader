@@ -37,6 +37,9 @@ type LoginOutput struct {
 }
 
 func (t *appstore) Login(input LoginInput) (LoginOutput, error) {
+	input.Email = strings.TrimSpace(input.Email)
+	input.AuthCode = strings.TrimSpace(strings.ReplaceAll(input.AuthCode, " ", ""))
+
 	macAddr, err := t.machine.MacAddress()
 	if err != nil {
 		return LoginOutput{}, fmt.Errorf("failed to get mac address: %w", err)
@@ -141,7 +144,7 @@ func (t *appstore) login(email, password, authCode, guid, endpoint string, signe
 			return Account{}, fmt.Errorf("%s request failed: %w", stage, err)
 		}
 
-		if retry, redirect, err = t.parseLoginResponse(&res, attempt, authCode); err != nil {
+		if retry, redirect, err = t.parseLoginResponse(&res, requestAttempt, authCode); err != nil {
 			return Account{}, err
 		}
 	}
@@ -250,6 +253,14 @@ func retryableAuthenticationError(err error) (int, bool) {
 	return status, retry
 }
 
+func is2FARequiredResponse(res *http.Result[loginResult]) bool {
+	if res == nil {
+		return false
+	}
+	msg := res.Data.CustomerMessage
+	return msg == CustomerMessageBadLogin || strings.Contains(msg, "MZFinance.BadLogin")
+}
+
 func (t *appstore) parseLoginResponse(res *http.Result[loginResult], attempt int, authCode string) (bool, string, error) {
 	var (
 		retry    bool
@@ -265,10 +276,10 @@ func (t *appstore) parseLoginResponse(res *http.Result[loginResult], attempt int
 		} else {
 			retry = true
 		}
+	} else if authCode == "" && is2FARequiredResponse(res) {
+		err = ErrAuthCodeRequired
 	} else if attempt == 1 && res.Data.FailureType == FailureTypeInvalidCredentials {
 		retry = true
-	} else if res.Data.FailureType == "" && authCode == "" && res.Data.CustomerMessage == CustomerMessageBadLogin {
-		err = ErrAuthCodeRequired
 	} else if res.Data.FailureType == "" && res.Data.CustomerMessage == CustomerMessageAccountDisabled {
 		err = NewErrorWithMetadata(errors.New("account is disabled"), res)
 	} else if res.Data.FailureType == FailureTypeAccountNeedsVerification && res.Data.CustomerMessage == "" {
@@ -276,6 +287,14 @@ func (t *appstore) parseLoginResponse(res *http.Result[loginResult], attempt int
 			"this Apple ID needs to be verified on a real Apple device or browser before it can sign in here: "+
 				"open the App Store on an iPhone, iPad, or Mac (or sign in at appleid.apple.com) with this account, "+
 				"accept any pending terms, then try again",
+		), res)
+	} else if authCode != "" && is2FARequiredResponse(res) {
+		err = NewErrorWithMetadata(errors.New(
+			"invalid 2FA verification code or password; if your verification code expired, please generate a new code on your Apple device and try again",
+		), res)
+	} else if res.Data.FailureType == FailureTypeInvalidCredentials && res.Data.CustomerMessage == "" {
+		err = NewErrorWithMetadata(errors.New(
+			"invalid Apple ID or password; please verify your credentials and note that app-specific passwords are not supported for App Store login",
 		), res)
 	} else if res.Data.FailureType != "" {
 		if res.Data.CustomerMessage != "" {
@@ -297,6 +316,9 @@ func (t *appstore) parseLoginResponse(res *http.Result[loginResult], attempt int
 }
 
 func (t *appstore) loginRequest(email, password, authCode, guid, endpoint string, attempt int, signer ActionSigner) http.Request {
+	cleanEmail := strings.TrimSpace(email)
+	cleanAuthCode := strings.TrimSpace(strings.ReplaceAll(authCode, " ", ""))
+
 	return http.Request{
 		Method:         http.MethodPOST,
 		URL:            endpoint,
@@ -307,10 +329,10 @@ func (t *appstore) loginRequest(email, password, authCode, guid, endpoint string
 		},
 		Payload: &http.XMLPayload{
 			Content: map[string]interface{}{
-				"appleId":  email,
+				"appleId":  cleanEmail,
 				"attempt":  strconv.Itoa(attempt),
 				"guid":     guid,
-				"password": fmt.Sprintf("%s%s", password, strings.ReplaceAll(authCode, " ", "")),
+				"password": fmt.Sprintf("%s%s", password, cleanAuthCode),
 				"rmp":      "0",
 				"why":      "signIn",
 			},

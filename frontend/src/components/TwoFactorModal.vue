@@ -30,11 +30,23 @@
           />
         </div>
 
+        <div class="rounded-xl bg-white/[0.04] border border-white/10 p-3 space-y-1 text-left">
+          <p class="text-[11px] font-semibold text-[#0A84FF] flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ t.twoFactor.manualCodeTipTitle }}
+          </p>
+          <p class="text-[11px] text-[#86868B] leading-relaxed">
+            {{ t.twoFactor.manualCodeTip }}
+          </p>
+        </div>
+
         <div class="flex items-center space-x-3 pt-2">
           <button
             type="button"
             class="btn-secondary text-xs px-4 py-2.5 flex-1"
-            @click="authStore.is2FAModalOpen = false"
+            @click="handleCancel"
           >
             {{ t.common.cancel }}
           </button>
@@ -54,10 +66,12 @@
 
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useI18n } from '../i18n'
 import { useNotifications } from '../composables/useNotifications'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 const { showToast } = useNotifications()
@@ -77,16 +91,26 @@ watch(
   }
 )
 
+function handleCancel() {
+  authStore.cancel2FA()
+}
+
 async function submit2FA() {
-  if (!code.value || code.value.length < 6) {
+  const cleanCode = code.value.trim().replace(/\s+/g, '')
+  if (!cleanCode || cleanCode.length < 6) {
     showToast('Invalid Code', t.value.twoFactor.invalidCode, 'error')
     return
   }
 
   try {
-    await authStore.submit2FACode(code.value)
+    await authStore.submit2FACode(cleanCode)
     showToast('Verified', t.value.twoFactor.verifiedToast, 'success')
+    router.push('/')
   } catch (err: any) {
+    code.value = ''
+    nextTick(() => {
+      inputRef.value?.focus()
+    })
     showToast('Verification Failed', err?.message || 'Invalid 2FA code', 'error')
   }
 }

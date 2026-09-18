@@ -17,11 +17,14 @@ import (
 
 var _ = Describe("AppStore (Login)", func() {
 	const (
-		testPassword  = "test-password"
-		testEmail     = "test-email"
-		testFirstName = "test-first-name"
-		testLastName  = "test-last-name"
-		testPod       = "42"
+		testPassword            = "test-password"
+		testEmail               = "test-email"
+		testFirstName           = "test-first-name"
+		testLastName            = "test-last-name"
+		testPod                 = "42"
+		testStoreFront          = "143441-1,29"
+		testPasswordToken       = "test-token"
+		testDirectoryServicesID = "test-dsid"
 	)
 
 	var (
@@ -304,6 +307,101 @@ var _ = Describe("AppStore (Login)", func() {
 				Expect(err).To(Equal(ErrAuthCodeRequired))
 				Expect(signer.closeCalls).To(Equal(0))
 				Expect(as.signerState.signer).To(BeIdenticalTo(signer))
+			})
+		})
+
+		When("store API requires 2FA code with FailureType -5000", func() {
+			BeforeEach(func() {
+				mockClient.EXPECT().
+					Send(gomock.Any()).
+					Return(http.Result[loginResult]{
+						Data: loginResult{
+							FailureType:     FailureTypeInvalidCredentials,
+							CustomerMessage: CustomerMessageBadLogin,
+						},
+					}, nil)
+			})
+
+			It("returns ErrAuthCodeRequired instead of retrying as invalid credentials", func() {
+				_, err := as.Login(LoginInput{
+					Password: testPassword,
+				})
+				Expect(err).To(Equal(ErrAuthCodeRequired))
+			})
+		})
+
+		When("store API requires 2FA code with alternative BadLogin message", func() {
+			BeforeEach(func() {
+				mockClient.EXPECT().
+					Send(gomock.Any()).
+					Return(http.Result[loginResult]{
+						Data: loginResult{
+							CustomerMessage: "MZFinance.BadLogin.MacAppStore_message",
+						},
+					}, nil)
+			})
+
+			It("returns ErrAuthCodeRequired", func() {
+				_, err := as.Login(LoginInput{
+					Password: testPassword,
+				})
+				Expect(err).To(Equal(ErrAuthCodeRequired))
+			})
+		})
+
+		When("store API rejects provided 2FA code", func() {
+			BeforeEach(func() {
+				mockClient.EXPECT().
+					Send(gomock.Any()).
+					Return(http.Result[loginResult]{
+						Data: loginResult{
+							CustomerMessage: CustomerMessageBadLogin,
+						},
+					}, nil)
+			})
+
+			It("returns a descriptive 2FA verification error", func() {
+				_, err := as.Login(LoginInput{
+					Password: testPassword,
+					AuthCode: "123456",
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("invalid 2FA verification code"))
+			})
+		})
+
+		When("email or 2FA code contains leading/trailing whitespace", func() {
+			BeforeEach(func() {
+				mockClient.EXPECT().
+					Send(gomock.Any()).
+					Do(func(req http.Request) {
+						payload := req.Payload.(*http.XMLPayload)
+						Expect(payload.Content["appleId"]).To(Equal("trimmed@example.com"))
+						Expect(payload.Content["password"]).To(Equal("mysecret123456"))
+					}).
+					Return(http.Result[loginResult]{
+						StatusCode: 200,
+						Headers:    map[string]string{HTTPHeaderStoreFront: testStoreFront},
+						Data: loginResult{
+							PasswordToken:       testPasswordToken,
+							DirectoryServicesID: testDirectoryServicesID,
+							Account: loginAccountResult{
+								Email: "trimmed@example.com",
+							},
+						},
+					}, nil)
+
+				mockKeychain.EXPECT().Set("account", gomock.Any()).Return(nil)
+			})
+
+			It("trims email and authCode before constructing the payload", func() {
+				out, err := as.Login(LoginInput{
+					Email:    "  trimmed@example.com  ",
+					Password: "mysecret",
+					AuthCode: " 123 456 ",
+				})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(out.Account.Email).To(Equal("trimmed@example.com"))
 			})
 		})
 

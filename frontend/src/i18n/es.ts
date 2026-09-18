@@ -98,6 +98,16 @@ export const es: Translations = {
     update: 'Actualizar',
     downloaded: 'Descargado',
     localVersion: 'Versión local',
+    checkForUpdates: 'Buscar Actualizaciones',
+    checkingUpdates: 'Buscando...',
+    updateAll: 'Actualizar Todo',
+    updatingAll: 'Encolando...',
+    noUpdates: 'Sin actualizaciones',
+    updatesFound: 'Actualizaciones encontradas',
+    updatesFoundDesc: 'Se encontraron {count} actualizaciones disponibles.',
+    allUpToDate: 'Todo actualizado',
+    allUpToDateDesc: 'Todas tus apps descargadas tienen la versión más reciente.',
+    allQueuedDesc: '{count} actualizaciones encoladas para descarga.',
   },
   firmwares: {
     title: 'Firmwares de Apple',
@@ -279,6 +289,8 @@ export const es: Translations = {
     verifying: 'Verificando...',
     invalidCode: 'Por favor ingresa un código válido de 6 dígitos',
     verifiedToast: 'Sesión iniciada exitosamente con Apple ID',
+    manualCodeTipTitle: '¿No recibes el código automáticamente?',
+    manualCodeTip: 'En tu iPhone/iPad o Mac ve a: Ajustes > [Tu Nombre] > Inicio de sesión y seguridad > Obtener código de verificación e ingrésalo aquí.',
   },
   details: {
     screenshots: 'Capturas de Pantalla',
@@ -366,6 +378,7 @@ export const es: Translations = {
     signedOut: 'Sesión Cerrada',
     sessionRevoked: 'Tu sesión ha sido revocada',
     twoFactorRequired: 'Verificación 2FA Requerida',
+    appSpecificPasswordWarning: 'Usa tu contraseña habitual de Apple ID. La tienda de Apple no admite contraseñas de aplicación.',
   },
   profile: {
     title: 'Perfil de Cuenta',

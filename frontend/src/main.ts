@@ -9,6 +9,7 @@ import { useDownloadsStore } from './stores/downloads'
 import { useFavoritesStore } from './stores/favorites'
 import { useLogsStore } from './stores/logs'
 import { useSettingsStore } from './stores/settings'
+import { useDownloadedAppsStore } from './stores/downloadedApps'
 import { useNotifications } from './composables/useNotifications'
 import { useTheme } from './composables/useTheme'
 import { useI18n } from './i18n'
@@ -27,6 +28,7 @@ const downloadsStore = useDownloadsStore()
 const favoritesStore = useFavoritesStore()
 const logsStore = useLogsStore()
 const settingsStore = useSettingsStore()
+const downloadedAppsStore = useDownloadedAppsStore()
 const { initListeners: initNotificationListeners } = useNotifications()
 const { applyTheme } = useTheme()
 const { initLanguage } = useI18n()
@@ -35,6 +37,7 @@ authStore.initListeners()
 downloadsStore.initListeners()
 favoritesStore.initListeners()
 logsStore.initListeners()
+downloadedAppsStore.initListeners()
 initNotificationListeners()
 
 // Load initial settings and theme

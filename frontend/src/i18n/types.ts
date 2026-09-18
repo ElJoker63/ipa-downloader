@@ -96,6 +96,16 @@ export interface Translations {
     update: string
     downloaded: string
     localVersion: string
+    checkForUpdates?: string
+    checkingUpdates?: string
+    updateAll?: string
+    updatingAll?: string
+    noUpdates?: string
+    updatesFound?: string
+    updatesFoundDesc?: string
+    allUpToDate?: string
+    allUpToDateDesc?: string
+    allQueuedDesc?: string
   }
   firmwares: {
     title: string
@@ -277,6 +287,8 @@ export interface Translations {
     verifying: string
     invalidCode: string
     verifiedToast: string
+    manualCodeTipTitle: string
+    manualCodeTip: string
   }
   details: {
     screenshots: string
@@ -364,6 +376,7 @@ export interface Translations {
     signedOut: string
     sessionRevoked: string
     twoFactorRequired: string
+    appSpecificPasswordWarning: string
   }
   profile: {
     title: string
