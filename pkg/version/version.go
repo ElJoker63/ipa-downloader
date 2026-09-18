@@ -5,7 +5,7 @@ import "fmt"
 var (
 	// Version is the current version of the application.
 	// It is set during the build process using ldflags.
-	Version = "1.4.2"
+	Version = "1.4.3"
 
 	// Commit is the git commit hash at which the application was built.
 	Commit = "unknown"

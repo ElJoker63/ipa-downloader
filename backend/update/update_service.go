@@ -6,8 +6,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/ElJoker63/ipa-downloader/v2/backend/events"
 	"github.com/ElJoker63/ipa-downloader/v2/backend/models"
@@ -102,6 +105,13 @@ func (s *updateService) CheckForUpdate() (*models.UpdateInfo, error) {
 }
 
 func (s *updateService) ApplyUpdate(downloadURL string) error {
+	exePath, err := os.Executable()
+	if err == nil {
+		if evalPath, err := filepath.EvalSymlinks(exePath); err == nil {
+			exePath = evalPath
+		}
+	}
+
 	s.emitter.EmitLog("INFO", "Downloading update from "+downloadURL, "UpdateService")
 
 	resp, err := http.Get(downloadURL)
@@ -128,8 +138,35 @@ func (s *updateService) ApplyUpdate(downloadURL string) error {
 
 	s.emitter.EmitLog("SUCCESS", "Update applied successfully. Restarting...", "UpdateService")
 
+	// Allow a brief moment for the event to reach the frontend
+	time.Sleep(500 * time.Millisecond)
+
+	if exePath != "" {
+		if err := restartApp(exePath); err != nil {
+			s.emitter.EmitLog("ERROR", "Failed to restart application: "+err.Error(), "UpdateService")
+			return err
+		}
+	}
+
 	os.Exit(0)
 	return nil
+}
+
+func restartApp(exePath string) error {
+	var cmd *exec.Cmd
+
+	if runtime.GOOS == "darwin" && strings.Contains(exePath, ".app/Contents/MacOS") {
+		idx := strings.Index(exePath, ".app")
+		appBundle := exePath[:idx+4]
+		cmd = exec.Command("open", "-n", appBundle)
+	} else {
+		cmd = exec.Command(exePath, os.Args[1:]...)
+	}
+
+	cmd.Env = os.Environ()
+	setDetachFlags(cmd)
+
+	return cmd.Start()
 }
 
 type progressReader struct {
