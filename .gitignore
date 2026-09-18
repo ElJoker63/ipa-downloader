@@ -3,6 +3,7 @@
 .LSOverride
 .vscode/
 .idea/
+.artifacts/
 **/*_mock.go
 exp/
 *.exe
