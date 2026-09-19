@@ -30,6 +30,42 @@ theme:
         icon: material/weather-night
         name: Cambiar a modo oscuro
 
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: es
+          name: Español
+          default: true
+          build: true
+        - locale: en
+          name: English
+          build: true
+          nav_translations:
+            Inicio: Home
+            Primeros Pasos: Getting Started
+            Instalación: Installation
+            Inicio Rápido: Quickstart
+            Aplicación de Escritorio: Desktop Application
+            Vista General: Overview
+            Búsqueda y Descarga: Search & Download
+            Gestor USB y Sideloading: USB Manager & Sideloading
+            Biblioteca y Compras: Library & Purchases
+            Explorador de Firmwares IPSW: IPSW Firmware Browser
+            Modo CLI: CLI Mode
+            Visión General: Overview
+            Referencia de Comandos: Command Reference
+            Arquitectura y Seguridad: Architecture & Security
+            Arquitectura del Sistema: System Architecture
+            Protocolo App Store y FairPlay: App Store Protocol & FairPlay
+            Solución de Problemas: Troubleshooting
+            macOS (Gatekeeper y Cuarentena): macOS (Gatekeeper & Quarantine)
+            Windows y Linux: Windows & Linux
+            Desarrollo: Development
+            Compilación desde el Código: Building from Source
+            Guía de Contribución: Contributing Guide
+
 markdown_extensions:
   - admonition
   - pymdownx.details
