@@ -1,67 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/architecture/architecture/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/architecture/architecture/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/architecture/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/architecture/architecture/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/architecture/protocol/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/architecture/protocol/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/architecture/protocol/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/architecture/protocol/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/cli/commands/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/cli/commands/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/cli/commands/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/cli/commands/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/cli/overview/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/cli/overview/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/cli/overview/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/cli/overview/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/desktop/devices/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/desktop/devices/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/devices/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/devices/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/desktop/firmware/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/desktop/firmware/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/firmware/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/firmware/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/desktop/library/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/desktop/library/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/library/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/library/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/desktop/overview/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/desktop/overview/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/overview/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/overview/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/desktop/search-and-download/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/desktop/search-and-download/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/search-and-download/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/search-and-download/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/development/build/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/development/build/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/development/build/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/development/build/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/development/contributing/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/development/contributing/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/development/contributing/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/development/contributing/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/getting-started/installation/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/getting-started/installation/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/getting-started/installation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/getting-started/installation/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/getting-started/quickstart/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/getting-started/quickstart/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/getting-started/quickstart/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/getting-started/quickstart/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/troubleshooting/macos/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/troubleshooting/macos/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/troubleshooting/macos/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/troubleshooting/macos/"/>
     </url>
     <url>
-         <loc>https://eljoker63.github.io/ipa-downloader/troubleshooting/others/</loc>
-         <lastmod>2026-09-19</lastmod>
+        <loc>https://eljoker63.github.io/ipa-downloader/troubleshooting/others/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/troubleshooting/others/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/troubleshooting/others/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/architecture/architecture/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/architecture/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/architecture/architecture/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/architecture/protocol/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/architecture/protocol/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/architecture/protocol/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/cli/commands/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/cli/commands/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/cli/commands/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/cli/overview/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/cli/overview/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/cli/overview/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/desktop/devices/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/devices/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/devices/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/desktop/firmware/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/firmware/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/firmware/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/desktop/library/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/library/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/library/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/desktop/overview/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/overview/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/overview/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/desktop/search-and-download/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/desktop/search-and-download/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/desktop/search-and-download/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/development/build/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/development/build/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/development/build/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/development/contributing/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/development/contributing/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/development/contributing/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/getting-started/installation/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/getting-started/installation/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/getting-started/installation/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/getting-started/quickstart/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/getting-started/quickstart/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/getting-started/quickstart/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/troubleshooting/macos/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/troubleshooting/macos/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/troubleshooting/macos/"/>
+    </url>
+    <url>
+        <loc>https://eljoker63.github.io/ipa-downloader/en/troubleshooting/others/</loc>
+        <lastmod>2026-09-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://eljoker63.github.io/ipa-downloader/en/troubleshooting/others/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://eljoker63.github.io/ipa-downloader/troubleshooting/others/"/>
     </url>
 </urlset>
