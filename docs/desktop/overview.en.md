@@ -11,14 +11,14 @@ Built with **Vue 3**, **TailwindCSS**, and **Wails v2**, the desktop client feat
 * **Glassmorphic Styling**: Translucent panels with subtle borders inspired by modern macOS design principles.
 * **Dark & Light Themes**: Automatically respects system theme preferences or can be toggled manually in Settings.
 * **Sidebar Navigation**: Instant access to primary application areas:
-  * 🔍 **Search**: Global search across App Store catalogs.
-  * 📥 **Downloads**: Live download monitor and queue manager.
-  * 📱 **Devices**: USB sideloading and app management for connected iPhones & iPads.
-  * 📚 **Library**: Local repository of downloaded packages and favorites.
-  * 🛍️ **Purchases**: Account license history across Apple platforms.
-  * 💾 **Firmwares**: IPSW restore image explorer categorized by device model.
-  * ⚙️ **Settings**: Directory preferences, download limits, and account sessions.
-  * 📋 **Logs**: Live system log viewer with severity filtering.
+  * :material-magnify: **Search**: Global search across App Store catalogs.
+  * :material-download: **Downloads**: Live download monitor and queue manager.
+  * :material-cellphone: **Devices**: USB sideloading and app management for connected iPhones & iPads.
+  * :material-bookshelf: **Library**: Local repository of downloaded packages and favorites.
+  * :material-shopping: **Purchases**: Account license history across Apple platforms.
+  * :material-chip: **Firmwares**: IPSW restore image explorer categorized by device model.
+  * :material-cog: **Settings**: Directory preferences, download limits, and account sessions.
+  * :material-clipboard-text: **Logs**: Live system log viewer with severity filtering.
 
 ---
 

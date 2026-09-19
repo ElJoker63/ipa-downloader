@@ -11,14 +11,14 @@ Construida con **Vue 3**, **TailwindCSS** y **Wails v2**, la interfaz cuenta con
 * **Efecto Glassmorphism**: Paneles traslúcidos con bordes sutiles inspirados en macOS y diseño moderno.
 * **Modo Oscuro y Modo Claro**: Adaptación automática a las preferencias del sistema o selección manual en ajustes.
 * **Barra Lateral Intuitiva**: Navegación rápida entre las secciones principales:
-  * 🔍 **Buscar**: Búsqueda global en el catálogo de la App Store.
-  * 📥 **Descargas**: Monitor de transferencias en tiempo real.
-  * 📱 **Dispositivos**: Gestor de sideloading por USB para iPhone y iPad.
-  * 📚 **Biblioteca**: Archivo local de apps descargadas e historial.
-  * 🛍️ **Compras**: Historial de licencias asociadas a tu Apple ID.
-  * 💾 **Firmwares**: Navegador de imágenes IPSW por modelo de dispositivo.
-  * ⚙️ **Ajustes**: Preferencias de descargas, carpetas y autenticación.
-  * 📋 **Logs**: Consola en vivo de eventos del sistema.
+  * :material-magnify: **Buscar**: Búsqueda global en el catálogo de la App Store.
+  * :material-download: **Descargas**: Monitor de transferencias en tiempo real.
+  * :material-cellphone: **Dispositivos**: Gestor de sideloading por USB para iPhone y iPad.
+  * :material-bookshelf: **Biblioteca**: Archivo local de apps descargadas e historial.
+  * :material-shopping: **Compras**: Historial de licencias asociadas a tu Apple ID.
+  * :material-chip: **Firmwares**: Navegador de imágenes IPSW por modelo de dispositivo.
+  * :material-cog: **Ajustes**: Preferencias de descargas, carpetas y autenticación.
+  * :material-clipboard-text: **Logs**: Consola en vivo de eventos del sistema.
 
 ---
 

@@ -8,6 +8,9 @@ repo_url: https://github.com/ElJoker63/ipa-downloader
 theme:
   name: material
   language: es
+  icon:
+    logo: material/apple
+    repo: fontawesome/brands/github
   features:
     - navigation.tabs
     - navigation.sections
