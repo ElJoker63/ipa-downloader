@@ -1,6 +1,7 @@
 package update
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -130,10 +131,62 @@ func (s *updateService) ApplyUpdate(downloadURL string) error {
 		Emitter: s.emitter,
 	}
 
-	err = update.Apply(progressReader, update.Options{})
-	if err != nil {
-		s.emitter.EmitLog("ERROR", "Failed to apply update: "+err.Error(), "UpdateService")
-		return err
+	isZip := strings.HasSuffix(strings.ToLower(downloadURL), ".zip")
+
+	if isZip {
+		tmpFile, err := os.CreateTemp("", "ipa-downloader-update-*.zip")
+		if err != nil {
+			return fmt.Errorf("failed to create temp file for update: %w", err)
+		}
+		tmpPath := tmpFile.Name()
+		defer os.Remove(tmpPath)
+
+		if _, err := io.Copy(tmpFile, progressReader); err != nil {
+			_ = tmpFile.Close()
+			return fmt.Errorf("failed to save update zip: %w", err)
+		}
+		_ = tmpFile.Close()
+
+		zipReader, err := zip.OpenReader(tmpPath)
+		if err != nil {
+			return fmt.Errorf("failed to open update zip: %w", err)
+		}
+		defer zipReader.Close()
+
+		binaryName := filepath.Base(exePath)
+		binaryReader, infoPlistData, err := findExecutableInZip(&zipReader.Reader, binaryName)
+		if err != nil {
+			return fmt.Errorf("failed to locate binary in update zip: %w", err)
+		}
+		defer binaryReader.Close()
+
+		updateOpts := update.Options{}
+		if exePath != "" {
+			updateOpts.TargetPath = exePath
+		}
+
+		err = update.Apply(binaryReader, updateOpts)
+		if err != nil {
+			s.emitter.EmitLog("ERROR", "Failed to apply update: "+err.Error(), "UpdateService")
+			return err
+		}
+
+		if len(infoPlistData) > 0 && strings.Contains(exePath, ".app/Contents/MacOS") {
+			idx := strings.Index(exePath, ".app")
+			infoPlistPath := filepath.Join(exePath[:idx+4], "Contents", "Info.plist")
+			_ = os.WriteFile(infoPlistPath, infoPlistData, 0644)
+		}
+	} else {
+		updateOpts := update.Options{}
+		if exePath != "" {
+			updateOpts.TargetPath = exePath
+		}
+
+		err = update.Apply(progressReader, updateOpts)
+		if err != nil {
+			s.emitter.EmitLog("ERROR", "Failed to apply update: "+err.Error(), "UpdateService")
+			return err
+		}
 	}
 
 	s.emitter.EmitLog("SUCCESS", "Update applied successfully. Restarting...", "UpdateService")
@@ -208,4 +261,46 @@ func isNewer(latest, current string) bool {
 	}
 
 	return len(lParts) > len(cParts)
+}
+
+func findExecutableInZip(r *zip.Reader, targetName string) (io.ReadCloser, []byte, error) {
+	var execFile *zip.File
+	var plistData []byte
+
+	for _, f := range r.File {
+		name := filepath.ToSlash(f.Name)
+		if strings.HasSuffix(name, "Contents/Info.plist") {
+			rc, err := f.Open()
+			if err == nil {
+				plistData, _ = io.ReadAll(rc)
+				_ = rc.Close()
+			}
+		}
+
+		if strings.HasSuffix(name, "/Contents/MacOS/"+targetName) || filepath.Base(name) == targetName {
+			execFile = f
+		}
+	}
+
+	// Fallback: if not found by exact targetName, search for any binary in Contents/MacOS/
+	if execFile == nil {
+		for _, f := range r.File {
+			name := filepath.ToSlash(f.Name)
+			if strings.Contains(name, "Contents/MacOS/") && !strings.HasSuffix(name, "/") {
+				execFile = f
+				break
+			}
+		}
+	}
+
+	if execFile == nil {
+		return nil, nil, fmt.Errorf("executable %q not found inside zip archive", targetName)
+	}
+
+	rc, err := execFile.Open()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return rc, plistData, nil
 }

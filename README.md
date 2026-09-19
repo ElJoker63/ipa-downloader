@@ -1,6 +1,12 @@
 # IPA Downloader
 
+[![Documentation](https://img.shields.io/badge/docs-GitHub_Pages-blue.svg)](https://eljoker63.github.io/ipa-downloader/)
+[![Release](https://img.shields.io/github/v/release/ElJoker63/ipa-downloader)](https://github.com/ElJoker63/ipa-downloader/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **IPA Downloader** is a desktop application by **UDYAT** for searching, downloading, and managing iOS/iPadOS/tvOS/visionOS/macOS app packages from the App Store using your own Apple ID, with direct USB sideloading to connected Apple devices and IPSW firmware browsing — all in one native app, with a CLI mode for scripting.
+
+> 📖 **Documentación Completa**: Consulta la documentación oficial y guías paso a paso en **[https://eljoker63.github.io/ipa-downloader/](https://eljoker63.github.io/ipa-downloader/)**.
 
 ## Overview
 

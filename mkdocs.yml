@@ -1,0 +1,79 @@
+site_name: IPA Downloader
+site_description: Aplicación de escritorio y suite CLI para buscar, descargar y realizar sideloading de paquetes de apps (.ipa) de la App Store de Apple.
+site_author: UDYAT / ElJoker63
+site_url: https://eljoker63.github.io/ipa-downloader/
+repo_name: ElJoker63/ipa-downloader
+repo_url: https://github.com/ElJoker63/ipa-downloader
+
+theme:
+  name: material
+  language: es
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: slate
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Cambiar a modo claro
+    - scheme: default
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Cambiar a modo oscuro
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Inicio: index.md
+  - Primeros Pasos:
+      - Instalación: getting-started/installation.md
+      - Inicio Rápido: getting-started/quickstart.md
+  - Aplicación de Escritorio:
+      - Vista General: desktop/overview.md
+      - Búsqueda y Descarga: desktop/search-and-download.md
+      - Gestor USB y Sideloading: desktop/devices.md
+      - Biblioteca y Compras: desktop/library.md
+      - Explorador de Firmwares IPSW: desktop/firmware.md
+  - Modo CLI:
+      - Visión General: cli/overview.md
+      - Referencia de Comandos: cli/commands.md
+  - Arquitectura y Seguridad:
+      - Arquitectura del Sistema: architecture/architecture.md
+      - Protocolo App Store y FairPlay: architecture/protocol.md
+  - Solución de Problemas:
+      - macOS (Gatekeeper y Cuarentena): troubleshooting/macos.md
+      - Windows y Linux: troubleshooting/others.md
+  - Desarrollo:
+      - Compilación desde el Código: development/build.md
+      - Guía de Contribución: development/contributing.md
