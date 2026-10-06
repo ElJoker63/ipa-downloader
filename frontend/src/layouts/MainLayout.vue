@@ -15,15 +15,6 @@
     <div class="relative z-20 flex-1 flex overflow-hidden min-h-0 w-full">
       <!-- macOS / visionOS Style Liquid Glass Sidebar -->
       <aside class="relative z-30 w-64 bg-[#171A21]/70 backdrop-blur-[40px] backdrop-saturate-150 border-r border-white/[0.1] flex flex-col justify-between p-3.5 shrink-0 shadow-specular">
-        <div class="px-3 py-2 flex items-center justify-between border-b border-white/[0.08] pb-3 mb-2">
-        <div class="flex items-center space-x-2.5">
-          <img src="/logo.png" alt="IPA Downloader" class="w-20 h-20 rounded-lg object-contain shadow-sm shrink-0" />
-          <div>
-            <div class="text-[13px] font-bold tracking-tight text-white leading-tight">{{ t.common.appName }}</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Main Navigation Links -->
       <nav class="space-y-1 flex-1 overflow-y-auto">
         <!-- Section Label -->
