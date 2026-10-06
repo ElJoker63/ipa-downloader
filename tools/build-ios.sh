@@ -38,5 +38,5 @@ cmake --build "$BUILD_DIR/build" --parallel "$(sysctl -n hw.ncpu)"
 # purego resolves the statically linked Unicorn API through dlsym.
 export CGO_LDFLAGS="${CGO_LDFLAGS:-} -Wl,-force_load,$BUILD_DIR/build/libunicorn.a -Wl,-export_dynamic"
 cd "$ROOT"
-go build -ldflags="-X github.com/majd/ipatool/v2/cmd.version=$VERSION" -o "$OUTPUT" .
+go build -ldflags="-X github.com/ElJoker63/ipa-downloader/v2/cmd.version=$VERSION" -o "$OUTPUT" .
 ldid -S"$ROOT/resources/ios-entitlements.plist" "$OUTPUT"

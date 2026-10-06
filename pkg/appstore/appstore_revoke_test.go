@@ -2,8 +2,10 @@ package appstore
 
 import (
 	"errors"
+	"io/fs"
 
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/keychain"
+	"github.com/byteness/keyring"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
@@ -33,6 +35,7 @@ var _ = Describe("AppStore (Revoke)", func() {
 			mockKeychain.EXPECT().
 				Remove("account").
 				Return(nil)
+			mockKeychain.EXPECT().Remove(kbsyncCacheKey).Return(nil)
 		})
 
 		It("returns data", func() {
@@ -41,11 +44,27 @@ var _ = Describe("AppStore (Revoke)", func() {
 		})
 	})
 
+	DescribeTable("revokes accounts saved before a kbsync cache existed", func(missing error) {
+		mockKeychain.EXPECT().Remove("account").Return(nil)
+		mockKeychain.EXPECT().Remove(kbsyncCacheKey).Return(missing)
+		Expect(appstore.Revoke()).To(Succeed())
+	},
+		Entry("native keychain", keyring.ErrKeyNotFound),
+		Entry("file keychain", &fs.PathError{Op: "remove", Path: "cache", Err: fs.ErrNotExist}),
+	)
+
+	It("reports a cache removal failure after removing the account", func() {
+		mockKeychain.EXPECT().Remove("account").Return(nil)
+		mockKeychain.EXPECT().Remove(kbsyncCacheKey).Return(errors.New("cache unavailable"))
+		Expect(appstore.Revoke()).To(MatchError("failed to remove kbsync cache from keychain: cache unavailable"))
+	})
+
 	When("keychain returns error", func() {
 		BeforeEach(func() {
 			mockKeychain.EXPECT().
 				Remove("account").
 				Return(errors.New(""))
+			mockKeychain.EXPECT().Remove(kbsyncCacheKey).Return(nil)
 		})
 
 		It("returns wrapped error", func() {

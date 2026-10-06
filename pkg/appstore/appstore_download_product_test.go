@@ -1,6 +1,7 @@
 package appstore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	gohttp "net/http"
@@ -56,7 +57,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 		ctrl.Finish()
 	})
 
-	It("uses volumeStore as the primary endpoint", func() {
+	It("uses volumeStore when kbsync generation is unavailable", func() {
 		expected := http.Result[downloadResult]{
 			StatusCode: gohttp.StatusOK,
 			Data: downloadResult{
@@ -78,7 +79,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 			}).
 			Return(expected, nil)
 
-		actual, platform, err := store.sendDownloadProduct(account, app, testGUID, testVersionID, PlatformIPhone, nil)
+		actual, platform, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, testVersionID, PlatformIPhone, nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(expected))
 		Expect(platform).To(Equal(PlatformIPhone))
@@ -97,7 +98,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 			Send(gomock.Any()).
 			Return(expected, nil)
 
-		actual, _, err := store.sendDownloadProduct(account, app, testGUID, testVersionID, PlatformIPhone, nil)
+		actual, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, testVersionID, PlatformIPhone, nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(expected))
 	})
@@ -137,7 +138,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 				Return(expected, nil),
 		)
 
-		actual, _, err := store.sendDownloadProduct(account, app, testGUID, testVersionID, PlatformIPhone, nil)
+		actual, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, testVersionID, PlatformIPhone, nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(expected))
 	})
@@ -152,7 +153,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 			Send(gomock.Any()).
 			Return(http.Result[bagResult]{StatusCode: gohttp.StatusOK, Data: validBagResult()}, nil)
 
-		actual, _, err := store.sendDownloadProduct(account, app, testGUID, testVersionID, PlatformIPhone, nil)
+		actual, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, testVersionID, PlatformIPhone, nil)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(actual).To(Equal(expected))
 	})
@@ -165,7 +166,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 			Send(gomock.Any()).
 			Return(http.Result[bagResult]{}, errors.New("bag request failed"))
 
-		_, _, err := store.sendDownloadProduct(account, app, testGUID, testVersionID, PlatformIPhone, nil)
+		_, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, testVersionID, PlatformIPhone, nil)
 		Expect(err).To(MatchError(ContainSubstring("failed to get bag for redownload fallback")))
 	})
 
@@ -185,7 +186,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 				Return(http.Result[downloadResult]{}, errors.New("redownload failed")),
 		)
 
-		_, _, err := store.sendDownloadProduct(account, app, testGUID, testVersionID, PlatformIPhone, nil)
+		_, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, testVersionID, PlatformIPhone, nil)
 		Expect(err).To(MatchError(ContainSubstring("failed to send redownload request")))
 	})
 
@@ -197,7 +198,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 			}
 			mockDownloadClient.EXPECT().Send(gomock.Any()).Return(expected, nil)
 
-			actual, resolvedPlatform, err := store.sendDownloadProduct(account, app, testGUID, testVersionID, platform, nil)
+			actual, resolvedPlatform, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, testVersionID, platform, nil)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(expected))
 			Expect(resolvedPlatform).To(Equal(platform))
@@ -265,7 +266,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 							Expect(payload).To(HaveKeyWithValue("pricingParameters", "STDQ"))
 						}).Return(expected, nil),
 				)
-				actual, resolvedPlatform, err := store.sendDownloadProduct(account, app, testGUID, "", platform, nil)
+				actual, resolvedPlatform, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", platform, nil)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(actual).To(Equal(expected))
 				if platform == "" {
@@ -280,6 +281,18 @@ var _ = Describe("AppStore (Download Product)", func() {
 			Entry("account storefront", PlatformIPhone, "143444-2,29", "gb"),
 		)
 
+		It("pins the consumer catalog version on redownload", func() {
+			gomock.InOrder(
+				mockPlatformClient.EXPECT().Send(gomock.Any()).Return(http.Result[platformVersionLookupResult]{StatusCode: gohttp.StatusOK}, nil),
+				mockPlatformClient.EXPECT().Send(gomock.Any()).Return(http.Result[platformVersionLookupResult]{StatusCode: gohttp.StatusOK, Data: latestVersion}, nil),
+				mockDownloadClient.EXPECT().Send(gomock.Any()).Do(func(req http.Request) {
+					Expect(req.Payload.(*http.XMLPayload).Content).To(HaveKeyWithValue("appExtVrsId", testVersionID))
+				}).Return(http.Result[downloadResult]{StatusCode: gohttp.StatusOK}, nil),
+			)
+			_, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", PlatformIPhone, nil)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		DescribeTable("does not retry or remove the version pin after a redownload error",
 			func(original error) {
 				gomock.InOrder(
@@ -290,7 +303,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 							Expect(req.Payload.(*http.XMLPayload).Content).To(HaveKeyWithValue("appExtVrsId", testVersionID))
 						}).Return(http.Result[downloadResult]{}, original),
 				)
-				_, _, err := store.sendDownloadProduct(account, app, testGUID, "", PlatformIPhone, nil)
+				_, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", PlatformIPhone, nil)
 				Expect(errors.Is(err, original)).To(BeTrue())
 			},
 			Entry("empty HTTP 500", fmt.Errorf("wrapped: %w", &http.UnexpectedResponseError{StatusCode: gohttp.StatusInternalServerError})),
@@ -316,7 +329,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 							Expect(payload).To(HaveKeyWithValue("appExtVrsId", versionID))
 						}
 					}).Return(expected, nil)
-				actual, resolvedPlatform, err := store.sendDownloadProduct(account, app, testGUID, versionID, platform, nil)
+				actual, resolvedPlatform, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, versionID, platform, nil)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(actual).To(Equal(expected))
 				Expect(resolvedPlatform).To(Equal(platform))
@@ -337,7 +350,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 					Return(http.Result[platformVersionLookupResult]{StatusCode: gohttp.StatusOK, Data: latestVersion}, nil),
 				mockDownloadClient.EXPECT().Send(gomock.Any()).Return(expected, nil),
 			)
-			actual, _, err := store.sendDownloadProduct(account, app, testGUID, "", PlatformIPhone, nil)
+			actual, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", PlatformIPhone, nil)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(expected))
 		})
@@ -346,7 +359,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 			lookupErr := errors.New("catalog unavailable")
 			mockPlatformClient.EXPECT().Send(gomock.Any()).Return(http.Result[platformVersionLookupResult]{}, lookupErr)
 
-			actual, _, err := store.sendDownloadProduct(account, app, testGUID, "", PlatformIPhone, nil)
+			actual, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", PlatformIPhone, nil)
 			Expect(isEmptyDownloadProductResponse(actual)).To(BeTrue())
 			Expect(errors.Is(err, lookupErr)).To(BeTrue())
 			Expect(err).To(MatchError(ContainSubstring("failed to resolve latest iOS version for redownload")))
@@ -354,9 +367,9 @@ var _ = Describe("AppStore (Download Product)", func() {
 
 		It("does not send an unpinned request when the app is absent from the catalog", func() {
 			mockPlatformClient.EXPECT().Send(gomock.Any()).
-				Return(http.Result[platformVersionLookupResult]{StatusCode: gohttp.StatusOK}, nil)
+				Return(http.Result[platformVersionLookupResult]{StatusCode: gohttp.StatusOK}, nil).Times(3)
 
-			_, _, err := store.sendDownloadProduct(account, app, testGUID, "", PlatformIPhone, nil)
+			_, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", PlatformIPhone, nil)
 			Expect(err).To(MatchError(ContainSubstring("platform version lookup returned no app")))
 		})
 
@@ -367,7 +380,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 			mockPlatformClient.EXPECT().Send(gomock.Any()).
 				Return(http.Result[platformVersionLookupResult]{StatusCode: gohttp.StatusOK, Data: latestVersion}, nil)
 
-			_, _, err := store.sendDownloadProduct(account, app, testGUID, "", PlatformIPhone, nil)
+			_, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", PlatformIPhone, nil)
 			Expect(err).To(MatchError(ContainSubstring("platform version lookup returned no external version id")))
 		})
 
@@ -378,7 +391,7 @@ var _ = Describe("AppStore (Download Product)", func() {
 					Return(http.Result[platformVersionLookupResult]{StatusCode: gohttp.StatusOK, Data: latestVersion}, nil),
 				mockDownloadClient.EXPECT().Send(gomock.Any()).Return(expected, nil),
 			)
-			actual, _, err := store.sendDownloadProduct(account, app, testGUID, "", PlatformIPhone, nil)
+			actual, _, err := store.sendDownloadProduct(context.Background(), account, app, testGUID, "", PlatformIPhone, nil)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(actual).To(Equal(expected))
 		})

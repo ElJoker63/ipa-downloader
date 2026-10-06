@@ -16,7 +16,7 @@ type AppStore interface {
 	AccountInfo() (AccountInfoOutput, error)
 	// Revoke revokes the active credentials.
 	Revoke() error
-	// Lookup looks apps up based on the specified bundle identifier.
+	// Lookup looks apps up by bundle identifier or numeric app ID.
 	Lookup(input LookupInput) (LookupOutput, error)
 	// Search searches the App Store for apps matching the specified term.
 	Search(input SearchInput) (SearchOutput, error)
@@ -43,6 +43,8 @@ type appstore struct {
 	searchClient        http.Client[searchResult]
 	purchaseClient      http.Client[purchaseResult]
 	downloadClient      http.Client[downloadResult]
+	kbsyncGenerator     kbsyncGenerator
+	kbsyncCache         kbsyncCache
 	platformClient      http.Client[platformVersionLookupResult]
 	storefrontClient    http.Client[[]byte]
 	bagClient           http.Client[bagResult]
@@ -80,9 +82,10 @@ func NewAppStore(args Args) AppStore {
 		searchClient:        http.NewClient[searchResult](clientArgs),
 		purchaseClient:      http.NewClient[purchaseResult](clientArgs),
 		downloadClient:      http.NewClient[downloadResult](clientArgs),
+		kbsyncGenerator:     defaultKBSyncGenerator,
 		platformClient:      http.NewClient[platformVersionLookupResult](clientArgs),
 		storefrontClient:    http.NewClient[[]byte](clientArgs),
-		bagClient:           http.NewClient[bagResult](clientArgs),
+		bagClient:           http.NewClient[bagResult](http.Args{CookieJar: args.CookieJar, Timeout: http.DefaultAuthenticationTimeout}),
 		ownedAppsClient:     http.NewClient[[]byte](clientArgs),
 		httpClient:          http.NewClient[interface{}](clientArgs),
 		macDecrypterFactory: defaultMacPackageDecrypterFactory,

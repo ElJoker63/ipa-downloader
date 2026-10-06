@@ -5,7 +5,7 @@ import (
 	"net"
 	"path/filepath"
 	"runtime"
-	"strings"
+	"sync"
 
 	"github.com/ElJoker63/ipa-downloader/v2/pkg/util/operatingsystem"
 	"golang.org/x/term"
@@ -19,7 +19,11 @@ type Machine interface {
 }
 
 type machine struct {
-	os operatingsystem.OperatingSystem
+	os             operatingsystem.OperatingSystem
+	interfaces     func() ([]net.Interface, error)
+	macAddressOnce sync.Once
+	macAddress     string
+	macAddressErr  error
 }
 
 type Args struct {
@@ -28,66 +32,26 @@ type Args struct {
 
 func New(args Args) Machine {
 	return &machine{
-		os: args.OS,
+		os:         args.OS,
+		interfaces: net.Interfaces,
 	}
 }
 
-func (*machine) MacAddress() (string, error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
+// Resolve once so bag requests, authentication and downloads use the same
+// identity even if an adapter is added or removed during this invocation.
+func (m *machine) MacAddress() (string, error) {
+	m.macAddressOnce.Do(func() {
+		interfaces, err := m.interfaces()
+		if err != nil {
+			m.macAddressErr = fmt.Errorf("failed to get network interfaces: %w", err)
 
-	if len(interfaces) == 0 {
-		return "", fmt.Errorf("could not find network interfaces: %w", err)
-	}
+			return
+		}
 
-	isVirtual := func(name string) bool {
-		nameLower := strings.ToLower(name)
-		for _, kw := range []string{"radmin", "vethernet", "wsl", "tap", "tun", "pseudo", "vmware", "virtual", "loopback"} {
-			if strings.Contains(nameLower, kw) {
-				return true
-			}
-		}
-		return false
-	}
+		m.macAddress, m.macAddressErr = selectMacAddress(interfaces, interfaceMacAddress)
+	})
 
-	// 1st pass: Active physical interface (Up, not loopback, 6-byte MAC, globally unique OUI, not virtual)
-	for _, iface := range interfaces {
-		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
-			continue
-		}
-		if len(iface.HardwareAddr) == 6 && (iface.HardwareAddr[0]&0x02 == 0) && !isVirtual(iface.Name) {
-			return iface.HardwareAddr.String(), nil
-		}
-	}
-
-	// 2nd pass: Any active interface with a 6-byte MAC that isn't virtual
-	for _, iface := range interfaces {
-		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
-			continue
-		}
-		if len(iface.HardwareAddr) == 6 && !isVirtual(iface.Name) {
-			return iface.HardwareAddr.String(), nil
-		}
-	}
-
-	// 3rd pass: Any non-virtual interface with a valid MAC
-	for _, iface := range interfaces {
-		if iface.HardwareAddr.String() != "" && !isVirtual(iface.Name) {
-			return iface.HardwareAddr.String(), nil
-		}
-	}
-
-	// Fallback: any interface with a valid MAC
-	for _, iface := range interfaces {
-		addr := iface.HardwareAddr.String()
-		if addr != "" {
-			return addr, nil
-		}
-	}
-
-	return "", fmt.Errorf("could not find network interfaces with a valid mac address: %w", err)
+	return m.macAddress, m.macAddressErr
 }
 
 func (m *machine) HomeDirectory() string {
