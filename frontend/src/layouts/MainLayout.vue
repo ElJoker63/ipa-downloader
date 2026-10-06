@@ -18,10 +18,6 @@
       <!-- Main Navigation Links -->
       <nav class="space-y-1 flex-1 overflow-y-auto">
         <!-- Section Label -->
-        <div class="px-3 pt-1 pb-1.5 text-[11px] font-medium tracking-wider uppercase text-[#7D8592]">
-          {{ t.nav.menu }}
-        </div>
-
         <!-- Home / Account -->
         <router-link
           to="/"
