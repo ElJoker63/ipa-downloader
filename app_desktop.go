@@ -28,7 +28,7 @@ func runDesktopApp() error {
 		Height:            800,
 		MinWidth:          980,
 		MinHeight:         660,
-		Frameless:         false,
+		Frameless:         true,
 		StartHidden:       false,
 		HideWindowOnClose: false,
 		BackgroundColour:  &options.RGBA{R: 11, G: 15, B: 25, A: 255},
@@ -42,10 +42,11 @@ func runDesktopApp() error {
 			appService,
 		},
 		Windows: &windows.Options{
-			WebviewIsTransparent: false,
-			WindowIsTranslucent:  false,
-			BackdropType:         windows.Mica,
-			DisableWindowIcon:    false,
+			WebviewIsTransparent:              false,
+			WindowIsTranslucent:               false,
+			BackdropType:                      windows.Mica,
+			DisableWindowIcon:                 false,
+			DisableFramelessWindowDecorations: false,
 		},
 	})
 

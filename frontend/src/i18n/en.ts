@@ -11,6 +11,8 @@ export const en: Translations = {
     cancel: 'Cancel',
     confirm: 'Confirm',
     close: 'Close',
+    minimize: 'Minimize',
+    maximize: 'Maximize',
     save: 'Save',
     retry: 'Retry',
     refresh: 'Refresh',

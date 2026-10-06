@@ -1,58 +1,98 @@
 <template>
-  <header class="wails-drag h-11 flex items-center justify-between px-4 border-b border-white/[0.1] bg-[#0F1115]/70 backdrop-blur-[40px] backdrop-saturate-150 shadow-specular select-none z-50">
-    <!-- Left: App Icon & Brand -->
-    <div class="flex items-center space-x-3">
-      <img src="/logo.png" alt="IPA Downloader" class="w-6 h-6 rounded-lg object-contain shadow-sm shrink-0" />
-      <span class="text-[13px] font-bold tracking-tight text-white font-sans">{{ t.common.appName }}</span>
-      <span class="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-white/[0.08] text-[#B8C0CC] border border-white/[0.12]">{{ t.common.version }}</span>
+  <header
+    class="wails-drag h-10 w-full flex items-center justify-between px-4 border-b border-white/[0.08] bg-[#12151B]/85 backdrop-blur-[40px] backdrop-saturate-150 select-none z-50 shrink-0 shadow-sm"
+    style="--wails-draggable: drag;"
+    @dblclick="toggleMaximize"
+  >
+    <!-- Left: macOS Traffic Lights & Brand -->
+    <div class="flex items-center space-x-3.5">
+      <!-- Traffic Lights (macOS Control Buttons) -->
+      <div class="wails-no-drag flex items-center space-x-2 group cursor-default py-1" style="--wails-draggable: no-drag;">
+        <!-- Close (Red) -->
+        <button
+          type="button"
+          :title="t.common.close || 'Cerrar'"
+          class="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/60 flex items-center justify-center transition-all duration-150 hover:brightness-105 active:brightness-90 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+          @click.stop="closeApp"
+        >
+          <svg class="w-1.5 h-1.5 text-[#4D0000] opacity-0 group-hover:opacity-100 transition-opacity duration-150" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5" fill="none">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Minimize (Yellow) -->
+        <button
+          type="button"
+          :title="t.common.minimize || 'Minimizar'"
+          class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/60 flex items-center justify-center transition-all duration-150 hover:brightness-105 active:brightness-90 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+          @click.stop="minimize"
+        >
+          <svg class="w-1.5 h-1.5 text-[#5C3C00] opacity-0 group-hover:opacity-100 transition-opacity duration-150" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4" fill="none">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16" />
+          </svg>
+        </button>
+
+        <!-- Maximize / Zoom (Green) -->
+        <button
+          type="button"
+          :title="t.common.maximize || 'Maximizar'"
+          class="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/60 flex items-center justify-center transition-all duration-150 hover:brightness-105 active:brightness-90 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+          @click.stop="toggleMaximize"
+        >
+          <svg class="w-1.5 h-1.5 text-[#004D00] opacity-0 group-hover:opacity-100 transition-opacity duration-150" viewBox="0 0 10 10" fill="currentColor">
+            <polygon points="1,1 1,5.5 5.5,1" />
+            <polygon points="9,9 9,4.5 4.5,9" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Subtle vertical divider -->
+      <div class="h-3 w-px bg-white/[0.1]"></div>
+
+      <!-- Logo & App Name -->
+      <div class="flex items-center space-x-2">
+        <img src="/logo.png" alt="IPA Downloader" class="w-4 h-4 rounded object-contain opacity-90 shrink-0" />
+        <span class="text-xs font-semibold tracking-tight text-white/90 font-sans">{{ t.common.appName }}</span>
+        <span class="px-1.5 py-0.2 text-[9px] font-mono font-medium rounded-full bg-white/[0.06] text-[#B8C0CC]/80 border border-white/[0.1]">v1.5.0</span>
+      </div>
     </div>
 
     <!-- Center: Live Connection Status Pill (macOS Capsule) -->
     <div class="flex items-center space-x-2">
       <div
-        class="wails-no-drag flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium border backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 ease-liquid cursor-default shadow-specular-soft"
+        class="wails-no-drag flex items-center space-x-2 px-3 py-0.5 rounded-full text-[11px] font-medium border backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 ease-liquid cursor-default shadow-specular-soft"
+        style="--wails-draggable: no-drag;"
         :class="statusBadgeClass"
       >
-        <span class="w-2 h-2 rounded-full" :class="statusDotClass"></span>
-        <span>{{ translatedStatus }}</span>
-        <span v-if="authStore.isLoggedIn" class="text-[#B8C0CC] font-medium text-[11px] pl-1">
-          ({{ authStore.account.name || t.common.appleId }})
+        <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="statusDotClass"></span>
+        <span class="truncate">{{ translatedStatus }}</span>
+        <span v-if="authStore.isLoggedIn" class="text-[#B8C0CC] font-medium text-[10px] pl-1 max-w-[160px] truncate">
+          ({{ authStore.account.name || authStore.account.email || t.common.appleId }})
         </span>
       </div>
     </div>
 
-    <!-- Right: Window Controls (Minimalist & Smooth) -->
-    <div class="wails-no-drag flex items-center space-x-1.5">
-      <button
-        type="button"
-        title="Minimize"
-        class="w-7 h-7 flex items-center justify-center rounded-lg text-[#B8C0CC] hover:text-white hover:bg-white/[0.08] transition duration-150"
-        @click="minimize"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        title="Toggle Maximize"
-        class="w-7 h-7 flex items-center justify-center rounded-lg text-[#B8C0CC] hover:text-white hover:bg-white/[0.08] transition duration-150"
-        @click="toggleMaximize"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        title="Close"
-        class="w-7 h-7 flex items-center justify-center rounded-lg text-[#B8C0CC] hover:text-white hover:bg-[#FF453A] transition duration-150"
-        @click="closeApp"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+    <!-- Right: Language Pill & Draggable Region -->
+    <div class="wails-no-drag flex items-center space-x-2" style="--wails-draggable: no-drag;">
+      <!-- Language Quick Switcher -->
+      <div class="glass-input flex items-center !rounded-full p-0.5 text-[10px]">
+        <button
+          type="button"
+          class="px-2 py-0.5 rounded-full transition-all duration-200 font-semibold"
+          :class="currentLanguage === 'es' ? 'bg-[#0A84FF] text-white shadow-sm' : 'text-[#B8C0CC] hover:text-white'"
+          @click="setLanguage('es')"
+        >
+          ES
+        </button>
+        <button
+          type="button"
+          class="px-2 py-0.5 rounded-full transition-all duration-200 font-semibold"
+          :class="currentLanguage === 'en' ? 'bg-[#0A84FF] text-white shadow-sm' : 'text-[#B8C0CC] hover:text-white'"
+          @click="setLanguage('en')"
+        >
+          EN
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -64,7 +104,7 @@ import { WailsService } from '../services/wails'
 import { useI18n } from '../i18n'
 
 const authStore = useAuthStore()
-const { t } = useI18n()
+const { t, currentLanguage, setLanguage } = useI18n()
 
 const translatedStatus = computed(() => {
   if (authStore.status === 'Connected') return t.value.common.connected

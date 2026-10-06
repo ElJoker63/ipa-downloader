@@ -320,3 +320,17 @@ button { font-weight: 500; }
   from { background-position: 120% 0%; }
   to { background-position: -20% 0%; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Wails Frameless Window Drag Utilities                              */
+/* ------------------------------------------------------------------ */
+.wails-drag {
+  --wails-draggable: drag;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.wails-no-drag {
+  --wails-draggable: no-drag;
+  -webkit-app-region: no-drag;
+}

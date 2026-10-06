@@ -9,6 +9,8 @@ export interface Translations {
     cancel: string
     confirm: string
     close: string
+    minimize: string
+    maximize: string
     save: string
     retry: string
     refresh: string

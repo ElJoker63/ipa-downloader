@@ -1,5 +1,5 @@
 <template>
-  <div class="relative h-screen w-screen flex overflow-hidden bg-[#0F1115] text-[#FFFFFF] select-none font-sans">
+  <div class="relative h-screen w-screen flex flex-col overflow-hidden bg-[#0F1115] text-[#FFFFFF] select-none font-sans">
     <!-- Liquid Glass ambient backdrop: soft, drifting color fields that every
          blurred glass surface (sidebar, top bar, cards, modals) refracts. -->
     <div class="liquid-glow-bg" aria-hidden="true">
@@ -8,8 +8,13 @@
       <span class="glow-3"></span>
     </div>
 
-    <!-- macOS / visionOS Style Liquid Glass Sidebar -->
-    <aside class="relative z-30 w-64 bg-[#171A21]/70 backdrop-blur-[40px] backdrop-saturate-150 border-r border-white/[0.1] flex flex-col justify-between p-3.5 shrink-0 shadow-specular">
+    <!-- macOS Window TitleBar -->
+    <TitleBar />
+
+    <!-- App Body: Sidebar & Main Workspace -->
+    <div class="relative z-20 flex-1 flex overflow-hidden min-h-0 w-full">
+      <!-- macOS / visionOS Style Liquid Glass Sidebar -->
+      <aside class="relative z-30 w-64 bg-[#171A21]/70 backdrop-blur-[40px] backdrop-saturate-150 border-r border-white/[0.1] flex flex-col justify-between p-3.5 shrink-0 shadow-specular">
         <div class="px-3 py-2 flex items-center justify-between border-b border-white/[0.08] pb-3 mb-2">
         <div class="flex items-center space-x-2.5">
           <img src="/logo.png" alt="IPA Downloader" class="w-20 h-20 rounded-lg object-contain shadow-sm shrink-0" />
@@ -268,6 +273,7 @@
         </transition>
       </router-view>
     </main>
+    </div>
 
     <!-- Modals & Overlays -->
     <TwoFactorModal />
@@ -280,6 +286,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import TitleBar from '../components/TitleBar.vue'
 import TwoFactorModal from '../components/TwoFactorModal.vue'
 import AppDetailsModal from '../components/AppDetailsModal.vue'
 import ToastContainer from '../components/ToastContainer.vue'

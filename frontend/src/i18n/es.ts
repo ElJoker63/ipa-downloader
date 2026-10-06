@@ -11,6 +11,8 @@ export const es: Translations = {
     cancel: 'Cancelar',
     confirm: 'Confirmar',
     close: 'Cerrar',
+    minimize: 'Minimizar',
+    maximize: 'Maximizar',
     save: 'Guardar',
     retry: 'Reintentar',
     refresh: 'Actualizar',
